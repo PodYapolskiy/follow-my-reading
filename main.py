@@ -5,5 +5,5 @@ app = FastAPI()
 
 
 @app.get("/")
-async def index():
+async def index() -> str:
     return "Hello world!"
