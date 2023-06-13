@@ -1,5 +1,10 @@
 # Follow My Reading
 
+### Project start
+```
+uvicorn main:app
+```
+
 ### Type Validation:
 ```
 mypy --ignore-missing-imports  --follow-imports=skip --strict .
