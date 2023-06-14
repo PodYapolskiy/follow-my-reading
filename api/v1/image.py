@@ -7,10 +7,10 @@ import aiofiles
 router = APIRouter(prefix="/image", tags=["image"])
 
 
-@router.post("/upload", response_model=UploadFile)
-async def upload_image(upload_file: UploadFile):
+@router.post("/upload", response_model=UploadFileResponse)
+async def upload_image(upload_file: UploadFile) -> UploadFileResponse:
     file_id = uuid4()
-    async with aiofiles.open("/temp_data/image/" + str(file_id), "wb") as file:
+    async with aiofiles.open("./temp_data/image/" + str(file_id), "wb") as file:
         byte_content = await upload_file.read()
         await file.write(byte_content)
     return UploadFileResponse(file_id=file_id)
