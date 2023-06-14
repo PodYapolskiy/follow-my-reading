@@ -12,6 +12,7 @@ fastapi = "^0.97.0"
 pydantic = "^1.10.9"
 uvicorn = "^0.22.0"
 aiofiles = "^23.1.0"
+types-aiofiles = "^23.1.0.4"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.3.2"
