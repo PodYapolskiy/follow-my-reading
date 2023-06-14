@@ -1,7 +1,8 @@
 from fastapi import APIRouter, UploadFile, HTTPException, status
 from uuid import uuid4
-from .models import UploadFileResponse
+from .models import UploadFileResponse, ModelData, ModelsDataReponse
 import aiofiles
+from core.models import image_models
 
 
 router = APIRouter(prefix="/image", tags=["image"])
@@ -28,3 +29,12 @@ async def upload_image(upload_file: UploadFile) -> UploadFileResponse:
         byte_content = await upload_file.read()
         await file.write(byte_content)
     return UploadFileResponse(file_id=file_id)
+
+
+@router.get("/models", response_model=ModelsDataReponse)
+async def get_models() -> ModelsDataReponse:
+    # Transform any known image model into ModelData object format and
+    # store them as a list inside ModelsDataResponse
+    return ModelsDataReponse(
+        models=[ModelData.from_orm(model) for model in image_models.values()]
+    )

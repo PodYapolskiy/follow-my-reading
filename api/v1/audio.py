@@ -1,6 +1,7 @@
 from fastapi import APIRouter, UploadFile, HTTPException, status
 from uuid import uuid4, UUID
-from .models import UploadFileResponse
+from .models import UploadFileResponse, ModelsDataReponse, ModelData
+from core.models import audio_models
 import aiofiles
 
 router = APIRouter(prefix="/audio", tags=["audio"])
@@ -28,3 +29,12 @@ async def upload_audio(upload_file: UploadFile) -> UploadFileResponse:
         await file.write(byte_content)
 
     return UploadFileResponse(file_id=file_id)
+
+
+@router.get("/models", response_model=ModelsDataReponse)
+async def get_models() -> ModelsDataReponse:
+    # Transform any known audio model into ModelData object format and
+    # store them as a list inside ModelsDataResponse
+    return ModelsDataReponse(
+        models=[ModelData.from_orm(model) for model in audio_models.values()]
+    )
