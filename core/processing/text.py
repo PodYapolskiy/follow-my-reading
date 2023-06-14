@@ -37,6 +37,12 @@ def match(first_text: str, second_text: str):
         elif optimal == lev_dp[curx][cury - 1]:
             result.append("_-" + second_text[cury - 1])
             cury -= 1
+
+    if curx != 0:
+        result.append(first_text[:curx] + "-_")
+    elif cury != 0:
+        result.append("_-" + second_text[:cury])
+
     joined_result = []
     for i in result[::-1]:
         if not joined_result:
@@ -70,6 +76,5 @@ def match(first_text: str, second_text: str):
             first_index += len(i)
     return answer
 
+
 print(match(input(), input()))
-
-
