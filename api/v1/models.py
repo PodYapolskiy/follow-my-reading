@@ -25,5 +25,15 @@ class ModelsDataReponse(BaseModel):
     models: List[ModelData]
 
 
+
 class ImageProcessingResponse(BaseModel):
+    text: str
+
+
+class AudioProcessingRequest(BaseModel):
+    audio_file: UUID
+    audio_model: str
+
+
+class AudioProcessingResponse(BaseModel):
     text: str

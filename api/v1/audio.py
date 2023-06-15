@@ -1,8 +1,15 @@
 from fastapi import APIRouter, UploadFile, HTTPException, status
 from uuid import uuid4, UUID
-from .models import UploadFileResponse, ModelsDataReponse, ModelData
+from .models import (
+    UploadFileResponse,
+    ModelsDataReponse,
+    ModelData,
+    AudioProcessingRequest,
+    AudioProcessingResponse,
+)
 from core.models import audio_models
 import aiofiles
+import os
 
 router = APIRouter(prefix="/audio", tags=["audio"])
 
@@ -37,4 +44,23 @@ async def get_models() -> ModelsDataReponse:
     # store them as a list inside ModelsDataResponse
     return ModelsDataReponse(
         models=[ModelData.from_orm(model) for model in audio_models.values()]
+    )
+
+
+@router.post("/process", response_model=AudioProcessingResponse)
+async def process_audio(request: AudioProcessingRequest):
+    model = audio_models.get(request.audio_model)
+
+    if model is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Model not found"
+        )
+
+    if not os.path.exists("./temp_data/audio/" + str(request.audio_file)):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="File not Found"
+        )
+
+    return AudioProcessingResponse(
+        text=model.process_audio("./temp_data/audio/" + str(request.audio_file))
     )
