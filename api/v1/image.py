@@ -1,8 +1,9 @@
 from fastapi import APIRouter, UploadFile, HTTPException, status
 from uuid import uuid4
-from .models import UploadFileResponse, ModelData, ModelsDataReponse
+from .models import UploadFileResponse, ModelData, ImageProcessingRequest, ModelsDataReponse
 import aiofiles
-from core.models import image_models
+from ...core.models import image_models
+import os.path
 
 
 router = APIRouter(prefix="/image", tags=["image"])
@@ -38,3 +39,14 @@ async def get_models() -> ModelsDataReponse:
     return ModelsDataReponse(
         models=[ModelData.from_orm(model) for model in image_models.values()]
     )
+
+
+@router.post("/process", response_model={"text": str})
+async def process_image(request: ImageProcessingRequest):
+    model = image_models.get(str(request.image_model))
+    if model is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Model not found")
+    if os.path.exists("./temp_data/image/" + str(request.image_file)):
+        return {"text": model.process_image("./temp_data/image/" + str(request.image_file))}
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not Found")

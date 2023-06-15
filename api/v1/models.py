@@ -7,6 +7,11 @@ class UploadFileResponse(BaseModel):
     file_id: UUID
 
 
+class ImageProcessingRequest(BaseModel):
+    image_file: UUID
+    image_model: UUID
+
+
 class ModelData(BaseModel):
     name: str
     languages: List[str]
