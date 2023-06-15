@@ -9,7 +9,7 @@ class UploadFileResponse(BaseModel):
 
 class ImageProcessingRequest(BaseModel):
     image_file: UUID
-    image_model: UUID
+    image_model: str
 
 
 class ModelData(BaseModel):
@@ -23,3 +23,7 @@ class ModelData(BaseModel):
 
 class ModelsDataReponse(BaseModel):
     models: List[ModelData]
+
+
+class ImageProcessingResponse(BaseModel):
+    text: str
