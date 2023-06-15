@@ -18,3 +18,8 @@ class ModelData(BaseModel):
 
 class ModelsDataReponse(BaseModel):
     models: List[ModelData]
+
+
+class AudioProcessingRequest(BaseModel):
+    audio_file: UUID
+    audio_model: UUID
