@@ -22,4 +22,8 @@ class ModelsDataReponse(BaseModel):
 
 class AudioProcessingRequest(BaseModel):
     audio_file: UUID
-    audio_model: UUID
+    audio_model: str
+
+
+class AudioProcessingResponse(BaseModel):
+    text: str
