@@ -25,7 +25,6 @@ class ModelsDataReponse(BaseModel):
     models: List[ModelData]
 
 
-
 class ImageProcessingResponse(BaseModel):
     text: str
 

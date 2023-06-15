@@ -3,15 +3,15 @@ from typing import Dict
 import importlib
 import pathlib
 
-audio_models: Dict[str, ModelPlugin] = {}
-image_models: Dict[str, ModelPlugin] = {}
+audio_models: Dict[str, AudioModel] = {}
+image_models: Dict[str, ImageModel] = {}
 
 
 def register_model(cls: ModelPlugin):
     # create an instanse of decorated class
     instance = cls.__call__()  # type: ignore
     # reference to dictionary
-    models_obj = None
+    models_obj: Dict[str, AudioModel] | Dict[str, ImageModel] | None = None
     if isinstance(instance, ImageModel):
         # if object matches ImageModel interface, register it to the image_models
         models_obj = image_models
