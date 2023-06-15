@@ -62,5 +62,5 @@ async def process_audio(request: AudioProcessingRequest):
         )
 
     return AudioProcessingResponse(
-        text=model.process_audio("./temp_data/audio/" + str(request.audio_model))
+        text=model.process_audio("./temp_data/audio/" + str(request.audio_file))
     )
