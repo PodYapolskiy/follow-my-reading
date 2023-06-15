@@ -1,5 +1,5 @@
 from fastapi import APIRouter, UploadFile, HTTPException, status
-from uuid import uuid4, UUID
+from uuid import uuid4
 from .models import (
     UploadFileResponse,
     ModelsDataReponse,
