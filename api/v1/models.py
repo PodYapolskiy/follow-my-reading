@@ -1,15 +1,10 @@
 from pydantic import BaseModel
 from uuid import UUID
-from typing import List
+from typing import List, Tuple
 
 
 class UploadFileResponse(BaseModel):
     file_id: UUID
-
-
-class ImageProcessingRequest(BaseModel):
-    image_file: UUID
-    image_model: str
 
 
 class ModelData(BaseModel):
@@ -25,6 +20,11 @@ class ModelsDataReponse(BaseModel):
     models: List[ModelData]
 
 
+class ImageProcessingRequest(BaseModel):
+    image_file: UUID
+    image_model: str
+
+
 class ImageProcessingResponse(BaseModel):
     text: str
 
@@ -36,3 +36,17 @@ class AudioProcessingRequest(BaseModel):
 
 class AudioProcessingResponse(BaseModel):
     text: str
+
+
+class TaskCreateRequest(BaseModel):
+    audio_file: UUID
+    image_file: UUID
+    audio_model: str
+    image_model: str
+
+
+class TaskCreateResponse(BaseModel):
+    task_id: UUID
+    audio_text: str
+    image_text: str
+    difference: List[Tuple[int, str, str]]
