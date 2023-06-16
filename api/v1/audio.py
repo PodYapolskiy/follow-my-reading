@@ -8,8 +8,8 @@ from .models import (
     AudioProcessingResponse,
 )
 from core.models import audio_models
+from core.processing.audio import extract_text
 import aiofiles
-import os
 
 router = APIRouter(prefix="/audio", tags=["audio"])
 
@@ -49,18 +49,6 @@ async def get_models() -> ModelsDataReponse:
 
 @router.post("/process", response_model=AudioProcessingResponse)
 async def process_audio(request: AudioProcessingRequest):
-    model = audio_models.get(request.audio_model)
-
-    if model is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Model not found"
-        )
-
-    if not os.path.exists("./temp_data/audio/" + str(request.audio_file)):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="File not Found"
-        )
-
     return AudioProcessingResponse(
-        text=model.process_audio("./temp_data/audio/" + str(request.audio_file))
+        text=await extract_text(request.audio_model, str(request.audio_file))
     )

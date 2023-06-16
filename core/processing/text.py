@@ -88,6 +88,3 @@ def match(first_text: str, second_text: str):
         else:
             first_index += len(current_str)
     return answer
-
-
-print(match(input(), input()))
