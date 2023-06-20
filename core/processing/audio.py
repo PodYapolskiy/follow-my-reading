@@ -1,10 +1,10 @@
-from core.models import audio_models
+from core.models import get_audio_models
 from fastapi import HTTPException, status
 import os
 
 
-async def extract_text(model_name: str, file_name: str):
-    model = audio_models.get(model_name)
+def extract_text(model_name: str, file_name: str):
+    model = get_audio_models().get(model_name)
 
     if model is None:
         raise HTTPException(
