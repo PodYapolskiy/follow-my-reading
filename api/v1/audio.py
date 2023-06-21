@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, HTTPException, status
+from fastapi import APIRouter, UploadFile, HTTPException, status, Depends
 from uuid import uuid4
 from .models import (
     UploadFileResponse,
@@ -7,7 +7,9 @@ from .models import (
     AudioProcessingRequest,
     AudioProcessingResponse,
 )
-from core.models import audio_models
+from typing import Dict, Annotated
+from core.models import get_audio_models
+from core.models.base import AudioModel
 from core.processing.audio import extract_text
 import aiofiles
 
@@ -39,7 +41,9 @@ async def upload_audio(upload_file: UploadFile) -> UploadFileResponse:
 
 
 @router.get("/models", response_model=ModelsDataReponse)
-async def get_models() -> ModelsDataReponse:
+async def get_models(
+    audio_models: Annotated[Dict[str, AudioModel], Depends(get_audio_models)]
+) -> ModelsDataReponse:
     # Transform any known audio model into ModelData object format and
     # store them as a list inside ModelsDataResponse
     return ModelsDataReponse(
