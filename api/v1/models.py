@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from uuid import UUID
-from typing import List, Tuple
+from typing import List
 
 
 class UploadFileResponse(BaseModel):
@@ -47,6 +47,3 @@ class TaskCreateRequest(BaseModel):
 
 class TaskCreateResponse(BaseModel):
     task_id: UUID
-    audio_text: str
-    image_text: str
-    difference: List[Tuple[int, str, str]]

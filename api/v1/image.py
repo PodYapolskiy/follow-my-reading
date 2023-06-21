@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, HTTPException, status
+from fastapi import APIRouter, UploadFile, HTTPException, status, Depends
 from uuid import uuid4
 from .models import (
     UploadFileResponse,
@@ -8,7 +8,9 @@ from .models import (
     ImageProcessingResponse,
 )
 import aiofiles
-from core.models import image_models
+from typing import Dict, Annotated
+from core.models import get_image_models
+from core.models.base import ImageModel
 from core.processing.image import extract_text
 
 
@@ -39,7 +41,9 @@ async def upload_image(upload_file: UploadFile) -> UploadFileResponse:
 
 
 @router.get("/models", response_model=ModelsDataReponse)
-async def get_models() -> ModelsDataReponse:
+async def get_models(
+    image_models: Annotated[Dict[str, ImageModel], Depends(get_image_models)]
+) -> ModelsDataReponse:
     # Transform any known image model into ModelData object format and
     # store them as a list inside ModelsDataResponse
     return ModelsDataReponse(
