@@ -20,3 +20,7 @@ def put_in_queue(function, *args, **kwargs) -> UUID:
     tasks[task_uuid] = task
 
     return task_uuid
+
+
+def terminate(uuid: UUID):
+    tasks.get(uuid).cancel()

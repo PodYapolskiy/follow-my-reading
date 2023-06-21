@@ -1,4 +1,5 @@
-from fastapi import APIRouter
+from uuid import UUID
+from fastapi import APIRouter, HTTPException, status
 from .models import TaskCreateRequest, TaskCreateResponse
 from core import tasks, processing
 
@@ -27,3 +28,10 @@ async def get_all_tasks():
         answer[uuid] = {"status": task.get_status(), "ended_at": task.ended_at}
 
     return answer
+
+
+@router.delete("/terminate")
+async def terminate_task(uuid: UUID):
+    if tasks.get_tasks().get(uuid, None) is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task is not Found")
+    tasks.terminate(uuid)
