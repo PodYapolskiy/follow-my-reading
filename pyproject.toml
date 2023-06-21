@@ -16,6 +16,7 @@ types-aiofiles = "^23.1.0.4"
 pytesseract = "^0.3.10"
 openai-whisper = {git = "https://github.com/openai/whisper.git"}
 python-multipart = "^0.0.6"
+pydub = "^0.25.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.3.2"
