@@ -7,7 +7,6 @@ from .models import (
     AudioProcessingRequest,
     AudioProcessingResponse,
     AudioChunk,
-    SplitAudioResponse
 )
 from typing import Dict, Annotated
 from core.models import get_audio_models
@@ -59,9 +58,10 @@ async def process_audio(request: AudioProcessingRequest):
     data = []
     res = await extract_text(request.audio_model, str(request.audio_file))
     for item in res.get("segments"):
-        data.append(AudioChunk(start=item.get('start'), end=item.get('end'), text=item.get('text')))
+        data.append(
+            AudioChunk(
+                start=item.get("start"), end=item.get("end"), text=item.get("text")
+            )
+        )
 
-    return AudioProcessingResponse(
-        text=res.get('text'),
-        data=data
-    )
+    return AudioProcessingResponse(text=res.get("text"), data=data)
