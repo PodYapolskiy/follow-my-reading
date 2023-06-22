@@ -80,6 +80,6 @@ async def audio_split_res(request: AudioProcessingRequest, interval: int | float
 
     unipath = split_audio("./temp_data/audio/" + str(request.audio_file), intervals)
     for i in range(len(intervals)):
-        tmp = await extract_text(request.audio_model, str(i))
+        tmp = await extract_text(request.audio_model, str(i)).text
         data.append(AudioChunk(start=intervals[i][0], end=intervals[i][1], text=tmp))
     return SplitAudioResponse(data=data)
