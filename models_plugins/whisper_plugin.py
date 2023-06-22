@@ -3,7 +3,7 @@ import whisper
 
 
 @register_model
-class Whisper:
+class WhisperPlugin:
     name = "whisper"
     languages = ["eng"]
     description = "Robust Speech Recognition via Large-Scale Weak Supervision By OpenAI"
