@@ -35,8 +35,8 @@ class AudioProcessingRequest(BaseModel):
 
 
 class AudioChunk(BaseModel):
-    start: int | float
-    end: int | float
+    start: float
+    end: float
     text: str
 
 
