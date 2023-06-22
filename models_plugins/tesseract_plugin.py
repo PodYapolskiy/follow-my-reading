@@ -3,7 +3,7 @@ import pytesseract
 
 
 @register_model
-class EngTesseract:
+class EngTesseractPlugin:
     name = "eng_tesseract"
     languages = ["eng"]
     description = "Tesseract Open Source OCR Engine For English Language"
