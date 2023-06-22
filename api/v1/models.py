@@ -34,17 +34,14 @@ class AudioProcessingRequest(BaseModel):
     audio_model: str
 
 
+class AudioChunk(BaseModel):
+    start: int | float
+    end: int | float
+    text: str
+
+
 class AudioProcessingResponse(BaseModel):
     text: str
-
-
-class AudioChunk(BaseModel):
-    start: int
-    end: int
-    text: str
-
-
-class SplitAudioResponse(BaseModel):
     data: List[AudioChunk]
 
 

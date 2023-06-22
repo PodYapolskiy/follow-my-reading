@@ -56,30 +56,12 @@ async def get_models(
 
 @router.post("/process", response_model=AudioProcessingResponse)
 async def process_audio(request: AudioProcessingRequest):
-    return AudioProcessingResponse(
-        text=await extract_text(request.audio_model, str(request.audio_file))
-    )
-
-
-@router.post("/split", response_model=SplitAudioResponse)
-async def audio_split_res(request: AudioProcessingRequest, interval: int | float = 10):
     data = []
-    intervals = []
-    cur = 0
-    dur = duration(str(request.audio_file))
-    # Might not be the final interval separation algorithm
-    while True:
-        if not dur - cur - interval < 0:
-            intervals.append((cur, cur + interval))
-            cur += interval
-        elif (not dur - cur > interval) and dur - cur > 0:
-            intervals.append((cur, dur))
-            break
-        elif dur == cur:
-            break
+    res = await extract_text(request.audio_model, str(request.audio_file))
+    for item in res.get("segments"):
+        data.append(AudioChunk(start=item.get('start'), end=item.get('end'), text=item.get('text')))
 
-    unipath = split_audio("./temp_data/audio/" + str(request.audio_file), intervals)
-    for i in range(len(intervals)):
-        tmp = await extract_text(request.audio_model, str(i))
-        data.append(AudioChunk(start=intervals[i][0], end=intervals[i][1], text=tmp))
-    return SplitAudioResponse(data=data)
+    return AudioProcessingResponse(
+        text=res.get('text'),
+        data=data
+    )
