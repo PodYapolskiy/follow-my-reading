@@ -1,10 +1,21 @@
 from .base import ModelPlugin, AudioModel, ImageModel
 from typing import Dict
+from functools import lru_cache
 import importlib
 import pathlib
 
 audio_models: Dict[str, AudioModel] = {}
 image_models: Dict[str, ImageModel] = {}
+
+
+@lru_cache
+def get_audio_models():
+    return audio_models
+
+
+@lru_cache
+def get_image_models():
+    return image_models
 
 
 def register_model(cls: ModelPlugin):

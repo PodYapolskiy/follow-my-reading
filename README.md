@@ -2,7 +2,7 @@
 
 ### Project start
 ```
-uvicorn main:app
+redis-server & rq worker --with-scheduler & uvicorn main:app
 ```
 
 ### Type Validation:

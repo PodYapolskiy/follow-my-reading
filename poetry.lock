@@ -41,6 +41,14 @@ optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,>=2.7"
 
 [[package]]
+name = "async-timeout"
+version = "4.0.2"
+description = "Timeout context manager for asyncio programs"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[[package]]
 name = "attrdict"
 version = "2.0.1"
 description = "A dict with attribute-style access"
@@ -210,6 +218,27 @@ docs = ["furo", "sphinx-copybutton"]
 mypy = ["contourpy[bokeh,docs]", "docutils-stubs", "mypy (==1.2.0)", "types-Pillow"]
 test = ["Pillow", "contourpy[test-no-images]", "matplotlib"]
 test-no-images = ["pytest", "pytest-cov", "wurlitzer"]
+
+[[package]]
+name = "cryptography"
+version = "41.0.1"
+description = "cryptography is a package which provides cryptographic recipes and primitives to Python developers."
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+cffi = ">=1.12"
+
+[package.extras]
+docs = ["sphinx (>=5.3.0)", "sphinx-rtd-theme (>=1.1.1)"]
+docstest = ["pyenchant (>=1.6.11)", "sphinxcontrib-spelling (>=4.0.1)", "twine (>=1.12.0)"]
+nox = ["nox"]
+pep8test = ["black", "check-sdist", "mypy", "ruff"]
+sdist = ["build"]
+ssh = ["bcrypt (>=3.1.5)"]
+test = ["pretend", "pytest (>=6.2.0)", "pytest-benchmark", "pytest-cov", "pytest-xdist"]
+test-randomorder = ["pytest-randomly"]
 
 [[package]]
 name = "cssselect"
@@ -1211,6 +1240,14 @@ dotenv = ["python-dotenv (>=0.10.4)"]
 email = ["email-validator (>=1.0.3)"]
 
 [[package]]
+name = "pydub"
+version = "0.25.1"
+description = "Manipulate audio with an simple and easy high level interface"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "PyMuPDF"
 version = "1.20.0"
 description = "Python bindings for the PDF toolkit and renderer MuPDF"
@@ -1221,7 +1258,6 @@ python-versions = ">=3.7"
 [package.source]
 type = "url"
 url = "https://github.com/pymupdf/PyMuPDF/archive/refs/tags/1.20.0.zip"
-
 [[package]]
 name = "pyparsing"
 version = "3.1.0"
@@ -1363,6 +1399,21 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "redis"
+version = "4.5.5"
+description = "Python client for Redis database and key-value store"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+async-timeout = {version = ">=4.0.2", markers = "python_full_version <= \"3.11.2\""}
+
+[package.extras]
+hiredis = ["hiredis (>=1.0.0)"]
+ocsp = ["cryptography (>=36.0.1)", "pyopenssl (==20.0.1)", "requests (>=2.26.0)"]
+
+[[package]]
 name = "regex"
 version = "2023.6.3"
 description = "Alternative regular expression module, to replace re."
@@ -1387,6 +1438,18 @@ urllib3 = ">=1.21.1,<3"
 [package.extras]
 socks = ["PySocks (>=1.5.6,!=1.5.7)"]
 use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
+
+[[package]]
+name = "rq"
+version = "1.15.1"
+description = "RQ is a simple, lightweight, library for creating background jobs, and processing them."
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+click = ">=5.0.0"
+redis = ">=4.0.0"
 
 [[package]]
 name = "safetensors"
@@ -1799,6 +1862,29 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "types-pyopenssl"
+version = "23.2.0.1"
+description = "Typing stubs for pyOpenSSL"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+cryptography = ">=35.0.0"
+
+[[package]]
+name = "types-redis"
+version = "4.5.5.2"
+description = "Typing stubs for redis"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+cryptography = ">=35.0.0"
+types-pyOpenSSL = "*"
+
+[[package]]
 name = "typing-extensions"
 version = "4.6.3"
 description = "Backported and Experimental Type Hints for Python 3.7+"
@@ -1914,7 +2000,7 @@ watchdog = ["watchdog (>=2.3)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "cf6e7ec94f206bed4b113402ad9581a13ce70f5d1f75993bfc3219863f156765"
+content-hash = "b200ec5150f3cc906db841fd27c983d79715599cf3e39e43fc9878306aeda9ae"
 
 [metadata.files]
 aiofiles = [
@@ -1932,6 +2018,10 @@ appdirs = [
 astor = [
     {file = "astor-0.8.1-py2.py3-none-any.whl", hash = "sha256:070a54e890cefb5b3739d19f30f5a5ec840ffc9c50ffa7d23cc9fc1a38ebbfc5"},
     {file = "astor-0.8.1.tar.gz", hash = "sha256:6a6effda93f4e1ce9f618779b2dd1d9d84f1e32812c23a29b3fff6fd7f63fa5e"},
+]
+async-timeout = [
+    {file = "async-timeout-4.0.2.tar.gz", hash = "sha256:2163e1640ddb52b7a8c80d0a67a08587e5d245cc9c553a74a847056bc2976b15"},
+    {file = "async_timeout-4.0.2-py3-none-any.whl", hash = "sha256:8ca1e4fcf50d07413d66d1a5e416e42cfdf5851c981d679a09851a6853383b3c"},
 ]
 attrdict = [
     {file = "attrdict-2.0.1-py2.py3-none-any.whl", hash = "sha256:9432e3498c74ff7e1b20b3d93b45d766b71cbffa90923496f82c4ae38b92be34"},
@@ -2186,6 +2276,27 @@ contourpy = [
     {file = "contourpy-1.1.0-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:084eaa568400cfaf7179b847ac871582199b1b44d5699198e9602ecbbb5f6104"},
     {file = "contourpy-1.1.0-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:911ff4fd53e26b019f898f32db0d4956c9d227d51338fb3b03ec72ff0084ee5f"},
     {file = "contourpy-1.1.0.tar.gz", hash = "sha256:e53046c3863828d21d531cc3b53786e6580eb1ba02477e8681009b6aa0870b21"},
+]
+cryptography = [
+    {file = "cryptography-41.0.1-cp37-abi3-macosx_10_12_universal2.whl", hash = "sha256:f73bff05db2a3e5974a6fd248af2566134d8981fd7ab012e5dd4ddb1d9a70699"},
+    {file = "cryptography-41.0.1-cp37-abi3-macosx_10_12_x86_64.whl", hash = "sha256:1a5472d40c8f8e91ff7a3d8ac6dfa363d8e3138b961529c996f3e2df0c7a411a"},
+    {file = "cryptography-41.0.1-cp37-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:7fa01527046ca5facdf973eef2535a27fec4cb651e4daec4d043ef63f6ecd4ca"},
+    {file = "cryptography-41.0.1-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b46e37db3cc267b4dea1f56da7346c9727e1209aa98487179ee8ebed09d21e43"},
+    {file = "cryptography-41.0.1-cp37-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:d198820aba55660b4d74f7b5fd1f17db3aa5eb3e6893b0a41b75e84e4f9e0e4b"},
+    {file = "cryptography-41.0.1-cp37-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:948224d76c4b6457349d47c0c98657557f429b4e93057cf5a2f71d603e2fc3a3"},
+    {file = "cryptography-41.0.1-cp37-abi3-musllinux_1_1_aarch64.whl", hash = "sha256:059e348f9a3c1950937e1b5d7ba1f8e968508ab181e75fc32b879452f08356db"},
+    {file = "cryptography-41.0.1-cp37-abi3-musllinux_1_1_x86_64.whl", hash = "sha256:b4ceb5324b998ce2003bc17d519080b4ec8d5b7b70794cbd2836101406a9be31"},
+    {file = "cryptography-41.0.1-cp37-abi3-win32.whl", hash = "sha256:8f4ab7021127a9b4323537300a2acfb450124b2def3756f64dc3a3d2160ee4b5"},
+    {file = "cryptography-41.0.1-cp37-abi3-win_amd64.whl", hash = "sha256:1fee5aacc7367487b4e22484d3c7e547992ed726d14864ee33c0176ae43b0d7c"},
+    {file = "cryptography-41.0.1-pp38-pypy38_pp73-macosx_10_12_x86_64.whl", hash = "sha256:9a6c7a3c87d595608a39980ebaa04d5a37f94024c9f24eb7d10262b92f739ddb"},
+    {file = "cryptography-41.0.1-pp38-pypy38_pp73-manylinux_2_28_aarch64.whl", hash = "sha256:5d092fdfedaec4cbbffbf98cddc915ba145313a6fdaab83c6e67f4e6c218e6f3"},
+    {file = "cryptography-41.0.1-pp38-pypy38_pp73-manylinux_2_28_x86_64.whl", hash = "sha256:1a8e6c2de6fbbcc5e14fd27fb24414507cb3333198ea9ab1258d916f00bc3039"},
+    {file = "cryptography-41.0.1-pp38-pypy38_pp73-win_amd64.whl", hash = "sha256:cb33ccf15e89f7ed89b235cff9d49e2e62c6c981a6061c9c8bb47ed7951190bc"},
+    {file = "cryptography-41.0.1-pp39-pypy39_pp73-macosx_10_12_x86_64.whl", hash = "sha256:5f0ff6e18d13a3de56f609dd1fd11470918f770c6bd5d00d632076c727d35485"},
+    {file = "cryptography-41.0.1-pp39-pypy39_pp73-manylinux_2_28_aarch64.whl", hash = "sha256:7bfc55a5eae8b86a287747053140ba221afc65eb06207bedf6e019b8934b477c"},
+    {file = "cryptography-41.0.1-pp39-pypy39_pp73-manylinux_2_28_x86_64.whl", hash = "sha256:eb8163f5e549a22888c18b0d53d6bb62a20510060a22fd5a995ec8a05268df8a"},
+    {file = "cryptography-41.0.1-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:8dde71c4169ec5ccc1087bb7521d54251c016f126f922ab2dfe6649170a3b8c5"},
+    {file = "cryptography-41.0.1.tar.gz", hash = "sha256:d34579085401d3f49762d2f7d6634d6b6c2ae1242202e860f4d26b046e3a1006"},
 ]
 cssselect = [
     {file = "cssselect-1.2.0-py2.py3-none-any.whl", hash = "sha256:da1885f0c10b60c03ed5eccbb6b68d6eff248d91976fcde348f395d54c9fd35e"},
@@ -3401,6 +3512,10 @@ pydantic = [
     {file = "pydantic-1.10.9-py3-none-any.whl", hash = "sha256:6cafde02f6699ce4ff643417d1a9223716ec25e228ddc3b436fe7e2d25a1f305"},
     {file = "pydantic-1.10.9.tar.gz", hash = "sha256:95c70da2cd3b6ddf3b9645ecaa8d98f3d80c606624b6d245558d202cd23ea3be"},
 ]
+pydub = [
+    {file = "pydub-0.25.1-py2.py3-none-any.whl", hash = "sha256:65617e33033874b59d87db603aa1ed450633288aefead953b30bded59cb599a6"},
+    {file = "pydub-0.25.1.tar.gz", hash = "sha256:980a33ce9949cab2a569606b65674d748ecbca4f0796887fd6f46173a7b0d30f"},
+]
 PyMuPDF = []
 pyparsing = [
     {file = "pyparsing-3.1.0-py3-none-any.whl", hash = "sha256:d554a96d1a7d3ddaf7183104485bc19fd80543ad6ac5bdb6426719d766fb06c1"},
@@ -3604,6 +3719,10 @@ rarfile = [
     {file = "rarfile-4.0-py3-none-any.whl", hash = "sha256:1094869119012f95c31a6f22cc3a9edbdca61861b805241116adbe2d737b68f8"},
     {file = "rarfile-4.0.tar.gz", hash = "sha256:67548769229c5bda0827c1663dce3f54644f9dbfba4ae86d4da2b2afd3e602a1"},
 ]
+redis = [
+    {file = "redis-4.5.5-py3-none-any.whl", hash = "sha256:77929bc7f5dab9adf3acba2d3bb7d7658f1e0c2f1cafe7eb36434e751c471119"},
+    {file = "redis-4.5.5.tar.gz", hash = "sha256:dc87a0bdef6c8bfe1ef1e1c40be7034390c2ae02d92dcd0c7ca1729443899880"},
+]
 regex = [
     {file = "regex-2023.6.3-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:824bf3ac11001849aec3fa1d69abcb67aac3e150a933963fb12bda5151fe1bfd"},
     {file = "regex-2023.6.3-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:05ed27acdf4465c95826962528f9e8d41dbf9b1aa8531a387dee6ed215a3e9ef"},
@@ -3697,6 +3816,10 @@ regex = [
 requests = [
     {file = "requests-2.31.0-py3-none-any.whl", hash = "sha256:58cd2187c01e70e6e26505bca751777aa9f2ee0b7f4300988b709f44e013003f"},
     {file = "requests-2.31.0.tar.gz", hash = "sha256:942c5a758f98d790eaed1a29cb6eefc7ffb0d1cf7af05c3d2791656dbd6ad1e1"},
+]
+rq = [
+    {file = "rq-1.15.1-py2.py3-none-any.whl", hash = "sha256:6e243d8d9c4af4686ded4b01b25ea1ff4bac4fc260b02638fbe9c8c17b004bd1"},
+    {file = "rq-1.15.1.tar.gz", hash = "sha256:1f49f4ac1a084044bb8e95b3f305c0bf17e55618b08c18e0b60c080f12d6f008"},
 ]
 safetensors = [
     {file = "safetensors-0.3.1-cp310-cp310-macosx_10_11_x86_64.whl", hash = "sha256:2ae9b7dd268b4bae6624729dac86deb82104820e9786429b0583e5168db2f770"},
@@ -4064,6 +4187,14 @@ transformers = [
 types-aiofiles = [
     {file = "types-aiofiles-23.1.0.4.tar.gz", hash = "sha256:89a58cd0ae93b37a22c323c22d250bd65dde6833f6c6f3c1824784e56f47109f"},
     {file = "types_aiofiles-23.1.0.4-py3-none-any.whl", hash = "sha256:65a862f0d36e6b8e1b2df601ba7aeeb2eba8e2f9764ba9d0989bdd498ed8c857"},
+]
+types-pyopenssl = [
+    {file = "types-pyOpenSSL-23.2.0.1.tar.gz", hash = "sha256:beeb5d22704c625a1e4b6dc756355c5b4af0b980138b702a9d9f932acf020903"},
+    {file = "types_pyOpenSSL-23.2.0.1-py3-none-any.whl", hash = "sha256:0568553f104466f1b8e0db3360fbe6770137d02e21a1a45c209bf2b1b03d90d4"},
+]
+types-redis = [
+    {file = "types-redis-4.5.5.2.tar.gz", hash = "sha256:2fe82f374d9dddf007deaf23d81fddcfd9523d9522bf11523c5c43bc5b27099e"},
+    {file = "types_redis-4.5.5.2-py3-none-any.whl", hash = "sha256:bf8692252038dbe03b007ca4fde87d3ae8e10610854a6858e3bf5d01721a7c4b"},
 ]
 typing-extensions = [
     {file = "typing_extensions-4.6.3-py3-none-any.whl", hash = "sha256:88a4153d8505aabbb4e13aacb7c486c2b4a33ca3b3f807914a9b4c844c471c26"},
