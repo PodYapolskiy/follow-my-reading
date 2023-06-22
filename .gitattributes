@@ -1,3 +1,0 @@
-models_plugins/forVOSK filter=lfs diff=lfs merge=lfs -text
-models_plugins/htr_pipeline filter=lfs diff=lfs merge=lfs -text
-models_plugins/forHTR filter=lfs diff=lfs merge=lfs -text
