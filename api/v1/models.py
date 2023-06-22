@@ -38,6 +38,16 @@ class AudioProcessingResponse(BaseModel):
     text: str
 
 
+class AudioChunk(BaseModel):
+    start: int
+    end: int
+    text: str
+
+
+class SplitAudioResponse(BaseModel):
+    data: List[AudioChunk]
+
+
 class TaskCreateRequest(BaseModel):
     audio_file: UUID
     image_file: UUID

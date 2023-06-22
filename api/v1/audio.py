@@ -6,11 +6,14 @@ from .models import (
     ModelData,
     AudioProcessingRequest,
     AudioProcessingResponse,
+    AudioChunk,
+    SplitAudioResponse
 )
 from typing import Dict, Annotated
 from core.models import get_audio_models
 from core.models.base import AudioModel
 from core.processing.audio import extract_text
+from core.processing.audio_split import duration, split_audio
 import aiofiles
 
 router = APIRouter(prefix="/audio", tags=["audio"])
@@ -56,3 +59,28 @@ async def process_audio(request: AudioProcessingRequest):
     return AudioProcessingResponse(
         text=await extract_text(request.audio_model, str(request.audio_file))
     )
+
+
+@router.post("/split", response_model=SplitAudioResponse)
+async def audio_split_res(request: AudioProcessingRequest, interval: int | float = 10):
+    data = []
+    intervals = []
+    cur = 0
+    dur = duration(str(request.audio_file))
+    # Might not be the final interval separation algorithm
+    # Might have mistakes
+    while True:
+        if not dur - cur - interval < 0:
+            intervals.append((cur, cur + interval))
+            cur += interval
+        elif (not dur - cur > interval) and dur - cur > 0:
+            intervals.append((cur, dur))
+            break
+        elif dur == cur:
+            break
+
+    unipath = split_audio("./temp_data/audio/" + str(request.audio_file), intervals)
+    for i in range(len(intervals)):
+        tmp = await extract_text(request.audio_model, str(i))
+        data.append(AudioChunk(start=intervals[i][0], end=intervals[i][1], text=tmp))
+    return AudioProcessingResponse(data=data)
