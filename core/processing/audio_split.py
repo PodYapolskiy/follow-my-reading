@@ -1,6 +1,12 @@
 from pydub import AudioSegment, silence
 from os import path, mkdir
 from math import log10 as lg
+from librosa import get_duration
+
+
+def duration(audio: str):
+    filepath = "./temp_data/audio/" + audio
+    return get_duration(path=filepath)
 
 
 def dbfs_to_percents(dbfs):
@@ -16,7 +22,7 @@ def split_audio(file: str | AudioSegment, intervals):
     # intervals is the set of intervals to be returned in format of [(begin(seconds), end(seconds)),]
     # returns the absolute path to where the split segments were stored
 
-    store_path = "out"
+    store_path = "./temp_data/audio"  # a temporal change just for extract_text to work with split audio
 
     if not path.exists(store_path):
         mkdir(store_path)

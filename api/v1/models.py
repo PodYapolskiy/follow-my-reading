@@ -34,8 +34,15 @@ class AudioProcessingRequest(BaseModel):
     audio_model: str
 
 
+class AudioChunk(BaseModel):
+    start: float
+    end: float
+    text: str
+
+
 class AudioProcessingResponse(BaseModel):
     text: str
+    data: List[AudioChunk]
 
 
 class TaskCreateRequest(BaseModel):
