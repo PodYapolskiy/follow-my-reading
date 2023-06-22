@@ -20,6 +20,14 @@ async def create_task(request: TaskCreateRequest):
     return TaskCreateResponse(task_id=task_id)
 
 
+@router.get("/status")
+async def get_status(uuid: UUID):
+    task = tasks.get_tasks().get(uuid)
+    if task:
+        return { "status": task.get_status(), "ready": task.is_finished() }
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task is not found")
+
+
 @router.get("/tasks")
 async def get_all_tasks():
     # todo: this is demo. to be removed in the future
