@@ -68,7 +68,6 @@ async def audio_split_res(request: AudioProcessingRequest, interval: int | float
     cur = 0
     dur = duration(str(request.audio_file))
     # Might not be the final interval separation algorithm
-    # Might have mistakes
     while True:
         if not dur - cur - interval < 0:
             intervals.append((cur, cur + interval))
