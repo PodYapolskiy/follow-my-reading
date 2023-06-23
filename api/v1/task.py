@@ -26,8 +26,8 @@ async def create_task(request: TaskCreateRequest):
 
 
 @router.get("/status", response_model=TaskStatusResponse)
-async def get_status(request: TaskStatusRequest):
-    task = tasks.get_tasks().get(request.uuid)
+async def get_status(task_id: UUID):
+    task = tasks.get_tasks().get(task_id))
     if task:
         return TaskStatusResponse(status=task.get_status(), ready=task.is_finished())
     raise HTTPException(
