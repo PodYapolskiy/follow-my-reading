@@ -54,3 +54,12 @@ class TaskCreateRequest(BaseModel):
 
 class TaskCreateResponse(BaseModel):
     task_id: UUID
+
+
+class TaskStatusRequest(BaseModel):
+    uuid: UUID
+
+
+class TaskStatusResponse(BaseModel):
+    status: str
+    ready: bool
