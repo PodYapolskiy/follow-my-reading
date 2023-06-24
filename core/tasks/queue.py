@@ -3,6 +3,7 @@ from rq.job import Job
 from typing import Dict
 from uuid import UUID, uuid4
 from redis import Redis
+from .worker import ModelsWorker
 
 tasks: Dict[UUID, Job] = {}
 
