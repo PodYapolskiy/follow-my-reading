@@ -6,11 +6,13 @@ from .models import (
     ModelData,
     AudioProcessingRequest,
     AudioProcessingResponse,
+    AudioChunk,
 )
 from typing import Dict, Annotated
 from core.models import get_audio_models
 from core.models.base import AudioModel
 from core.processing.audio import extract_text
+from core.processing.audio_split import duration, split_audio
 import aiofiles
 
 router = APIRouter(prefix="/audio", tags=["audio"])
@@ -53,6 +55,19 @@ async def get_models(
 
 @router.post("/process", response_model=AudioProcessingResponse)
 async def process_audio(request: AudioProcessingRequest):
-    return AudioProcessingResponse(
-        text=await extract_text(request.audio_model, str(request.audio_file))
-    )
+    data = []
+    if request.audio_model == "whisper":
+        res = get_audio_models()["whisper"].model.transcribe(
+            "./temp_data/audio/" + str(request.audio_file)
+        )
+
+        for item in res.get("segments"):
+            data.append(
+                AudioChunk(
+                    start=item.get("start"), end=item.get("end"), text=item.get("text")
+                )
+            )
+    else:
+        res = {"text": extract_text(request.audio_model, str(request.audio_file))}
+
+    return AudioProcessingResponse(text=res.get("text"), data=data)
