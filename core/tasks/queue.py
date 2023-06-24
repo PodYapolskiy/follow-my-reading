@@ -16,11 +16,11 @@ task_queue = Queue(connection=Redis())
 
 
 def put_in_queue(function, *args, **kwargs) -> UUID:
-    task_uuid = uuid4()
     task = task_queue.enqueue(function, *args, **kwargs)
-    tasks[task_uuid] = task
+    task_id = UUID(task.get_id())
+    tasks[task_id] = task
 
-    return task_uuid
+    return task_id
 
 
 def terminate(uuid: UUID):
