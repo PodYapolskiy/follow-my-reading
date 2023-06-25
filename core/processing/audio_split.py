@@ -76,6 +76,3 @@ def split_silence(file, max_interval=30, cutoff_ratio=0.05):
     return split_audio(
         audio, [(i[0] / 1000, i[1] / 1000) for i in audio_intervals]
     ), len(audio_intervals)
-
-
-# split_silence("D:\\Downloads\\TextTo.mp3")
