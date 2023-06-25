@@ -12,7 +12,7 @@ def get_tasks():
     return tasks
 
 
-task_queue = Queue(connection=Redis())
+task_queue = Queue(connection=Redis(), default_timeout=36000)
 
 
 def put_in_queue(function, *args, **kwargs) -> UUID:

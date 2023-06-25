@@ -33,6 +33,17 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "arrow"
+version = "1.2.3"
+description = "Better dates & times for Python"
+category = "dev"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+python-dateutil = ">=2.7.0"
+
+[[package]]
 name = "astor"
 version = "0.8.1"
 description = "Read/rewrite/write Python ASTs"
@@ -1258,6 +1269,7 @@ python-versions = ">=3.7"
 [package.source]
 type = "url"
 url = "https://github.com/pymupdf/PyMuPDF/archive/refs/tags/1.20.0.zip"
+
 [[package]]
 name = "pyparsing"
 version = "3.1.0"
@@ -1450,6 +1462,20 @@ python-versions = ">=3.6"
 [package.dependencies]
 click = ">=5.0.0"
 redis = ">=4.0.0"
+
+[[package]]
+name = "rq-dashboard"
+version = "0.6.1"
+description = "rq-dashboard is a general purpose, lightweight, web interface to monitor your RQ queues, jobs, and workers in realtime."
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+arrow = "*"
+Flask = "*"
+redis = "*"
+rq = ">=1.0"
 
 [[package]]
 name = "safetensors"
@@ -2000,7 +2026,7 @@ watchdog = ["watchdog (>=2.3)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "b200ec5150f3cc906db841fd27c983d79715599cf3e39e43fc9878306aeda9ae"
+content-hash = "7f21a358e203d536ac9fec0490428212336d02f1a845a3b66ad006e514790a45"
 
 [metadata.files]
 aiofiles = [
@@ -2014,6 +2040,10 @@ anyio = [
 appdirs = [
     {file = "appdirs-1.4.4-py2.py3-none-any.whl", hash = "sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128"},
     {file = "appdirs-1.4.4.tar.gz", hash = "sha256:7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41"},
+]
+arrow = [
+    {file = "arrow-1.2.3-py3-none-any.whl", hash = "sha256:5a49ab92e3b7b71d96cd6bfcc4df14efefc9dfa96ea19045815914a6ab6b1fe2"},
+    {file = "arrow-1.2.3.tar.gz", hash = "sha256:3934b30ca1b9f292376d9db15b19446088d12ec58629bc3f0da28fd55fb633a1"},
 ]
 astor = [
     {file = "astor-0.8.1-py2.py3-none-any.whl", hash = "sha256:070a54e890cefb5b3739d19f30f5a5ec840ffc9c50ffa7d23cc9fc1a38ebbfc5"},
@@ -3820,6 +3850,9 @@ requests = [
 rq = [
     {file = "rq-1.15.1-py2.py3-none-any.whl", hash = "sha256:6e243d8d9c4af4686ded4b01b25ea1ff4bac4fc260b02638fbe9c8c17b004bd1"},
     {file = "rq-1.15.1.tar.gz", hash = "sha256:1f49f4ac1a084044bb8e95b3f305c0bf17e55618b08c18e0b60c080f12d6f008"},
+]
+rq-dashboard = [
+    {file = "rq-dashboard-0.6.1.tar.gz", hash = "sha256:95163f0a8413e6be277d60eada0125f1c4b230577c3fa538a31a77a2cb556f8a"},
 ]
 safetensors = [
     {file = "safetensors-0.3.1-cp310-cp310-macosx_10_11_x86_64.whl", hash = "sha256:2ae9b7dd268b4bae6624729dac86deb82104820e9786429b0583e5168db2f770"},
