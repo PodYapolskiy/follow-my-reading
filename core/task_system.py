@@ -1,23 +1,29 @@
-from rq import Queue
-from rq.worker import Worker
-from typing import Dict
-from uuid import UUID
-from redis import Redis
-from core.models import load_models
-from functools import lru_cache
+from huey import RedisHuey
+from core.plugins import load_plugins
+import logging
+
+scheduler = RedisHuey()
+
+plugins = load_plugins()
 
 
-@lru_cache
-def get_connection():
-    return Redis()
+@scheduler.task()
+def dynamic_plugin_call(class_name: str, function: str, *args, **kwargs):
+    logger = logging.getLogger("huey")
 
-
-@lru_cache
-def get_queue():
-    return Queue(connection=get_connection(), default_timeout=36000)
-
-
-class PluginWorker(Worker):
-    def __init__(self, *args, **kwargs):
-        load_models()
-        super().__init__(*args, **kwargs)
+    logger.info(">>> Searching target plugin")
+    target = None
+    for plugin in plugins:
+        if hasattr(plugin, class_name):
+            logger.info(">>> Target plugin found")
+            target = plugin
+            break
+    else:
+        logger.info(">>> Target plugin not found")
+        raise KeyError(f"No plugin contain class {class_name}")
+    logger.info(">>> Getting class object from target plugin")
+    cls = getattr(target, class_name)
+    logger.info(">>> Getting fuction from class")
+    func = getattr(cls, function)
+    logger.info(">>> Executing function")
+    return func(*args, **kwargs)  # Call the function.

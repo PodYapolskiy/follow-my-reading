@@ -76,13 +76,15 @@ def load_plugins():
     """
     `load_plugins` is a function, that iterates over all files in `./plugins` directory,
     which satify the mask "*_plugin.py", and dynamically imports them as modules,
-    thus loading them into the memory and triggering `@register_plugin` decorator
+    thus loading them into the memory and triggering `@register_plugin` decorator.
+    Returns loaded models as list of python objects.
     """
     # iterate over all *_plugin.py files in plugins directory
+    imported_modules = []
     for filepath in pathlib.Path("./plugins").glob("*_plugin.py"):
         # transform path to module name
         module_name = filepath.as_posix().replace("/", ".")[:-3]
         # import it, loading into the memory
-        importlib.import_module(module_name)
+        imported_modules.append(importlib.import_module(module_name))
 
-    print(AUDIO_PLUGINS, IMAGE_PLUGINS)
+    return imported_modules

@@ -6,13 +6,13 @@ from .models import (
     ModelData,
     AudioProcessingRequest,
     AudioProcessingResponse,
-    AudioChunk,
 )
-from typing import Dict, Annotated
 from core.plugins import AUDIO_PLUGINS
-from core.plugins.base import AudioProcessingPlugin
-from core.processing.audio import extract_text
-from core.processing.audio_split import duration, split_audio
+from core.plugins.base import AudioProcessingFunction
+from core import task_system
+from huey.api import Result
+from pathlib import Path
+import asyncio
 import aiofiles
 
 router = APIRouter(prefix="/audio", tags=["audio"])
@@ -53,19 +53,26 @@ async def get_models() -> ModelsDataReponse:
 
 @router.post("/process", response_model=AudioProcessingResponse)
 async def process_audio(request: AudioProcessingRequest):
-    data = []
-    if request.audio_model == "whisper":
-        res = AUDIO_PLUGINS["whisper"].model.transcribe(
-            "./temp_data/audio/" + str(request.audio_file)
+    plugin_info = AUDIO_PLUGINS.get(request.audio_model)
+
+    if plugin_info is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="No such model available"
         )
 
-        for item in res.get("segments"):
-            data.append(
-                AudioChunk(
-                    start=item.get("start"), end=item.get("end"), text=item.get("text")
-                )
-            )
-    else:
-        res = {"text": extract_text(request.audio_model, str(request.audio_file))}
+    filepath = Path("./temp_data/audio") / str(request.audio_file)
 
-    return AudioProcessingResponse(text=res.get("text"), data=data)
+    if not filepath.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="No such file available"
+        )
+
+    job: Result = task_system.dynamic_plugin_call(
+        plugin_info.class_name, AudioProcessingFunction, str(filepath)
+    )
+
+    extracted_text = await asyncio.get_running_loop().run_in_executor(
+        None, lambda: job.get(blocking=True)
+    )
+
+    return AudioProcessingResponse(text=extracted_text, data=[])
