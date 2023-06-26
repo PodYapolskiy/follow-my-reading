@@ -1,7 +1,8 @@
-from core.plugins import register_plugin
 import librosa
 import torch
 from transformers import Wav2Vec2ForCTC, Wav2Vec2Tokenizer
+
+from core.plugins import register_plugin
 
 
 @register_plugin

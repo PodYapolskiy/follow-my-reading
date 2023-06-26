@@ -1,17 +1,20 @@
+from pathlib import Path
 from uuid import UUID
+
 from fastapi import APIRouter, HTTPException, status
+from huey.api import Result
+
+from core import task_system
+from core.plugins import AUDIO_PLUGINS, IMAGE_PLUGINS
+from core.plugins.base import AudioProcessingFunction, ImageProcessingFunction
+from core.task_system import scheduler
+
 from .models import (
     TaskCreateRequest,
     TaskCreateResponse,
-    TaskStatusResponse,
     TaskResultsResponse,
+    TaskStatusResponse,
 )
-from core import task_system
-from core.task_system import scheduler
-from core.plugins import AUDIO_PLUGINS, IMAGE_PLUGINS
-from core.plugins.base import AudioProcessingFunction, ImageProcessingFunction
-from huey.api import Result
-from pathlib import Path
 
 router = APIRouter(prefix="/task", tags=["task"])
 

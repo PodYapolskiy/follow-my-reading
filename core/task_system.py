@@ -1,8 +1,9 @@
+import logging
+
 from huey import RedisHuey
-from huey.api import Result
+
 from core.plugins import load_plugins
 from core.processing.text import match
-import logging
 
 scheduler = RedisHuey()
 

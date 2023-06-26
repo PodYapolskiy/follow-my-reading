@@ -1,6 +1,7 @@
-from pydantic import BaseModel
+from typing import Any, List
 from uuid import UUID
-from typing import List, Any
+
+from pydantic import BaseModel
 
 
 class UploadFileResponse(BaseModel):

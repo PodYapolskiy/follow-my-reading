@@ -1,6 +1,6 @@
 from core.plugins.loader import (
-    register_plugin,
-    IMAGE_PLUGINS,
     AUDIO_PLUGINS,
+    IMAGE_PLUGINS,
     load_plugins,
+    register_plugin,
 )

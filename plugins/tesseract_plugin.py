@@ -1,5 +1,6 @@
-from core.plugins import register_plugin
 import pytesseract
+
+from core.plugins import register_plugin
 
 
 @register_plugin

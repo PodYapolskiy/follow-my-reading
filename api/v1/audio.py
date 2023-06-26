@@ -1,19 +1,22 @@
-from fastapi import APIRouter, UploadFile, HTTPException, status
+import asyncio
+from pathlib import Path
 from uuid import uuid4
-from .models import (
-    UploadFileResponse,
-    ModelsDataReponse,
-    ModelData,
-    AudioProcessingRequest,
-    AudioProcessingResponse,
-)
+
+import aiofiles
+from fastapi import APIRouter, HTTPException, UploadFile, status
+from huey.api import Result
+
+from core import task_system
 from core.plugins import AUDIO_PLUGINS
 from core.plugins.base import AudioProcessingFunction
-from core import task_system
-from huey.api import Result
-from pathlib import Path
-import asyncio
-import aiofiles
+
+from .models import (
+    AudioProcessingRequest,
+    AudioProcessingResponse,
+    ModelData,
+    ModelsDataReponse,
+    UploadFileResponse,
+)
 
 router = APIRouter(prefix="/audio", tags=["audio"])
 

@@ -1,8 +1,9 @@
-from core.plugins.base import BasePlugin, AudioProcessingPlugin, ImageProcessingPlugin
-from typing import Dict, Type, List
-from dataclasses import dataclass
 import importlib
 import pathlib
+from dataclasses import dataclass
+from typing import Dict, List, Type
+
+from core.plugins.base import AudioProcessingPlugin, BasePlugin, ImageProcessingPlugin
 
 
 @dataclass

@@ -1,20 +1,22 @@
-from fastapi import APIRouter, UploadFile, HTTPException, status
+import asyncio
+from pathlib import Path
 from uuid import uuid4
-from .models import (
-    UploadFileResponse,
-    ModelData,
-    ImageProcessingRequest,
-    ModelsDataReponse,
-    ImageProcessingResponse,
-)
+
 import aiofiles
+from fastapi import APIRouter, HTTPException, UploadFile, status
+from huey.api import Result
+
+from core import task_system
 from core.plugins import IMAGE_PLUGINS
 from core.plugins.base import ImageProcessingFunction
-from core import task_system
-from huey.api import Result
-from pathlib import Path
-import asyncio
 
+from .models import (
+    ImageProcessingRequest,
+    ImageProcessingResponse,
+    ModelData,
+    ModelsDataReponse,
+    UploadFileResponse,
+)
 
 router = APIRouter(prefix="/image", tags=["image"])
 
