@@ -1,3 +1,5 @@
+# NOTE: temporary disabled
+
 # from core.models import register_model
 # import cv2
 # from models_plugins.htr_pipeline import read_page, DetectorConfig, LineClusteringConfig, ReaderConfig, PrefixTree
