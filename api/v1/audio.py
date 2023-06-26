@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, HTTPException, status, Depends
+from fastapi import APIRouter, UploadFile, HTTPException, status
 from uuid import uuid4
 from .models import (
     UploadFileResponse,
