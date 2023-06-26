@@ -9,8 +9,8 @@ from .models import (
 )
 import aiofiles
 from typing import Dict, Annotated
-from core.models import get_image_models
-from core.models.base import ImageModel
+from core.plugins import IMAGE_PLUGINS
+from core.plugins.base import ImageProcessingPlugin
 from core.processing.image import extract_text
 
 
@@ -41,13 +41,11 @@ async def upload_image(upload_file: UploadFile) -> UploadFileResponse:
 
 
 @router.get("/models", response_model=ModelsDataReponse)
-async def get_models(
-    image_models: Annotated[Dict[str, ImageModel], Depends(get_image_models)]
-) -> ModelsDataReponse:
+async def get_models() -> ModelsDataReponse:
     # Transform any known image model into ModelData object format and
     # store them as a list inside ModelsDataResponse
     return ModelsDataReponse(
-        models=[ModelData.from_orm(model) for model in image_models.values()]
+        models=[ModelData.from_orm(model) for model in IMAGE_PLUGINS.values()]
     )
 
 

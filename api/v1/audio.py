@@ -9,8 +9,8 @@ from .models import (
     AudioChunk,
 )
 from typing import Dict, Annotated
-from core.models import get_audio_models
-from core.models.base import AudioModel
+from core.plugins import AUDIO_PLUGINS
+from core.plugins.base import AudioProcessingPlugin
 from core.processing.audio import extract_text
 from core.processing.audio_split import duration, split_audio
 import aiofiles
@@ -43,13 +43,11 @@ async def upload_audio(upload_file: UploadFile) -> UploadFileResponse:
 
 
 @router.get("/models", response_model=ModelsDataReponse)
-async def get_models(
-    audio_models: Annotated[Dict[str, AudioModel], Depends(get_audio_models)]
-) -> ModelsDataReponse:
+async def get_models() -> ModelsDataReponse:
     # Transform any known audio model into ModelData object format and
     # store them as a list inside ModelsDataResponse
     return ModelsDataReponse(
-        models=[ModelData.from_orm(model) for model in audio_models.values()]
+        models=[ModelData.from_orm(model) for model in AUDIO_PLUGINS.values()]
     )
 
 
@@ -57,7 +55,7 @@ async def get_models(
 async def process_audio(request: AudioProcessingRequest):
     data = []
     if request.audio_model == "whisper":
-        res = get_audio_models()["whisper"].model.transcribe(
+        res = AUDIO_PLUGINS["whisper"].model.transcribe(
             "./temp_data/audio/" + str(request.audio_file)
         )
 

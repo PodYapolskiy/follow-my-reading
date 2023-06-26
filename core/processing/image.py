@@ -1,10 +1,10 @@
-from core.models import get_image_models
+from core.plugins import IMAGE_PLUGINS
 import os
 from fastapi import HTTPException, status
 
 
 def extract_text(model_name: str, file_name: str):
-    model = get_image_models().get(model_name)
+    model = IMAGE_PLUGINS.get(model_name)
 
     if model is None:
         raise HTTPException(

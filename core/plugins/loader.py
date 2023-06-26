@@ -1,20 +1,47 @@
 from core.plugins.base import BasePlugin, AudioProcessingPlugin, ImageProcessingPlugin
-from typing import Dict, Type
+from typing import Dict, Type, List
+from dataclasses import dataclass
 import importlib
 import pathlib
+
+
+@dataclass
+class PluginInfo:
+    """
+    `PluginInfo` is a descriptive dataclass, which contains system information
+    about a plugin
+    """
+
+    name: str
+    class_name: str
+    description: str
+    languages: List[str]
+
+    @staticmethod
+    def from_baseplugin_cls(cls: Type[BasePlugin]):
+        """
+        `from_baseplugin_cls` is a static method (constructor), which build `PluginInfo`
+        using date from a class, that satisfy to `BasePlugin` protocol
+        """
+        return PluginInfo(
+            name=cls.name,
+            class_name=cls.__name__,
+            description=cls.description,
+            languages=cls.languages,
+        )
 
 
 """
 AUDIO_PLUGINS is a dictionary containing plugin names as keys
 and plugin class names as values. E.g.: 'whisper' -> 'WhisperPlugin'
 """
-AUDIO_PLUGINS: Dict[str, str] = {}
+AUDIO_PLUGINS: Dict[str, PluginInfo] = {}
 
 """
 IMAGE_PLUGINS is a dictionary containing plugin names as keys
 and plugin class names as values. E.g.: 'easyocr' -> 'EasyOCRPlugin'
 """
-IMAGE_PLUGINS: Dict[str, str] = {}
+IMAGE_PLUGINS: Dict[str, PluginInfo] = {}
 
 
 def register_plugin(plugin_cls: Type[BasePlugin]):
@@ -30,14 +57,14 @@ def register_plugin(plugin_cls: Type[BasePlugin]):
     if isinstance(plugin_cls, ImageProcessingPlugin):
         # if class matches ImageModel interface
 
-        # put {plugin class name} into dictionary with key {plugin name}
-        IMAGE_PLUGINS[plugin_cls.name] = plugin_cls.__name__
+        # put {plugin class name} into dictionary with key {plugin info}
+        IMAGE_PLUGINS[plugin_cls.name] = PluginInfo.from_baseplugin_cls(plugin_cls)
 
     elif isinstance(plugin_cls, AudioProcessingPlugin):
         # if object matches AudioModel interface
 
-        # put {plugin class name} into dictionary with key {plugin name}
-        AUDIO_PLUGINS[plugin_cls.name] = plugin_cls.__name__
+        # put {plugin class name} into dictionary with key {plugin info}
+        AUDIO_PLUGINS[plugin_cls.name] = PluginInfo.from_baseplugin_cls(plugin_cls)
     else:
         # todo: warning about not matching interface
         return
@@ -57,3 +84,5 @@ def load_plugins():
         module_name = filepath.as_posix().replace("/", ".")[:-3]
         # import it, loading into the memory
         importlib.import_module(module_name)
+
+    print(AUDIO_PLUGINS, IMAGE_PLUGINS)
