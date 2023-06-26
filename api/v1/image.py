@@ -72,7 +72,7 @@ async def process_image(request: ImageProcessingRequest):
     )
 
     extracted_text = await asyncio.get_running_loop().run_in_executor(
-        None, lambda: job.get(blocking=True)
+        None, lambda: job.get(blocking=True, preserve=True)
     )
 
     return ImageProcessingResponse(text=extracted_text)

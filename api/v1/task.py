@@ -5,108 +5,78 @@ from .models import (
     TaskCreateResponse,
     TaskStatusResponse,
     MultipleTasksStatusResponse,
+    TaskResultsResponse,
 )
-from core import task_system, processing
-from rq.job import Job
-from rq.exceptions import NoSuchJobError
-from rq.registry import (
-    StartedJobRegistry,
-    FailedJobRegistry,
-    ScheduledJobRegistry,
-    FinishedJobRegistry,
-)
-
+from core import task_system
+from core.task_system import scheduler
+from core.plugins import AUDIO_PLUGINS, IMAGE_PLUGINS
+from core.plugins.base import AudioProcessingFunction, ImageProcessingFunction
+from huey.api import Result
+from pathlib import Path
 
 router = APIRouter(prefix="/task", tags=["task"])
 
 
 @router.post("/create", response_model=TaskCreateResponse)
 async def create_task(request: TaskCreateRequest):
-    job = task_system.get_queue().enqueue(
-        processing.task.find_difference,
-        request.audio_model,
-        request.image_model,
-        str(request.audio_file),
-        str(request.image_file),
+    image_plugin_info = IMAGE_PLUGINS.get(request.image_model)
+    audio_plugin_info = AUDIO_PLUGINS.get(request.audio_model)
+    files_dir = Path("./temp_data")
+    image_file_path = files_dir / "image" / str(request.image_file)
+    audio_file_path = files_dir / "audio" / str(request.audio_file)
+
+    if image_plugin_info is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No such image model available",
+        )
+
+    if audio_plugin_info is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No such audio model available",
+        )
+
+    if not image_file_path.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No such image file available",
+        )
+
+    if not audio_file_path.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No such audio file available",
+        )
+
+    job: Result = task_system.compate_image_audio(
+        audio_plugin_info.class_name,
+        AudioProcessingFunction,
+        str(audio_file_path),
+        image_plugin_info.class_name,
+        ImageProcessingFunction,
+        str(image_file_path),
     )
-    return TaskCreateResponse(task_id=UUID(job.get_id()))
+    return TaskCreateResponse(task_id=UUID(job.id))
 
 
 @router.get("/status", response_model=TaskStatusResponse)
-async def get_status(task_id: UUID):
-    try:
-        job = Job.fetch(id=str(task_id), connection=task_system.get_connection())
-
+async def get_job_status(task_id: UUID):
+    if scheduler.result(str(task_id), preserve=True) is None:
         return TaskStatusResponse(
-            task_id=task_id, status=job.get_status(), ready=job.is_finished
+            task_id=task_id, status="results are not available", ready=False
         )
-    except NoSuchJobError:
+    else:
+        return TaskStatusResponse(task_id=task_id, status="finished", ready=True)
+
+
+@router.get("/result", response_model=TaskResultsResponse)
+async def get_result(task_id: UUID):
+    data = scheduler.result(str(task_id), preserve=True)
+    if data is not None:
+        return TaskResultsResponse(data=data)
+    else:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="No such job exist"
-        )
-
-
-@router.get("/started")
-async def get_started_tasks():
-    jobs = StartedJobRegistry(queue=task_system.get_queue()).get_job_ids()
-    data = []
-    for job_id in jobs:
-        job = Job.fetch(id=job_id, connection=task_system.get_connection())
-        data.append(
-            TaskStatusResponse(
-                task_id=UUID(job.get_id()),
-                status=job.get_status(),
-                ready=job.is_finished,
-            )
-        )
-
-    return MultipleTasksStatusResponse(data=data)
-
-
-@router.get("/failed")
-async def get_failed_tasks():
-    jobs = FailedJobRegistry(queue=task_system.get_queue()).get_job_ids()
-    data = []
-    for job_id in jobs:
-        job = Job.fetch(id=job_id, connection=task_system.get_connection())
-        data.append(
-            TaskStatusResponse(
-                task_id=UUID(job.get_id()),
-                status=job.get_status(),
-                ready=job.is_finished,
-            )
-        )
-
-    return MultipleTasksStatusResponse(data=data)
-
-
-@router.get("/scheduled")
-async def get_scheduled_tasks():
-    jobs = ScheduledJobRegistry(queue=task_system.get_queue()).get_job_ids()
-    data = []
-    for job_id in jobs:
-        job = Job.fetch(id=job_id, connection=task_system.get_connection())
-        data.append(
-            TaskStatusResponse(
-                task_id=UUID(job.get_id()),
-                status=job.get_status(),
-                ready=job.is_finished,
-            )
-        )
-
-    return MultipleTasksStatusResponse(data=data)
-
-
-@router.get("/finished")
-async def get_finished_tasks():
-    jobs = FinishedJobRegistry(queue=task_system.get_queue()).get_job_ids()
-    data = []
-    for job_id in jobs:
-        job = Job.fetch(id=job_id, connection=task_system.get_connection())
-        data.append(
-            TaskStatusResponse(
-                task_id=UUID(job.get_id()),
-                status=job.get_status(),
-                ready=job.is_finished,
-            )
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Results are not ready yet or no task with such id exist",
         )

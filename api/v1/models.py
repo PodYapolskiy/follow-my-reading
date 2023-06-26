@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from uuid import UUID
-from typing import List
+from typing import List, Any
 
 
 class UploadFileResponse(BaseModel):
@@ -60,6 +60,10 @@ class TaskStatusResponse(BaseModel):
     task_id: UUID
     status: str
     ready: bool
+
+
+class TaskResultsResponse(BaseModel):
+    data: Any
 
 
 class MultipleTasksStatusResponse(BaseModel):
