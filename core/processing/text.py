@@ -87,4 +87,64 @@ def match(first_text: str, second_text: str):
             first_index += len(current_str[0])
         else:
             first_index += len(current_str)
-    return answer
+    return answer, lev_dp[-1][-1]
+
+
+def find(lst, start_i, sym, step):
+    # helper function
+    # step is the step of the cycle (with backwards movement as well)
+    # lst is a list
+    # start_i is from which point do you need to find
+    # sym is the symbol to be found
+
+    if step < 0 and type(step) == int:
+        for i in range(start_i, -1, step):
+            if lst[i] == sym:
+                return i
+
+        return -1
+    elif step > 0 and type(step) == int:
+        for i in range(start_i, len(lst), step):
+            if lst[i] == sym:
+                return i
+
+        return len(lst)
+    else:
+        raise ValueError("step of 0 or not int step")
+
+
+def match_phrases(phrases, text, margin=1.3):
+    # phrases is an iterable of strings to be matched against the text
+    # text is the text to match against
+    # margin is the max size of the window in which we search for the phrase relative to len(phrase)
+    # modify margin as
+
+    answers = []
+    for i in phrases:
+        window = int(len(i) * margin)
+        best_window = [[], 463784628768273]
+        for j in range(window, len(text)+1):
+            new_ans, lev_dist = match(i, text[j-window:j])
+            if best_window[1] > lev_dist:
+                best_window = [new_ans, lev_dist]
+        ph_ans = best_window[0]
+
+        first_word = find(ph_ans[0][2], len(ph_ans[0][2]) - len(ph_ans[0][1]) - 1, ' ', -1)
+        ph_ans[0] = (ph_ans[0][0], ph_ans[0][1],  ph_ans[0][2][first_word+1:])
+
+        if ph_ans[0][2] == "" and ph_ans[0][1] == "":
+            ph_ans.pop(0)
+
+        last_word = find(ph_ans[-1][2], len(ph_ans[-1][1]), ' ', 1)
+        ph_ans[-1] = (ph_ans[-1][0], ph_ans[-1][1], ph_ans[-1][2][:last_word])
+
+        if ph_ans[-1][2] == "" and ph_ans[-1][1] == "":
+            ph_ans.pop()
+
+        answers.append(ph_ans)
+    return answers
+
+
+# for i in match_phrases(["боится зла?» Конец", "Он нашёл Дио Брандо в кране в гимназии неподалеку от кори"],
+#                        """Когда Александр Македонский пришёл в Аттику, то, разумеется, захотел познакомиться с прославленным «маргиналом» как и многие прочие. Плутарх рассказывает, что Александр долго ждал, пока сам Диоген придет к нему выразить свое почтение, но философ преспокойно проводил время у себя. Тогда Александр сам решил навестить его. Он нашёл Диогена в Крании (в гимнасии неподалёку от Коринфа), когда тот грелся на солнце. Александр подошёл к нему и сказал: «Я — великий царь Александр». «А я, — ответил Диоген, — собака Диоген». «И за что тебя зовут собакой?» «Кто бросит кусок — тому виляю, кто не бросит — облаиваю, кто злой человек — кусаю». «А меня ты боишься?» — спросил Александр. «А что ты такое, — спросил Диоген, — зло или добро?» «Добро», — сказал тот. «А кто же боится добра?» Наконец, Александр сказал: «Проси у меня чего хочешь». «Отойди, ты заслоняешь мне солнце», — сказал Диоген и продолжил греться. На обратном пути, в ответ на шутки своих приятелей, которые потешались над философом, Александр якобы даже заметил: «Если бы я не был Александром, то хотел бы стать Диогеном»."""):
+#     print(i)
