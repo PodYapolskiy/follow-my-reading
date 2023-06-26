@@ -7,6 +7,22 @@ pip install poetry
 poetry install
 ```
 
+## Launch
+Run redis server
+```bash
+redis-server
+```
+
+Run huey consumer
+```bash
+huey_consumer.py core.task_system.scheduler -n -k thread
+```
+
+Run server
+```
+uvicorn main:app
+```
+
 ## Models
 
 ### EasyOCR
