@@ -31,14 +31,16 @@ def register_model(cls: ModelPlugin):
         models_obj = audio_models
     else:
         # todo: warning about not matching interface
-        return
+        return cls
 
     if cls.name in models_obj:
         # todo: warning about not unique name
-        return
+        return cls
 
     # register instanse by static name
     models_obj[cls.name] = instance
+
+    return cls
 
 
 def load_models():

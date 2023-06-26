@@ -25,3 +25,5 @@ More: https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.6/doc/doc_en/quic
 ```bash
 paddleocr --image_dir image.jpg --use_angle_cls true --lang=ru --use_gpu false
 ```
+
+

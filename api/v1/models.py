@@ -56,10 +56,11 @@ class TaskCreateResponse(BaseModel):
     task_id: UUID
 
 
-class TaskStatusRequest(BaseModel):
-    uuid: UUID
-
-
 class TaskStatusResponse(BaseModel):
+    task_id: UUID
     status: str
     ready: bool
+
+
+class MultipleTasksStatusResponse(BaseModel):
+    data: List[TaskStatusResponse]
