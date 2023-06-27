@@ -1,18 +1,22 @@
-from fastapi import APIRouter, UploadFile, HTTPException, status, Depends
+import asyncio
+from pathlib import Path
 from uuid import uuid4
-from .models import (
-    UploadFileResponse,
-    ModelData,
-    ImageProcessingRequest,
-    ModelsDataReponse,
-    ImageProcessingResponse,
-)
-import aiofiles
-from typing import Dict, Annotated
-from core.models import get_image_models
-from core.models.base import ImageModel
-from core.processing.image import extract_text
 
+import aiofiles
+from fastapi import APIRouter, HTTPException, UploadFile, status
+from huey.api import Result
+
+from core import task_system
+from core.plugins import IMAGE_PLUGINS
+from core.plugins.base import ImageProcessingFunction
+
+from .models import (
+    ImageProcessingRequest,
+    ImageProcessingResponse,
+    ModelData,
+    ModelsDataReponse,
+    UploadFileResponse,
+)
 
 router = APIRouter(prefix="/image", tags=["image"])
 
@@ -41,18 +45,36 @@ async def upload_image(upload_file: UploadFile) -> UploadFileResponse:
 
 
 @router.get("/models", response_model=ModelsDataReponse)
-async def get_models(
-    image_models: Annotated[Dict[str, ImageModel], Depends(get_image_models)]
-) -> ModelsDataReponse:
+async def get_models() -> ModelsDataReponse:
     # Transform any known image model into ModelData object format and
     # store them as a list inside ModelsDataResponse
     return ModelsDataReponse(
-        models=[ModelData.from_orm(model) for model in image_models.values()]
+        models=[ModelData.from_orm(model) for model in IMAGE_PLUGINS.values()]
     )
 
 
 @router.post("/process", response_model=ImageProcessingResponse)
 async def process_image(request: ImageProcessingRequest):
-    return ImageProcessingResponse(
-        text=await extract_text(request.image_model, str(request.image_file))
+    plugin_info = IMAGE_PLUGINS.get(request.image_model)
+
+    if plugin_info is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="No such model available"
+        )
+
+    filepath = Path("./temp_data/image") / str(request.image_file)
+
+    if not filepath.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="No such file available"
+        )
+
+    job: Result = task_system.dynamic_plugin_call(
+        plugin_info.class_name, ImageProcessingFunction, str(filepath)
     )
+
+    extracted_text = await asyncio.get_running_loop().run_in_executor(
+        None, lambda: job.get(blocking=True, preserve=True)
+    )
+
+    return ImageProcessingResponse(text=extracted_text)

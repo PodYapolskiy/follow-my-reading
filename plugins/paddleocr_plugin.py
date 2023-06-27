@@ -1,19 +1,21 @@
-from core.models import register_model
+# NOTE: temporary disabled
 
+# from core.plugins import register_plugin
 # from paddleocr import PaddleOCR
 
 
+# @register_plugin
 # class PaddleOCRPlugin:
 #     name = "paddleocr"
 #     languages = ["eng"]
 #     description = "An open universal and multifunctional source library."
 
-#     def __init__(self):
-#         self.ocr = PaddleOCR(lang="en")
+#     ocr = PaddleOCR(lang="en")
 
-#     def process_image(self, filename: str) -> str:
+#     @staticmethod
+#     def process_image(filename: str) -> str:
 #         result = ""
-#         for el in self.ocr.ocr(filename, cls=False)[0]:
+#         for el in PaddleOCRPlugin.ocr.ocr(filename, cls=False)[0]:
 #             print(el)
 #             result += el[1][0] + " "
 #         return result

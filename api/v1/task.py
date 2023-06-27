@@ -1,54 +1,84 @@
+from pathlib import Path
 from uuid import UUID
+
 from fastapi import APIRouter, HTTPException, status
+from huey.api import Result
+
+from core import task_system
+from core.plugins import AUDIO_PLUGINS, IMAGE_PLUGINS
+from core.plugins.base import AudioProcessingFunction, ImageProcessingFunction
+from core.task_system import scheduler
+
 from .models import (
     TaskCreateRequest,
     TaskCreateResponse,
-    TaskStatusRequest,
+    TaskResultsResponse,
     TaskStatusResponse,
 )
-from core import tasks, processing
-
 
 router = APIRouter(prefix="/task", tags=["task"])
 
 
 @router.post("/create", response_model=TaskCreateResponse)
 async def create_task(request: TaskCreateRequest):
-    task_id = tasks.put_in_queue(
-        processing.task.find_difference,
-        request.audio_model,
-        request.image_model,
-        str(request.audio_file),
-        str(request.image_file),
-    )
+    image_plugin_info = IMAGE_PLUGINS.get(request.image_model)
+    audio_plugin_info = AUDIO_PLUGINS.get(request.audio_model)
+    files_dir = Path("./temp_data")
+    image_file_path = files_dir / "image" / str(request.image_file)
+    audio_file_path = files_dir / "audio" / str(request.audio_file)
 
-    return TaskCreateResponse(task_id=task_id)
+    if image_plugin_info is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No such image model available",
+        )
+
+    if audio_plugin_info is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No such audio model available",
+        )
+
+    if not image_file_path.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No such image file available",
+        )
+
+    if not audio_file_path.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No such audio file available",
+        )
+
+    job: Result = task_system.compate_image_audio(
+        audio_plugin_info.class_name,
+        AudioProcessingFunction,
+        str(audio_file_path),
+        image_plugin_info.class_name,
+        ImageProcessingFunction,
+        str(image_file_path),
+    )
+    return TaskCreateResponse(task_id=UUID(job.id))
 
 
 @router.get("/status", response_model=TaskStatusResponse)
-async def get_status(task_id: UUID):
-    task = tasks.get_tasks().get(task_id)
-    if task:
-        return TaskStatusResponse(status=task.get_status(), ready=task.is_finished())
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND, detail="Task is not found"
-    )
-
-
-@router.get("/tasks")
-async def get_all_tasks():
-    # todo: this is demo. to be removed in the future
-    answer = {}
-    for uuid, task in tasks.get_tasks().items():
-        answer[uuid] = {"status": task.get_status(), "ended_at": task.ended_at}
-
-    return answer
-
-
-@router.delete("/terminate")
-async def terminate_task(uuid: UUID):
-    if tasks.get_tasks().get(uuid, None) is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Task is not Found"
+async def get_job_status(task_id: UUID):
+    if scheduler.result(str(task_id), preserve=True) is None:
+        return TaskStatusResponse(
+            task_id=task_id, status="results are not available", ready=False
         )
-    tasks.terminate(uuid)
+    else:
+        return TaskStatusResponse(task_id=task_id, status="finished", ready=True)
+
+
+@router.get("/result", response_model=TaskResultsResponse)
+async def get_result(task_id: UUID):
+    data = scheduler.result(str(task_id), preserve=True)
+    if data is not None:
+        return TaskResultsResponse(data=data)
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Results are not ready yet or no task with such id exist",
+        )

@@ -1,19 +1,22 @@
-from fastapi import APIRouter, UploadFile, HTTPException, status, Depends
+import asyncio
+from pathlib import Path
 from uuid import uuid4
+
+import aiofiles
+from fastapi import APIRouter, HTTPException, UploadFile, status
+from huey.api import Result
+
+from core import task_system
+from core.plugins import AUDIO_PLUGINS
+from core.plugins.base import AudioProcessingFunction
+
 from .models import (
-    UploadFileResponse,
-    ModelsDataReponse,
-    ModelData,
     AudioProcessingRequest,
     AudioProcessingResponse,
-    AudioChunk,
+    ModelData,
+    ModelsDataReponse,
+    UploadFileResponse,
 )
-from typing import Dict, Annotated
-from core.models import get_audio_models
-from core.models.base import AudioModel
-from core.processing.audio import extract_text
-from core.processing.audio_split import duration, split_audio
-import aiofiles
 
 router = APIRouter(prefix="/audio", tags=["audio"])
 
@@ -43,31 +46,36 @@ async def upload_audio(upload_file: UploadFile) -> UploadFileResponse:
 
 
 @router.get("/models", response_model=ModelsDataReponse)
-async def get_models(
-    audio_models: Annotated[Dict[str, AudioModel], Depends(get_audio_models)]
-) -> ModelsDataReponse:
+async def get_models() -> ModelsDataReponse:
     # Transform any known audio model into ModelData object format and
     # store them as a list inside ModelsDataResponse
     return ModelsDataReponse(
-        models=[ModelData.from_orm(model) for model in audio_models.values()]
+        models=[ModelData.from_orm(model) for model in AUDIO_PLUGINS.values()]
     )
 
 
 @router.post("/process", response_model=AudioProcessingResponse)
 async def process_audio(request: AudioProcessingRequest):
-    data = []
-    if request.audio_model == "whisper":
-        res = get_audio_models()["whisper"].model.transcribe(
-            "./temp_data/audio/" + str(request.audio_file)
+    plugin_info = AUDIO_PLUGINS.get(request.audio_model)
+
+    if plugin_info is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="No such model available"
         )
 
-        for item in res.get("segments"):
-            data.append(
-                AudioChunk(
-                    start=item.get("start"), end=item.get("end"), text=item.get("text")
-                )
-            )
-    else:
-        res = {"text": extract_text(request.audio_model, str(request.audio_file))}
+    filepath = Path("./temp_data/audio") / str(request.audio_file)
 
-    return AudioProcessingResponse(text=res.get("text"), data=data)
+    if not filepath.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="No such file available"
+        )
+
+    job: Result = task_system.dynamic_plugin_call(
+        plugin_info.class_name, AudioProcessingFunction, str(filepath)
+    )
+
+    extracted_text = await asyncio.get_running_loop().run_in_executor(
+        None, lambda: job.get(blocking=True, preserve=True)
+    )
+
+    return AudioProcessingResponse(text=extracted_text, data=[])
