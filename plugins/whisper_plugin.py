@@ -1,6 +1,6 @@
 import whisper
 
-from core.plugins import register_plugin
+from core.plugins import register_plugin, AudioChunk, AudioProcessingResult
 
 
 @register_plugin
@@ -12,5 +12,11 @@ class WhisperPlugin:
     model = whisper.load_model("base")
 
     @staticmethod
-    def process_audio(filename: str) -> str:
-        return WhisperPlugin.model.transcribe(filename)["text"]
+    def process_audio(filename: str) -> AudioProcessingResult:
+        model_response = WhisperPlugin.model.transcribe(filename)
+        chunks = [
+            AudioChunk(start=seg["start"], end=seg["end"], text=seg["text"])
+            for seg in model_response["segments"]
+        ]
+
+        return AudioProcessingResult(text=model_response["text"], segments=chunks)
