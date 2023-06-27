@@ -1,4 +1,16 @@
 from typing import List, Protocol, runtime_checkable
+from pydantic import BaseModel
+
+
+class AudioChunk(BaseModel):
+    start: float
+    end: float
+    text: str
+
+
+class AudioProcessingResult(BaseModel):
+    text: str
+    segments: List[AudioChunk]
 
 
 @runtime_checkable
@@ -42,7 +54,7 @@ class AudioProcessingPlugin(BasePlugin, Protocol):
     """
 
     @staticmethod
-    def process_audio(filename: str) -> str:
+    def process_audio(filename: str) -> AudioProcessingResult:
         ...
 
 

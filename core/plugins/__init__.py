@@ -4,3 +4,4 @@ from core.plugins.loader import (
     load_plugins,
     register_plugin,
 )
+from core.plugins.base import AudioChunk, AudioProcessingResult
