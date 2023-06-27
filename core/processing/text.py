@@ -87,7 +87,7 @@ def match(first_text: str, second_text: str):
             first_index += len(current_str[0])
         else:
             first_index += len(current_str)
-    return answer, lev_dp[-1][-1]
+    return answer
 
 
 def find(lst, start_i, sym, step):
@@ -113,35 +113,22 @@ def find(lst, start_i, sym, step):
         raise ValueError("step of 0 or not int step")
 
 
-def match_phrases(phrases, text, margin=1.3):
+def match_phrases(phrases, text):
     # phrases is an iterable of strings to be matched against the text
+    # it is assumed that all the strings together resemble the text
     # text is the text to match against
-    # margin is the max size of the window in which we search for the phrase relative to len(phrase)
-    # modify margin as
 
-    answers = []
-    for i in phrases:
-        window = int(len(i) * margin)
-        best_window = [[], 463784628768273]
-        for j in range(window, len(text)+1):
-            new_ans, lev_dist = match(i, text[j-window:j])
-            if best_window[1] > lev_dist:
-                best_window = [new_ans, lev_dist]
-        ph_ans = best_window[0]
+    answers = [[] for i in phrases]
+    full_answer = match(" ".join(phrases), text)
 
-        first_word = find(ph_ans[0][2], len(ph_ans[0][2]) - len(ph_ans[0][1]) - 1, ' ', -1)
-        ph_ans[0] = (ph_ans[0][0], ph_ans[0][1],  ph_ans[0][2][first_word+1:])
+    y = 0
+    cur_ind = 0
+    for i in full_answer:
+        while i[0] > cur_ind + len(phrases[y]):
+            cur_ind += 1 + len(phrases[y])
+            y += 1
+        answers[y].append((i[0] - cur_ind, i[1], i[2]))
 
-        if ph_ans[0][2] == "" and ph_ans[0][1] == "":
-            ph_ans.pop(0)
-
-        last_word = find(ph_ans[-1][2], len(ph_ans[-1][1]), ' ', 1)
-        ph_ans[-1] = (ph_ans[-1][0], ph_ans[-1][1], ph_ans[-1][2][:last_word])
-
-        if ph_ans[-1][2] == "" and ph_ans[-1][1] == "":
-            ph_ans.pop()
-
-        answers.append(ph_ans)
     return answers
 
 
@@ -174,6 +161,13 @@ def prep_image_text(s):
 
     return s.lower().strip()
 
-# for i in match_phrases(["боится зла?» Конец", "Он нашёл Дио Брандо в кране в гимназии неподалеку от кори"],
-#                        """Когда Александр Македонский пришёл в Аттику, то, разумеется, захотел познакомиться с прославленным «маргиналом» как и многие прочие. Плутарх рассказывает, что Александр долго ждал, пока сам Диоген придет к нему выразить свое почтение, но философ преспокойно проводил время у себя. Тогда Александр сам решил навестить его. Он нашёл Диогена в Крании (в гимнасии неподалёку от Коринфа), когда тот грелся на солнце. Александр подошёл к нему и сказал: «Я — великий царь Александр». «А я, — ответил Диоген, — собака Диоген». «И за что тебя зовут собакой?» «Кто бросит кусок — тому виляю, кто не бросит — облаиваю, кто злой человек — кусаю». «А меня ты боишься?» — спросил Александр. «А что ты такое, — спросил Диоген, — зло или добро?» «Добро», — сказал тот. «А кто же боится добра?» Наконец, Александр сказал: «Проси у меня чего хочешь». «Отойди, ты заслоняешь мне солнце», — сказал Диоген и продолжил греться. На обратном пути, в ответ на шутки своих приятелей, которые потешались над философом, Александр якобы даже заметил: «Если бы я не был Александром, то хотел бы стать Диогеном»."""):
-#     print(i)
+# phrases = ["В кабинете, полном дыма, шел разгaвор о войне,", "которая была объявлена манифестом, о наборе манифеста",
+#                         "еще никто не читал, но все знали о его появлении. граф сидел на манке между", "двумя куреювшими и разговаривавшими соседями. Граф сам",
+#                         "не курил и говорил, а, наклоняя свой амогус то на один бок, то на другой, с видимым удовольствием смотрел на куривших",
+#                         "и слушал разговор двух соседей своих, которых он отравил между собой."]
+# ans = match_phrases(phrases,
+#     "В кабинете, полном дыма, шел разговор о войне, которая была объявлена манифестом, о наборе. Манифеста еще никто не читал, но все знали о его появлении. Граф сидел на оттоманке между двумя курившими и разговаривавшими соседями. Граф сам не курил и не говорил, а, наклоняя голову то на один бок, то на другой, с видимым удовольствием смотрел на куривших и слушал разговор двух соседей своих, которых он стравил между собой.")
+# for i in range(len(phrases)):
+#     print(phrases[i])
+#     print(ans[i])
+#     print(phrases[i][ans[i][0][0]:len(ans[i][0][1]) + ans[i][0][0]])
