@@ -3,7 +3,7 @@ from pathlib import Path
 from uuid import uuid4
 
 import aiofiles
-from fastapi import APIRouter, HTTPException, UploadFile, status
+from fastapi import APIRouter, HTTPException, UploadFile, status, Depends
 from huey.api import Result
 
 from core import task_system
@@ -18,7 +18,9 @@ from .models import (
     UploadFileResponse,
 )
 
-router = APIRouter(prefix="/image", tags=["image"])
+from .auth import get_current_active_user
+
+router = APIRouter(prefix="/image", tags=["image"], dependencies=[Depends(get_current_active_user)])
 
 
 @router.post("/upload", response_model=UploadFileResponse)

@@ -3,13 +3,13 @@ from pathlib import Path
 from uuid import uuid4
 
 import aiofiles
-from fastapi import APIRouter, HTTPException, UploadFile, status
+from fastapi import APIRouter, HTTPException, UploadFile, status, Depends
 from huey.api import Result
 
 from core import task_system
 from core.plugins.no_mem import get_audio_plugins
 from core.plugins.base import AudioProcessingFunction
-
+from .auth import get_current_active_user
 from .models import (
     AudioProcessingRequest,
     AudioProcessingResponse,
@@ -18,7 +18,7 @@ from .models import (
     UploadFileResponse,
 )
 
-router = APIRouter(prefix="/audio", tags=["audio"])
+router = APIRouter(prefix="/audio", tags=["audio"], dependencies=[Depends(get_current_active_user)])
 
 
 @router.post("/upload", response_model=UploadFileResponse)
