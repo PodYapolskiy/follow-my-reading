@@ -9,6 +9,8 @@ class EngTesseractPlugin:
     languages = ["eng"]
     description = "Tesseract Open Source OCR Engine For English Language"
 
+    # Additional models could be found here: https://github.com/tesseract-ocr/tessdata_best
+
     @staticmethod
     def process_image(filename: str) -> str:
         return pytesseract.image_to_string(

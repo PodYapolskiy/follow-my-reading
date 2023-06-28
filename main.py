@@ -8,6 +8,7 @@ from core.plugins import load_plugins
 
 nest_asyncio.apply()
 
+
 load_plugins()
 app = FastAPI()
 

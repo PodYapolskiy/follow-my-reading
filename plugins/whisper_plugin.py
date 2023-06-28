@@ -9,7 +9,7 @@ class WhisperPlugin:
     languages = ["eng"]
     description = "Robust Speech Recognition via Large-Scale Weak Supervision By OpenAI"
 
-    model = whisper.load_model("base")
+    model = whisper.load_model("large-v2")
 
     @staticmethod
     def process_audio(filename: str) -> AudioProcessingResult:

@@ -74,8 +74,8 @@ async def process_audio(request: AudioProcessingRequest):
         plugin_info.class_name, AudioProcessingFunction, str(filepath)
     )
 
-    extracted_text = await asyncio.get_running_loop().run_in_executor(
+    task_result = await asyncio.get_running_loop().run_in_executor(
         None, lambda: job.get(blocking=True, preserve=True)
     )
 
-    return AudioProcessingResponse(text=extracted_text, data=[])
+    return AudioProcessingResponse.parse_obj(task_result.dict())
