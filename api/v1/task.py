@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, status
 from huey.api import Result
 
 from core import task_system
-from core.plugins import AUDIO_PLUGINS, IMAGE_PLUGINS
+from core.plugins.no_mem import get_audio_plugins, get_image_plugins
 from core.plugins.base import AudioProcessingFunction, ImageProcessingFunction
 from core.task_system import scheduler
 
@@ -21,8 +21,8 @@ router = APIRouter(prefix="/task", tags=["task"])
 
 @router.post("/create", response_model=TaskCreateResponse)
 async def create_task(request: TaskCreateRequest):
-    image_plugin_info = IMAGE_PLUGINS.get(request.image_model)
-    audio_plugin_info = AUDIO_PLUGINS.get(request.audio_model)
+    image_plugin_info = get_image_plugins().get(request.image_model)
+    audio_plugin_info = get_audio_plugins().get(request.audio_model)
     files_dir = Path("./temp_data")
     image_file_path = files_dir / "image" / str(request.image_file)
     audio_file_path = files_dir / "audio" / str(request.audio_file)
