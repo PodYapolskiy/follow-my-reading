@@ -2,12 +2,11 @@ import logging
 
 from huey import RedisHuey
 
-
 from core.plugins import (
-    load_plugins,
     AUDIO_PLUGINS,
     IMAGE_PLUGINS,
     AudioProcessingResult,
+    load_plugins,
 )
 from core.processing.text import match_phrases
 

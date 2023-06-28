@@ -1,7 +1,8 @@
-from core.task_system import _get_audio_plugins, _get_image_plugins
 from functools import lru_cache
-from core.plugins.loader import PluginInfo
 from typing import Dict
+
+from core.plugins.loader import PluginInfo
+from core.task_system import _get_audio_plugins, _get_image_plugins
 
 
 @lru_cache

@@ -1,11 +1,11 @@
 import easyocr
 
 from core.plugins import (
-    register_plugin,
-    Point,
-    ImageTextBox,
     ImageProcessingResult,
+    ImageTextBox,
+    Point,
     Rectangle,
+    register_plugin,
 )
 
 

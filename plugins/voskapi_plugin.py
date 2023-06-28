@@ -1,9 +1,10 @@
-import wave
-from vosk import Model, KaldiRecognizer
-from pydub import AudioSegment
 import json
+import wave
 
-from core.plugins import register_plugin, AudioProcessingResult, AudioChunk
+from pydub import AudioSegment
+from vosk import KaldiRecognizer, Model
+
+from core.plugins import AudioChunk, AudioProcessingResult, register_plugin
 
 
 @register_plugin

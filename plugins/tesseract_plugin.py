@@ -1,11 +1,11 @@
 import pytesseract
 
 from core.plugins import (
-    register_plugin,
     ImageProcessingResult,
-    Point,
     ImageTextBox,
+    Point,
     Rectangle,
+    register_plugin,
 )
 
 

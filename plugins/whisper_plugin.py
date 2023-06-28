@@ -1,6 +1,6 @@
 import whisper
 
-from core.plugins import register_plugin, AudioChunk, AudioProcessingResult
+from core.plugins import AudioChunk, AudioProcessingResult, register_plugin
 
 
 @register_plugin

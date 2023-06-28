@@ -1,13 +1,15 @@
 from datetime import datetime, timedelta
 from functools import lru_cache
 from typing import Annotated, Dict
-from .models import RegisterResponse
-from fastapi import Depends, APIRouter, HTTPException, status
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
+
 from .config import Settings
+from .models import RegisterResponse
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
