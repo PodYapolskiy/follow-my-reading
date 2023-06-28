@@ -75,8 +75,8 @@ async def process_image(request: ImageProcessingRequest):
         plugin_info.class_name, ImageProcessingFunction, str(filepath)
     )
 
-    extracted_text = await asyncio.get_running_loop().run_in_executor(
+    model_response = await asyncio.get_running_loop().run_in_executor(
         None, lambda: job.get(blocking=True, preserve=True)
     )
 
-    return ImageProcessingResponse(text=extracted_text)
+    return ImageProcessingResponse.parse_obj(model_response.dict())
