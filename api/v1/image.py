@@ -18,9 +18,9 @@ from .models import (
     UploadFileResponse,
 )
 
-from .auth import login_for_access_token
+from .auth import get_current_active_user
 
-router = APIRouter(prefix="/image", tags=["image"], dependencies=[Depends(login_for_access_token)])
+router = APIRouter(prefix="/image", tags=["image"], dependencies=[Depends(get_current_active_user)])
 
 
 @router.post("/upload", response_model=UploadFileResponse)
