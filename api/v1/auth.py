@@ -56,8 +56,8 @@ def get_user(db, username: str):
     return False
 
 
-def authenticate_user(fake_db, username: str, password: str):
-    user = get_user(fake_db, username)
+def authenticate_user(db, username: str, password: str):
+    user = get_user(db, username)
     if not user:
         return False
     if not verify_password(password, user.hashed_password):
