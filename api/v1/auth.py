@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Annotated
-
+from .models import RegisterResponse
 from fastapi import Depends, APIRouter, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
@@ -129,7 +129,7 @@ async def read_users_me(
     return current_user
 
 
-@auth_router.put("/register")
+@auth_router.put("/register", response_model=RegisterResponse)
 async def register_user(username: str, password: str, email: str | None = None, full_name: str | None = None):
     # I don't know whether do we need to set password requirements or not, and if I checked everything or not
     # (most probably not, but nothing else comes to my mind, or I have schizophrenia, which is also possible)
@@ -142,3 +142,4 @@ async def register_user(username: str, password: str, email: str | None = None, 
                                         full_name=full_name,
                                         disabled=False,
                                         hashed_password=hashed_password)})
+    return RegisterResponse(text="Registered successfully.")

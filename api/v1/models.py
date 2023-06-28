@@ -4,6 +4,10 @@ from uuid import UUID
 from pydantic import BaseModel
 
 
+class RegisterResponse(BaseModel):
+    text: str
+
+
 class UploadFileResponse(BaseModel):
     file_id: UUID
 
