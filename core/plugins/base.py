@@ -13,6 +13,28 @@ class AudioProcessingResult(BaseModel):
     segments: List[AudioChunk]
 
 
+class Point(BaseModel):
+    x: int
+    y: int
+
+
+class Rectangle(BaseModel):
+    left_top: Point
+    right_top: Point
+    left_bottom: Point
+    right_bottom: Point
+
+
+class ImageTextBox(BaseModel):
+    text: str
+    coordinates: Rectangle
+
+
+class ImageProcessingResult(BaseModel):
+    text: str
+    boxes: List[ImageTextBox]
+
+
 @runtime_checkable
 class BasePlugin(Protocol):
     """

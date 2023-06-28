@@ -26,8 +26,26 @@ class ImageProcessingRequest(BaseModel):
     image_model: str
 
 
+class IPRPoint(BaseModel):
+    x: int
+    y: int
+
+
+class IPRRectangle(BaseModel):
+    left_top: IPRPoint
+    right_top: IPRPoint
+    left_bottom: IPRPoint
+    right_bottom: IPRPoint
+
+
+class IPRTextBox(BaseModel):
+    text: str
+    coordinates: IPRRectangle
+
+
 class ImageProcessingResponse(BaseModel):
     text: str
+    boxes: List[IPRTextBox]
 
 
 class AudioProcessingRequest(BaseModel):
