@@ -2,12 +2,12 @@ import logging
 
 from huey import RedisHuey
 
-
 from core.plugins import (
-    load_plugins,
     AUDIO_PLUGINS,
     IMAGE_PLUGINS,
     AudioProcessingResult,
+    ImageProcessingResult,
+    load_plugins,
 )
 from core.processing.text import match_phrases
 
@@ -102,11 +102,13 @@ def compate_image_audio(
         audio_class, audio_function, audio_path
     )
     logger.info("Executing image processing")
-    image_text = _plugin_class_method_call(image_class, image_function, image_path)
+    image_model_response: ImageProcessingResult = _plugin_class_method_call(
+        image_class, image_function, image_path
+    )
 
     logger.info("Text matching")
     phrases = [x.text for x in audio_model_response.segments]
-    return match_phrases(phrases, image_text)
+    return match_phrases(phrases, image_model_response.text)
 
 
 @scheduler.task()

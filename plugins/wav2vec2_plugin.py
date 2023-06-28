@@ -2,7 +2,7 @@ import librosa
 import torch
 from transformers import Wav2Vec2ForCTC, Wav2Vec2Tokenizer
 
-from core.plugins import register_plugin, AudioProcessingResult
+from core.plugins import AudioProcessingResult, register_plugin
 
 
 @register_plugin

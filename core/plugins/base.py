@@ -1,4 +1,5 @@
 from typing import List, Protocol, runtime_checkable
+
 from pydantic import BaseModel
 
 

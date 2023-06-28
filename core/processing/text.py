@@ -158,8 +158,8 @@ def match_words(first_text: str, second_text: str):
                 joined_result.append(current_str)
         elif isinstance(joined_result[-1], list):
             if "-" in current_str:
-                joined_result[-1][0] += " " + current_str[0:current_str.find("-")]
-                joined_result[-1][1] += " " + current_str[current_str.find("-")+1:]
+                joined_result[-1][0] += " " + current_str[0 : current_str.find("-")]
+                joined_result[-1][1] += " " + current_str[current_str.find("-") + 1 :]
             else:
                 joined_result.append(current_str)
         else:
@@ -214,8 +214,7 @@ def match_phrases(phrases, text):
     # text is the text to match against
 
     answers = [[] for i in phrases]
-    full_answer = match_words(prep_audio_text(" ".join(phrases)),
-                              prep_audio_text(text))
+    full_answer = match_words(prep_audio_text(" ".join(phrases)), prep_audio_text(text))
 
     y = 0
     cur_ind = 0
@@ -256,6 +255,7 @@ def prep_image_text(s):
         changed = changed.replace("  ", " ")
 
     return changed.lower().strip()
+
 
 # phrases = ["В кабинете, полном дыма, шел разгaвор о войне,", "которая была объявлена манифестом, о наборе манифеста",
 #                         "еще никто не читал, но все знали о его появлении. граф сидел на манке между", "двумя куреювшими и разговаривавшими соседями. Граф сам",
