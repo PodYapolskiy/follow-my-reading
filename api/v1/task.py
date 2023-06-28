@@ -1,14 +1,14 @@
 from pathlib import Path
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from huey.api import Result
 
 from core import task_system
 from core.plugins.no_mem import get_audio_plugins, get_image_plugins
 from core.plugins.base import AudioProcessingFunction, ImageProcessingFunction
 from core.task_system import scheduler
-
+from .auth import login_for_access_token
 from .models import (
     TaskCreateRequest,
     TaskCreateResponse,
@@ -16,7 +16,7 @@ from .models import (
     TaskStatusResponse,
 )
 
-router = APIRouter(prefix="/task", tags=["task"])
+router = APIRouter(prefix="/task", tags=["task"], dependencies=[Depends(login_for_access_token)])
 
 
 @router.post("/create", response_model=TaskCreateResponse)
