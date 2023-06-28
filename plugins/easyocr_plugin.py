@@ -24,11 +24,9 @@ class EasyOCRPlugin:
 
     @staticmethod
     def process_image(filename: str) -> ImageProcessingResult:
-        result_text = ""
         model_response = EasyOCRPlugin.reader.readtext(filename)
         boxes = []
         for coordinates, text, _ in model_response:
-            result_text += text
             lt, rt, rb, lb = coordinates
             boxes.append(
                 ImageTextBox(
@@ -41,5 +39,6 @@ class EasyOCRPlugin:
                     ),
                 )
             )
+        result_text = " ".join(map(lambda x: x[1], model_response))
 
         return ImageProcessingResult(text=result_text, boxes=boxes)
