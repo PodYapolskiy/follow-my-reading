@@ -43,7 +43,7 @@ class AudioChunk(BaseModel):
 
 class AudioProcessingResponse(BaseModel):
     text: str
-    data: List[AudioChunk]
+    segments: List[AudioChunk]
 
 
 class TaskCreateRequest(BaseModel):

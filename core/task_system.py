@@ -2,12 +2,26 @@ import logging
 
 from huey import RedisHuey
 
-from core.plugins import load_plugins
+
+from core.plugins import load_plugins, AUDIO_PLUGINS, IMAGE_PLUGINS
 from core.processing.text import match
 
 scheduler = RedisHuey()
 
-plugins = load_plugins()
+
+plugins = []
+
+
+@scheduler.on_startup()
+def load_plugins_into_memories():
+    """
+    Load plugins on startup. This function is introduced
+    in order not to load plugins into the module on import.
+    """
+    global plugins
+    plugins = load_plugins()
+
+
 logger = logging.getLogger("huey")
 
 
@@ -85,3 +99,21 @@ def compate_image_audio(
 
     logger.info("Text matching")
     return match(image_text, audio_text)
+
+
+@scheduler.task()
+def _get_audio_plugins():
+    """
+    `get_audio_plugins` is a sheduled job, which returns info about
+    loaded into the worker audio plugins.
+    """
+    return AUDIO_PLUGINS
+
+
+@scheduler.task()
+def _get_image_plugins():
+    """
+    `get_image_plugins` is scheduled job, which returns info about
+    loaded into the worker image plugins.
+    """
+    return IMAGE_PLUGINS

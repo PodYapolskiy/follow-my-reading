@@ -11,6 +11,7 @@ class EasyOCRPlugin:
         "mainly used for working with text on an image"
     )
 
+    # List of supported languages can be found here: https://www.jaided.ai/easyocr/
     languages = ["en", "ru"]
 
     reader = easyocr.Reader(languages, gpu=False)
