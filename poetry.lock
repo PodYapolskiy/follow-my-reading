@@ -1128,6 +1128,14 @@ video = ["av (==9.2.0)", "decord (==0.6.0)"]
 vision = ["Pillow"]
 
 [[package]]
+name = "types-aiofiles"
+version = "23.1.0.4"
+description = "Typing stubs for aiofiles"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "types-pyopenssl"
 version = "23.2.0.1"
 description = "Typing stubs for pyOpenSSL"
@@ -1213,7 +1221,7 @@ python-versions = ">=3.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "98f0ee60f157f00dd1c4ac3c4255a9513f32b8804881b04d6a632e8de70476ba"
+content-hash = "af0bf18c6174c5924eb559601e7db71c9501438d3a61981edd9c4a257c5c3ba3"
 
 [metadata.files]
 aiofiles = [
@@ -2475,6 +2483,10 @@ tqdm = [
 transformers = [
     {file = "transformers-4.30.2-py3-none-any.whl", hash = "sha256:c332e3a3097f9ed89ce556b403251235931c00237b8bc2d7adaa19d226c13f1d"},
     {file = "transformers-4.30.2.tar.gz", hash = "sha256:f4a8aac4e1baffab4033f4a345b0d7dc7957d12a4f1ba969afea08205a513045"},
+]
+types-aiofiles = [
+    {file = "types-aiofiles-23.1.0.4.tar.gz", hash = "sha256:89a58cd0ae93b37a22c323c22d250bd65dde6833f6c6f3c1824784e56f47109f"},
+    {file = "types_aiofiles-23.1.0.4-py3-none-any.whl", hash = "sha256:65a862f0d36e6b8e1b2df601ba7aeeb2eba8e2f9764ba9d0989bdd498ed8c857"},
 ]
 types-pyopenssl = [
     {file = "types-pyOpenSSL-23.2.0.1.tar.gz", hash = "sha256:beeb5d22704c625a1e4b6dc756355c5b4af0b980138b702a9d9f932acf020903"},

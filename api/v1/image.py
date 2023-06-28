@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, UploadFile, status
 from huey.api import Result
 
 from core import task_system
-from core.plugins import IMAGE_PLUGINS
+from core.plugins.no_mem import get_image_plugins
 from core.plugins.base import ImageProcessingFunction
 
 from .models import (
@@ -49,13 +49,13 @@ async def get_models() -> ModelsDataReponse:
     # Transform any known image model into ModelData object format and
     # store them as a list inside ModelsDataResponse
     return ModelsDataReponse(
-        models=[ModelData.from_orm(model) for model in IMAGE_PLUGINS.values()]
+        models=[ModelData.from_orm(model) for model in get_image_plugins().values()]
     )
 
 
 @router.post("/process", response_model=ImageProcessingResponse)
 async def process_image(request: ImageProcessingRequest):
-    plugin_info = IMAGE_PLUGINS.get(request.image_model)
+    plugin_info = get_image_plugins().get(request.image_model)
 
     if plugin_info is None:
         raise HTTPException(
