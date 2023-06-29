@@ -4,7 +4,7 @@ import aiofiles
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 
 from core.plugins.no_mem import get_image_plugins
-from .task import get_job_status, get_result, create_image_task
+from .task import _get_job_status, _get_job_result, create_image_task
 from .auth import get_current_active_user
 from .models import (
     ImageProcessingRequest,
@@ -54,18 +54,18 @@ async def get_models() -> ModelsDataReponse:
 
 @router.post("/process", response_model=TaskCreateResponse)
 async def process_image(request: ImageProcessingRequest):
-    uuid = create_image_task(request)
+    uuid = await create_image_task(request)
     return uuid
 
 
 @router.get("/result", response_model=ImageProcessingResponse)
 async def get_response(task_id: UUID):
-    response = await get_job_status(task_id)
+    response = await _get_job_status(task_id)
     if not response.ready:
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="The job is non-existent or not done"
         )
 
-    data = await get_result(task_id)
+    data = await _get_job_result(task_id)
     return data.data

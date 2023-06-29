@@ -4,7 +4,7 @@ import aiofiles
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 
 from core.plugins.no_mem import get_audio_plugins
-from .task import create_audio_task, get_job_status, get_result
+from .task import create_audio_task, _get_job_status, _get_job_result
 from .auth import get_current_active_user
 from .models import (
     AudioProcessingRequest,
@@ -55,18 +55,18 @@ async def get_models() -> ModelsDataReponse:
 
 @router.post("/process", response_model=TaskCreateResponse)
 async def process_audio(request: AudioProcessingRequest):
-    uuid = create_audio_task(request)
+    uuid = await create_audio_task(request)
     return uuid
 
 
 @router.get("/result", response_model=AudioProcessingResponse)
 async def get_response(task_id: UUID):
-    response = await get_job_status(task_id)
+    response = await _get_job_status(task_id)
     if not response.ready:
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="The job is non-existent or not done"
         )
 
-    data = await get_result(task_id)
+    data = await _get_job_result(task_id)
     return data.data
