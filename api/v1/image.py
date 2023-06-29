@@ -1,15 +1,10 @@
-import asyncio
-from pathlib import Path
-from uuid import uuid4
+from uuid import uuid4, UUID
 
 import aiofiles
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
-from huey.api import Result
 
-from core import task_system
-from core.plugins.base import ImageProcessingFunction
 from core.plugins.no_mem import get_image_plugins
-
+from .task import get_job_status, get_result, create_image_task
 from .auth import get_current_active_user
 from .models import (
     ImageProcessingRequest,
@@ -17,6 +12,7 @@ from .models import (
     ModelData,
     ModelsDataReponse,
     UploadFileResponse,
+    TaskCreateResponse
 )
 
 router = APIRouter(
@@ -56,28 +52,20 @@ async def get_models() -> ModelsDataReponse:
     )
 
 
-@router.post("/process", response_model=ImageProcessingResponse)
+@router.post("/process", response_model=TaskCreateResponse)
 async def process_image(request: ImageProcessingRequest):
-    plugin_info = get_image_plugins().get(request.image_model)
+    uuid = create_image_task(request)
+    return uuid
 
-    if plugin_info is None:
+
+@router.get("/result", response_model=ImageProcessingResponse)
+async def get_response(task_id: UUID):
+    response = await get_job_status(task_id)
+    if not response.ready:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="No such model available"
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="The job is non-existent or not done"
         )
 
-    filepath = Path("./temp_data/image") / str(request.image_file)
-
-    if not filepath.exists():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="No such file available"
-        )
-
-    job: Result = task_system.dynamic_plugin_call(
-        plugin_info.class_name, ImageProcessingFunction, str(filepath)
-    )
-
-    model_response = await asyncio.get_running_loop().run_in_executor(
-        None, lambda: job.get(blocking=True, preserve=True)
-    )
-
-    return ImageProcessingResponse.parse_obj(model_response.dict())
+    data = await get_result(task_id)
+    return data.data
