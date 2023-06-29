@@ -119,7 +119,7 @@ async def create_task(request: TaskCreateRequest):
     return TaskCreateResponse(task_id=UUID(job.id))
 
 
-async def get_job_status(task_id: UUID):
+async def _get_job_status(task_id: UUID):
     if scheduler.result(str(task_id), preserve=True) is None:
         return TaskStatusResponse(
             task_id=task_id, status="results are not available", ready=False
@@ -129,11 +129,11 @@ async def get_job_status(task_id: UUID):
 
 
 @router.get("/status", response_model=TaskStatusResponse)
-async def get_user_job_status(task_id: UUID):
-    return await get_job_status(task_id)
+async def get_job_status(task_id: UUID):
+    return await _get_job_status(task_id)
 
 
-async def get_result(task_id: UUID):
+async def _get_job_result(task_id: UUID):
     data = scheduler.result(str(task_id), preserve=True)
     if data is not None:
         return TaskResultsResponse(data=data)
@@ -145,5 +145,5 @@ async def get_result(task_id: UUID):
 
 
 @router.get("/result", response_model=TaskResultsResponse)
-async def get_user_result(task_id: UUID):
-    return await get_result(task_id)
+async def get_job_result(task_id: UUID):
+    return await _get_job_result(task_id)
