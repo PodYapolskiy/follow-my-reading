@@ -9,7 +9,7 @@ from core.plugins import (
     ImageProcessingResult,
     load_plugins,
 )
-from core.plugins.base import AudioSegment, AudioTaskResult
+from core.plugins.base import AudioSegment, AudioTaskResult, TaskResult, TextDiff
 from core.processing.text import match_phrases
 from core.processing.audio_split import split_audio, split_silence
 
@@ -73,8 +73,7 @@ def dynamic_plugin_call(class_name: str, function: str, filepath: str):
     return _plugin_class_method_call(class_name, function, filepath)
 
 
-@scheduler.task()
-def audio_processing_call(audio_class: str, audio_function: str, audio_path: str):
+def _audio_process(audio_class: str, audio_function: str, audio_path: str):
     logger.info("Executing audio processing")
     audio_model_response: AudioProcessingResult = _plugin_class_method_call(
         audio_class, audio_function, audio_path
@@ -102,12 +101,21 @@ def audio_processing_call(audio_class: str, audio_function: str, audio_path: str
 
 
 @scheduler.task()
-def image_processing_call(image_class: str, image_function: str, image_path: str):
+def audio_processing_call(audio_class: str, audio_function: str, audio_path: str):
+    return _audio_process(audio_class, audio_function, audio_path)
+
+
+def _image_process(image_class: str, image_function: str, image_path: str):
     logger.info("Executing image processing")
     image_model_response: ImageProcessingResult = _plugin_class_method_call(
         image_class, image_function, image_path
     )
     return image_model_response
+
+
+@scheduler.task()
+def image_processing_call(image_class: str, image_function: str, image_path: str):
+    return _image_process(image_class, image_function, image_path)
 
 
 @scheduler.task()
@@ -136,16 +144,32 @@ def compare_image_audio(
     instead of `_plugin_class_method_call` and execute code simultaneously for
     audio and image processing.
     """
-    audio_model_response = audio_processing_call(
+    audio_model_response: AudioTaskResult = _audio_process(
         audio_class, audio_function, audio_path
     )
-    image_model_response = image_processing_call(
+    image_model_response: ImageProcessingResult = _image_process(
         image_class, image_function, image_path
     )
+
     logger.info("Text matching")
     phrases = [x.text for x in audio_model_response.segments]
-    # todo: return TaskResultResponse
-    return match_phrases(phrases, image_model_response.text)
+    text_diffs = match_phrases(phrases, image_model_response.text)
+
+    data = []
+    for index, diff in enumerate(text_diffs):
+        for at_char, found, expected in diff:
+            data.append(
+                TextDiff(
+                    audio_segment=audio_model_response.segments[index],
+                    at_char=at_char,
+                    found=found,
+                    expected=expected,
+                )
+            )
+
+    return TaskResult(
+        audio=audio_model_response, image=image_model_response, errors=data
+    )
 
 
 @scheduler.task()

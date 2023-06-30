@@ -50,7 +50,7 @@ async def create_audio_task(request: AudioProcessingRequest):
 async def create_image_task(request: ImageProcessingRequest):
     image_plugin_info = get_image_plugins().get(request.image_model)
     files_dir = Path("./temp_data")
-    image_file_path = files_dir / "audio" / str(request.image_file)
+    image_file_path = files_dir / "image" / str(request.image_file)
 
     if image_plugin_info is None:
         raise HTTPException(
@@ -63,7 +63,7 @@ async def create_image_task(request: ImageProcessingRequest):
             status_code=status.HTTP_404_NOT_FOUND, detail="No such image file available"
         )
 
-    job: Result = task_system.audio_processing_call(
+    job: Result = task_system.image_processing_call(
         image_plugin_info.class_name, ImageProcessingFunction, str(image_file_path)
     )
 

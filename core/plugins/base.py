@@ -48,6 +48,19 @@ class ImageProcessingResult(BaseModel):
     boxes: List[ImageTextBox]
 
 
+class TextDiff(BaseModel):
+    audio_segment: AudioSegment
+    at_char: int
+    found: str
+    expected: str
+
+
+class TaskResult(BaseModel):
+    audio: AudioTaskResult
+    image: ImageProcessingResult
+    errors: List[TextDiff]
+
+
 @runtime_checkable
 class BasePlugin(Protocol):
     """

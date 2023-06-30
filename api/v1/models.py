@@ -88,6 +88,7 @@ class TaskStatusResponse(BaseModel):
 
 class TextDiff(BaseModel):
     audio_segment: AudioChunk
+    at_char: int
     found: str
     expected: str
 
