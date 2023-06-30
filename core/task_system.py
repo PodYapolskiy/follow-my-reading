@@ -72,7 +72,33 @@ def dynamic_plugin_call(class_name: str, function: str, filepath: str):
 
 
 @scheduler.task()
-def compate_image_audio(
+def audio_processing_call(
+        audio_class: str,
+        audio_function: str,
+        audio_path: str
+):
+    logger.info("Executing audio processing")
+    audio_model_response: AudioProcessingResult = _plugin_class_method_call(
+        audio_class, audio_function, audio_path
+    )
+    return audio_model_response
+
+
+@scheduler.task()
+def image_processing_call(
+        image_class: str,
+        image_function: str,
+        image_path: str
+):
+    logger.info("Executing image processing")
+    image_model_response: ImageProcessingResult = _plugin_class_method_call(
+        image_class, image_function, image_path
+    )
+    return image_model_response
+
+
+@scheduler.task()
+def compare_image_audio(
     audio_class: str,
     audio_function: str,
     audio_path: str,
@@ -81,7 +107,7 @@ def compate_image_audio(
     image_path: str,
 ):
     """
-    `compate_image_audio` is a sheduled job, which accepts these parameters:
+    `compare_image_audio` is a scheduled job, which accepts these parameters:
     - `audio_class: str`
     - `audio_function: str`
     - `audio_path: str`
@@ -89,23 +115,16 @@ def compate_image_audio(
     - `image_function: str`
     - `image_path: str`
 
-    Then `compate_image_audio` calls `_plugin_class_method_call` two times: for audio
+    Then `compare_image_audio` calls `_plugin_class_method_call` two times: for audio
     and for image correspondingly. When both of the calls are completed, it matches
-    resultred texts and returns the difference.
+    resulted texts and returns the difference.
 
     Note: with increased amount of workers, this job can call `dynamic_plugin_call`
-    instread of `_plugin_class_method_call` and execute code simultaneously for
+    instead of `_plugin_class_method_call` and execute code simultaneously for
     audio and image processing.
     """
-    logger.info("Executing audio processing")
-    audio_model_response: AudioProcessingResult = _plugin_class_method_call(
-        audio_class, audio_function, audio_path
-    )
-    logger.info("Executing image processing")
-    image_model_response: ImageProcessingResult = _plugin_class_method_call(
-        image_class, image_function, image_path
-    )
-
+    audio_model_response = audio_processing_call(audio_class, audio_function, audio_path)
+    image_model_response = image_processing_call(image_class, image_function, image_path)
     logger.info("Text matching")
     phrases = [x.text for x in audio_model_response.segments]
     return match_phrases(phrases, image_model_response.text)
@@ -114,7 +133,7 @@ def compate_image_audio(
 @scheduler.task()
 def _get_audio_plugins():
     """
-    `get_audio_plugins` is a sheduled job, which returns info about
+    `get_audio_plugins` is a scheduled job, which returns info about
     loaded into the worker audio plugins.
     """
     return AUDIO_PLUGINS

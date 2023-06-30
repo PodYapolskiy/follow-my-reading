@@ -1,15 +1,10 @@
-import asyncio
-from pathlib import Path
-from uuid import uuid4
+from uuid import uuid4, UUID
 
 import aiofiles
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
-from huey.api import Result
 
-from core import task_system
-from core.plugins.base import AudioProcessingFunction
 from core.plugins.no_mem import get_audio_plugins
-
+from .task import create_audio_task, _get_job_status, _get_job_result
 from .auth import get_current_active_user
 from .models import (
     AudioProcessingRequest,
@@ -17,6 +12,7 @@ from .models import (
     ModelData,
     ModelsDataReponse,
     UploadFileResponse,
+    TaskCreateResponse
 )
 
 router = APIRouter(
@@ -57,28 +53,20 @@ async def get_models() -> ModelsDataReponse:
     )
 
 
-@router.post("/process", response_model=AudioProcessingResponse)
+@router.post("/process", response_model=TaskCreateResponse)
 async def process_audio(request: AudioProcessingRequest):
-    plugin_info = get_audio_plugins().get(request.audio_model)
+    uuid = await create_audio_task(request)
+    return uuid
 
-    if plugin_info is None:
+
+@router.get("/result", response_model=AudioProcessingResponse)
+async def get_response(task_id: UUID):
+    response = await _get_job_status(task_id)
+    if not response.ready:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="No such model available"
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="The job is non-existent or not done"
         )
 
-    filepath = Path("./temp_data/audio") / str(request.audio_file)
-
-    if not filepath.exists():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="No such file available"
-        )
-
-    job: Result = task_system.dynamic_plugin_call(
-        plugin_info.class_name, AudioProcessingFunction, str(filepath)
-    )
-
-    task_result = await asyncio.get_running_loop().run_in_executor(
-        None, lambda: job.get(blocking=True, preserve=True)
-    )
-
-    return AudioProcessingResponse.parse_obj(task_result.dict())
+    data = await _get_job_result(task_id)
+    return data.data
