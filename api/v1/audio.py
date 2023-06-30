@@ -2,6 +2,8 @@ from uuid import uuid4, UUID
 
 import aiofiles
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
+from fastapi.responses import FileResponse
+from pathlib import Path
 
 from core.plugins.no_mem import get_audio_plugins
 from .task import create_audio_task, _get_job_status, _get_job_result
@@ -12,7 +14,7 @@ from .models import (
     ModelData,
     ModelsDataReponse,
     UploadFileResponse,
-    TaskCreateResponse
+    TaskCreateResponse,
 )
 
 router = APIRouter(
@@ -59,13 +61,25 @@ async def process_audio(request: AudioProcessingRequest):
     return uuid
 
 
+@router.get("/download", response_class=FileResponse)
+async def download_audio_file(file: UUID):
+    filepath = Path("./temp_data/audio") / str(file)
+
+    if not filepath.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
+        )
+
+    return filepath.as_posix()
+
+
 @router.get("/result", response_model=AudioProcessingResponse)
 async def get_response(task_id: UUID):
     response = await _get_job_status(task_id)
     if not response.ready:
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail="The job is non-existent or not done"
+            detail="The job is non-existent or not done",
         )
 
     data = await _get_job_result(task_id)
