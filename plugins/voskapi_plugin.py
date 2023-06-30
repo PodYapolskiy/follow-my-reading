@@ -20,7 +20,8 @@ class VoskPlugin:
     # List of available models can be found here: https://alphacephei.com/vosk/models
     # pretrained_model = "vosk-model-ru-0.42"
     # pretrained_model = "vosk-model-en-us-0.22-lgraph"
-    pretrained_model = "vosk-model-en-us-0.42-gigaspeech"
+    # pretrained_model = "vosk-model-en-us-0.42-gigaspeech"
+    pretrained_model = "vosk-model-small-en-us-0.15"
 
     model = Model(model_name=pretrained_model)
 

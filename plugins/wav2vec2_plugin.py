@@ -16,7 +16,7 @@ class Wav2Vec2Plugin:
         " on large training datasets."
     )
 
-    pretrained_model = "facebook/wav2vec2-large-960h"
+    pretrained_model = "facebook/wav2vec2-base-960h"
 
     tokenizer = Wav2Vec2Tokenizer.from_pretrained(pretrained_model)
     model = Wav2Vec2ForCTC.from_pretrained(pretrained_model)

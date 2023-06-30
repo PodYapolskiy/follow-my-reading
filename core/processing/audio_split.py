@@ -2,6 +2,7 @@ from math import log10 as lg
 from os import mkdir, path
 
 from librosa import get_duration
+from uuid import uuid4
 from pydub import AudioSegment, silence
 
 
@@ -29,17 +30,21 @@ def split_audio(file: str | AudioSegment, intervals):
         mkdir(store_path)
 
     if type(file) == str:
-        audio = AudioSegment.from_file(file, file[file.rfind(".") + 1 :])
+        audio = AudioSegment.from_file(file)
     elif type(file) == AudioSegment:
         audio = file
     else:
         raise TypeError("Invalid argument")
-    for i in range(len(intervals)):
-        audio[int(intervals[i][0] * 1000) : int(intervals[i][1] * 1000)].export(
-            f"{store_path}/{i}.mp3", format="mp3"
-        )
 
-    return path.abspath(store_path)
+    files = []
+    for i in range(len(intervals)):
+        file_id = uuid4()
+        audio[int(intervals[i][0] * 1000) : int(intervals[i][1] * 1000)].export(
+            f"{store_path}/{file_id}", format="mp3"
+        )
+        files.append(file_id)
+
+    return files
 
 
 def split_silence(file, max_interval=30, cutoff_ratio=0.05):
@@ -74,6 +79,7 @@ def split_silence(file, max_interval=30, cutoff_ratio=0.05):
 
     audio_intervals.append((new_beg, silence_chunks[-1][0] + 50))
 
-    return split_audio(
-        audio, [(i[0] / 1000, i[1] / 1000) for i in audio_intervals]
-    ), len(audio_intervals)
+    return (
+        split_audio(audio, [(i[0] / 1000, i[1] / 1000) for i in audio_intervals]),
+        audio_intervals,
+    )

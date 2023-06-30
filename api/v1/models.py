@@ -61,6 +61,7 @@ class AudioChunk(BaseModel):
     start: float
     end: float
     text: str
+    file: UUID
 
 
 class AudioProcessingResponse(BaseModel):
@@ -85,8 +86,17 @@ class TaskStatusResponse(BaseModel):
     ready: bool
 
 
+class TextDiff(BaseModel):
+    audio_segment: AudioChunk
+    at_char: int
+    found: str
+    expected: str
+
+
 class TaskResultsResponse(BaseModel):
-    data: Any
+    image: ImageProcessingResponse
+    audio: AudioProcessingResponse
+    errors: List[TextDiff]
 
 
 class MultipleTasksStatusResponse(BaseModel):

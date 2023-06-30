@@ -1,6 +1,6 @@
 from typing import List, Protocol, runtime_checkable
-
 from pydantic import BaseModel
+from uuid import UUID
 
 
 class AudioChunk(BaseModel):
@@ -12,6 +12,18 @@ class AudioChunk(BaseModel):
 class AudioProcessingResult(BaseModel):
     text: str
     segments: List[AudioChunk]
+
+
+class AudioSegment(BaseModel):
+    start: float
+    end: float
+    text: str
+    file: UUID
+
+
+class AudioTaskResult(BaseModel):
+    text: str
+    segments: List[AudioSegment]
 
 
 class Point(BaseModel):
@@ -34,6 +46,19 @@ class ImageTextBox(BaseModel):
 class ImageProcessingResult(BaseModel):
     text: str
     boxes: List[ImageTextBox]
+
+
+class TextDiff(BaseModel):
+    audio_segment: AudioSegment
+    at_char: int
+    found: str
+    expected: str
+
+
+class TaskResult(BaseModel):
+    audio: AudioTaskResult
+    image: ImageProcessingResult
+    errors: List[TextDiff]
 
 
 @runtime_checkable

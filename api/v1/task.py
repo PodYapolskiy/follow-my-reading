@@ -16,7 +16,7 @@ from .models import (
     TaskResultsResponse,
     TaskStatusResponse,
     AudioProcessingRequest,
-    ImageProcessingRequest
+    ImageProcessingRequest,
 )
 
 router = APIRouter(
@@ -32,19 +32,16 @@ async def create_audio_task(request: AudioProcessingRequest):
     if audio_plugin_info is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="No such audio model available"
+            detail="No such audio model available",
         )
 
     if not audio_file_path.exists():
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No such audio file available"
+            status_code=status.HTTP_404_NOT_FOUND, detail="No such audio file available"
         )
 
     job: Result = task_system.audio_processing_call(
-        audio_plugin_info.class_name,
-        AudioProcessingFunction,
-        str(audio_file_path)
+        audio_plugin_info.class_name, AudioProcessingFunction, str(audio_file_path)
     )
 
     return TaskCreateResponse(task_id=UUID(job.id))
@@ -53,24 +50,21 @@ async def create_audio_task(request: AudioProcessingRequest):
 async def create_image_task(request: ImageProcessingRequest):
     image_plugin_info = get_image_plugins().get(request.image_model)
     files_dir = Path("./temp_data")
-    image_file_path = files_dir / "audio" / str(request.image_file)
+    image_file_path = files_dir / "image" / str(request.image_file)
 
     if image_plugin_info is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="No such image model available"
+            detail="No such image model available",
         )
 
     if not image_file_path.exists():
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No such image file available"
+            status_code=status.HTTP_404_NOT_FOUND, detail="No such image file available"
         )
 
-    job: Result = task_system.audio_processing_call(
-        image_plugin_info.class_name,
-        ImageProcessingFunction,
-        str(image_file_path)
+    job: Result = task_system.image_processing_call(
+        image_plugin_info.class_name, ImageProcessingFunction, str(image_file_path)
     )
 
     return TaskCreateResponse(task_id=UUID(job.id))
@@ -136,7 +130,7 @@ async def get_job_status(task_id: UUID):
 async def _get_job_result(task_id: UUID):
     data = scheduler.result(str(task_id), preserve=True)
     if data is not None:
-        return TaskResultsResponse(data=data)
+        return data
     else:
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
@@ -146,4 +140,11 @@ async def _get_job_result(task_id: UUID):
 
 @router.get("/result", response_model=TaskResultsResponse)
 async def get_job_result(task_id: UUID):
-    return await _get_job_result(task_id)
+    data = scheduler.result(str(task_id), preserve=True)
+    if data is not None:
+        return TaskResultsResponse.parse_obj(data.dict())
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="Results are not ready yet or no task with such id exist",
+        )
