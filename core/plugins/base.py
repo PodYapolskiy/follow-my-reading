@@ -1,6 +1,6 @@
 from typing import List, Protocol, runtime_checkable
-
 from pydantic import BaseModel
+from uuid import UUID
 
 
 class AudioChunk(BaseModel):
@@ -12,6 +12,18 @@ class AudioChunk(BaseModel):
 class AudioProcessingResult(BaseModel):
     text: str
     segments: List[AudioChunk]
+
+
+class AudioSegment(BaseModel):
+    start: float
+    end: float
+    text: str
+    file: UUID
+
+
+class AudioTaskResult(BaseModel):
+    text: str
+    segments: List[AudioSegment]
 
 
 class Point(BaseModel):

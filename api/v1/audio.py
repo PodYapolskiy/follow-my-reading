@@ -83,4 +83,4 @@ async def get_response(task_id: UUID):
         )
 
     data = await _get_job_result(task_id)
-    return data.data
+    return AudioProcessingResponse.parse_obj(data.dict())
