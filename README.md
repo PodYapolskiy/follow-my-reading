@@ -1,5 +1,11 @@
 # Follow My Reading
 
+## Deploy
+Build and run stand-alone docker container
+```bash
+make standalone
+```
+
 ## Set up
 To set up the project run the following command in the terminal
 ```bash
