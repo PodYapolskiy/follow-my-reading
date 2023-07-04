@@ -28,6 +28,7 @@ python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 passlib = "^1.7.4"
 bcrypt = "^4.0.1"
 redis = "^4.6.0"
+fastapi-limiter = "^0.1.5"
 
 
 
