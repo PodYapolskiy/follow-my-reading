@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 
 from pathlib import Path
+from pydantic.error_wrappers import ValidationError
+
 from core.plugins.no_mem import get_image_plugins
 from .task import _get_job_status, _get_job_result, create_image_task
 from .auth import get_current_active_user
@@ -82,4 +84,11 @@ async def get_response(task_id: UUID):
         )
 
     data = await _get_job_result(task_id)
-    return ImageProcessingResponse.parse_obj(data.dict())
+
+    try:
+        return ImageProcessingResponse.parse_obj(data.dict())
+    except ValidationError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="There is no such image processing task",
+        )

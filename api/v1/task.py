@@ -1,5 +1,6 @@
-from pathlib import Path
 from uuid import UUID
+from pathlib import Path
+from pydantic.error_wrappers import ValidationError
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from huey.api import Result
@@ -141,10 +142,16 @@ async def _get_job_result(task_id: UUID):
 @router.get("/result", response_model=TaskResultsResponse)
 async def get_job_result(task_id: UUID):
     data = scheduler.result(str(task_id), preserve=True)
+
     if data is not None:
-        return TaskResultsResponse.parse_obj(data.dict())
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail="Results are not ready yet or no task with such id exist",
-        )
+        try:
+            return TaskResultsResponse.parse_obj(data.dict())
+        except ValidationError:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="There is no such task consists of the both image and audio",
+            )
+    raise HTTPException(
+        status_code=status.HTTP_406_NOT_ACCEPTABLE,
+        detail="Results are not ready yet or no task with such id exist",
+    )

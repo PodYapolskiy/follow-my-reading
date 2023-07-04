@@ -3,7 +3,9 @@ from uuid import uuid4, UUID
 import aiofiles
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
+
 from pathlib import Path
+from pydantic.error_wrappers import ValidationError
 
 from core.plugins.no_mem import get_audio_plugins
 from .task import create_audio_task, _get_job_status, _get_job_result
@@ -83,4 +85,10 @@ async def get_response(task_id: UUID):
         )
 
     data = await _get_job_result(task_id)
-    return AudioProcessingResponse.parse_obj(data.dict())
+    try:
+        return AudioProcessingResponse.parse_obj(data.dict())
+    except ValidationError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="There is no such audio processing task",
+        )
