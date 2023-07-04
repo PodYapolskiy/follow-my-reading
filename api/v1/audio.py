@@ -90,5 +90,5 @@ async def get_response(task_id: UUID):
     except ValidationError:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="There is no such image processing task",
+            detail="There is no such audio processing task",
         )
