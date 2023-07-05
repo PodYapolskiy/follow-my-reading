@@ -1,18 +1,23 @@
 stages:
   - linting
-  - test
+  - quality
 
 include:
   - template: Code-Quality.gitlab-ci.yml
 
-code_quality:
-  stage: linting
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH
+
+code_quality:    
+  stage: quality
   artifacts:
     expire_in: 14 days
     paths: [gl-code-quality-report.json]
 
 code_quality_html:
-  stage: linting
+  stage: quality
   extends: code_quality
   variables:
     REPORT_FORMAT: html
@@ -25,7 +30,6 @@ ruff:
   image: registry.gitlab.com/pipeline-components/ruff:latest
   script:
     - ruff --format=gitlab . > gl-code-quality-report.json
-  allow_failure: true
   artifacts:
     when: always
     expire_in: 14 days
@@ -47,7 +51,6 @@ mypy:
   script:
     - pip install mypy mypy-gitlab-code-quality
     - mypy . --no-error-summary | mypy-gitlab-code-quality > gl-code-quality-report.json
-  allow_failure: true
   artifacts:
     when: always
     expire_in: 14 days
