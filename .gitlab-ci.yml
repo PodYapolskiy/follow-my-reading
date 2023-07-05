@@ -37,7 +37,7 @@ ruff:
 
 mypy:
   stage: linting
-  image: python:alpine
+  image: python:3.10-slim-buster
   before_script:
     - pip install poetry 
     - poetry config virtualenvs.create false
