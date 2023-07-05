@@ -63,15 +63,19 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 
-def get_user(db, username: str):
-    if username in db:
-        user_dict = db[username]
-        return UserInDB.parse_obj(user_dict)
-    return None
+def get_user(username: str):
+    conn = aioredis.from_url("redis://localhost", decode_responses=True)
+    try:
+        db = await conn.hget("users", username)
+        if db:
+            return UserInDB.parse_raw(db)
+        return None
+    finally:
+        conn.close()
 
 
-def authenticate_user(db, username: str, password: str):
-    user = get_user(db, username)
+def authenticate_user(username: str, password: str):
+    user = get_user(username)
     if not user:
         return False
     if not verify_password(password, user.hashed_password):
@@ -96,7 +100,6 @@ def create_access_token(
 async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     setting: Annotated[Settings, Depends(get_settings)],
-    conn: Annotated[aioredis.Redis, Depends(get_conn)]
 ):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -115,7 +118,7 @@ async def get_current_user(
     if token_data.username is None:
         raise credentials_exception
 
-    user = get_user(await conn.hgetall("users"), username=token_data.username)
+    user = get_user(username=token_data.username)
     if user is None:
         raise credentials_exception
 
@@ -133,9 +136,8 @@ async def get_current_active_user(
 @router.post("/token", response_model=Token)
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    conn: Annotated[aioredis.Redis, Depends(get_conn)]
 ):
-    user = authenticate_user(await conn.hgetall("users"), form_data.username, form_data.password)
+    user = authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -163,21 +165,19 @@ async def register_user(
     conn: Annotated[aioredis.Redis, Depends(get_conn)],
     email: str | None = None, full_name: str | None = None
 ):
-    users = await conn.hgetall("users")
     hashed_password = get_password_hash(password)
-    if get_user(users, username):
+    if await conn.hexists("users", username):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="username is already taken",
         )
-
-    users[username] = UserInDB(
-        username=username,
-        email=email,
-        full_name=full_name,
-        disabled=False,
-        hashed_password=hashed_password,
+    encoded_data = UserInDB.json(UserInDB(
+            username=username,
+            email=email,
+            full_name=full_name,
+            disabled=False,
+            hashed_password=hashed_password
+        )
     )
-
-    await conn.hset("users", mapping=users)
+    await conn.hset("users", username, encoded_data)
     return RegisterResponse(text="Registered successfully.")
