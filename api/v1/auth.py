@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from functools import lru_cache
-from typing import Annotated
+from typing import Annotated, AsyncGenerator
 import aioredis
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -20,7 +20,7 @@ def get_settings() -> Settings:
     return Settings()  # type: ignore
 
 
-async def get_conn():
+async def get_conn() -> AsyncGenerator[aioredis.Redis, None]:
     conn = aioredis.from_url("redis://localhost", decode_responses=True)
     try:
         yield conn

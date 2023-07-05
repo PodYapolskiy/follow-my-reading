@@ -52,6 +52,7 @@ types-aiofiles = "^23.1.0.4"
 pydantic = {version = "^1.10.9", extras = ["dotenv"]}
 librosa = "^0.10.0.post2"
 fastapi = "^0.97.0"
+aioredis = {extras = ["hiredis"], version = "^2.0.1"}
 
 [build-system]
 requires = ["poetry-core"]
