@@ -43,6 +43,7 @@ mypy:
     - poetry config virtualenvs.create false
     - poetry install --only dev
   script:
+    - ls -R # debug
     - poetry run sh -lic "(mypy --config-file mypy.ini --no-error-summary . | mypy-gitlab-code-quality > gl-code-quality-report.json) || true"
     - cat gl-code-quality-report.json # debug
   artifacts:
