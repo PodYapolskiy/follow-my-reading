@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from functools import lru_cache
-from typing import Annotated, Dict
-
+from typing import Annotated, AsyncGenerator
+import aioredis
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
@@ -18,6 +18,14 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 @lru_cache
 def get_settings() -> Settings:
     return Settings()  # type: ignore
+
+
+async def get_conn() -> AsyncGenerator[aioredis.Redis, None]:
+    conn = aioredis.from_url("redis://localhost", decode_responses=True)
+    try:
+        yield conn
+    finally:
+        conn.close()
 
 
 class Token(BaseModel):
@@ -40,8 +48,6 @@ class UserInDB(User):
     hashed_password: str
 
 
-users_db: Dict[str, UserInDB] = {}  # todo: replace with database connection
-
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/v1/auth/token")
@@ -57,15 +63,20 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)  # type: ignore
 
 
-def get_user(db: dict, username: str) -> UserInDB | None:
-    if username in db:
-        user_dict = db[username]
-        return UserInDB.parse_obj(user_dict)
-    return None
+async def get_user(username: str) -> UserInDB | None:
+    conn = aioredis.from_url("redis://localhost", decode_responses=True)
+    try:
+        db = await conn.hget("users", username)
+        if not db:
+            return None
+
+        return UserInDB.parse_raw(db)
+    finally:
+        await conn.close()
 
 
-def authenticate_user(db: dict, username: str, password: str) -> UserInDB | None:
-    user = get_user(db, username)
+async def authenticate_user(username: str, password: str) -> UserInDB | None:
+    user = await get_user(username)
     if not user:
         return None
     if not verify_password(password, user.hashed_password):
@@ -107,7 +118,7 @@ async def get_current_user(
     if token_data.username is None:
         raise credentials_exception
 
-    user = get_user(users_db, username=token_data.username)
+    user = await get_user(username=token_data.username)
     if user is None:
         raise credentials_exception
 
@@ -124,9 +135,9 @@ async def get_current_active_user(
 
 @router.post("/token", response_model=Token)
 async def login_for_access_token(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> Token:
-    user = authenticate_user(users_db, form_data.username, form_data.password)
+    user = await authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -150,21 +161,26 @@ async def read_users_me(
 
 @router.put("/register", response_model=RegisterResponse)
 async def register_user(
-    username: str, password: str, email: str | None = None, full_name: str | None = None
+    username: str,
+    password: str,
+    conn: Annotated[aioredis.Redis, Depends(get_conn)],
+    email: str | None = None,
+    full_name: str | None = None,
 ) -> RegisterResponse:
     hashed_password = get_password_hash(password)
-    if get_user(users_db, username):
+    if await conn.hexists("users", username):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="username is already taken",
         )
-
-    users_db[username] = UserInDB(
-        username=username,
-        email=email,
-        full_name=full_name,
-        disabled=False,
-        hashed_password=hashed_password,
+    encoded_data = UserInDB.json(
+        UserInDB(
+            username=username,
+            email=email,
+            full_name=full_name,
+            disabled=False,
+            hashed_password=hashed_password,
+        )
     )
-
+    await conn.hset("users", username, encoded_data)
     return RegisterResponse(text="Registered successfully.")
