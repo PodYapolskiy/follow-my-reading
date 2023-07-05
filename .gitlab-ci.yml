@@ -1,24 +1,20 @@
-stages:
-  - linting
-  - test
-
 include:
   - template: Code-Quality.gitlab-ci.yml
 
-workflow:
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-    - if: $CI_COMMIT_TAG
+stages:
+  - lint
+  - quality
+  - test
+
 
 code_quality:    
-  stage: linting
+  stage: quality
   artifacts:
     expire_in: 14 days
     paths: [gl-code-quality-report.json]
 
 code_quality_html:
-  stage: linting
+  stage: quality
   extends: code_quality
   variables:
     REPORT_FORMAT: html
@@ -27,17 +23,20 @@ code_quality_html:
     paths: [gl-code-quality-report.html]
 
 ruff:
-  stage: linting
+  stage: lint
   image: registry.gitlab.com/pipeline-components/ruff:latest
   script:
     - ruff --format=gitlab . > gl-code-quality-report.json
   artifacts:
     when: always
     expire_in: 14 days
-    paths: [gl-code-quality-report.json]
+    # paths: [gl-code-quality-report.json]
+    reports:
+      codequality: gl-code-quality-report.json
+
 
 mypy:
-  stage: linting
+  stage: quality
   image: python:3.10-slim-buster
   before_script:
     - pip install poetry 
@@ -48,4 +47,6 @@ mypy:
   artifacts:
     when: always
     expire_in: 14 days
-    paths: [gl-code-quality-report.json]
+    # paths: [gl-code-quality-report.json]
+    reports:
+      codequality: gl-code-quality-report.json
