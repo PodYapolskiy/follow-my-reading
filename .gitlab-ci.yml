@@ -39,9 +39,12 @@ mypy:
   stage: linting
   image: python:alpine
   before_script:
-    - pip install mypy mypy-gitlab-code-quality
+    - pip install poetry 
+    - poetry config virtualenvs.create false
+    - poetry install
+    - poetry run pip install mypy-gitlab-code-quality
   script:
-    - (mypy --config-file mypy.ini --no-error-summary . | mypy-gitlab-code-quality > gl-code-quality-report.json) || true
+    - poetry run "(mypy --config-file mypy.ini --no-error-summary . | mypy-gitlab-code-quality > gl-code-quality-report.json) || true"
     - cat gl-code-quality-report.json # debug
   artifacts:
     when: always
