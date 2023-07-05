@@ -40,7 +40,7 @@ mypy:
   image: python:alpine
   script:
     - pip install mypy mypy-gitlab-code-quality
-    - mypy . --no-error-summary | mypy-gitlab-code-quality > gl-code-quality-report.json
+    - mypy --config-file mypy.ini --no-error-summary . | mypy-gitlab-code-quality > gl-code-quality-report.json
     - cat gl-code-quality-report.json # debug
   artifacts:
     when: always
