@@ -29,6 +29,7 @@ passlib = "^1.7.4"
 bcrypt = "^4.0.1"
 redis = "^4.6.0"
 fastapi-limiter = "^0.1.5"
+aioredis = {extras = ["hiredis"], version = "^2.0.1"}
 
 
 

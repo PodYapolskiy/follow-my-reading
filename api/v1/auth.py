@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from functools import lru_cache
-from typing import Annotated, Dict
-
+from typing import Annotated
+import aioredis
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
@@ -18,6 +18,14 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 @lru_cache
 def get_settings():
     return Settings()
+
+
+async def get_conn():
+    conn = aioredis.from_url("redis://localhost", decode_responses=True)
+    try:
+        yield conn
+    finally:
+        conn.close()
 
 
 class Token(BaseModel):
@@ -39,8 +47,6 @@ class User(BaseModel):
 class UserInDB(User):
     hashed_password: str
 
-
-users_db: Dict[str, UserInDB] = {}  # todo: replace with database connection
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -90,6 +96,7 @@ def create_access_token(
 async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     setting: Annotated[Settings, Depends(get_settings)],
+    conn: Annotated[aioredis.Redis, Depends(get_conn)]
 ):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -108,7 +115,7 @@ async def get_current_user(
     if token_data.username is None:
         raise credentials_exception
 
-    user = get_user(users_db, username=token_data.username)
+    user = get_user(await conn.hgetall("users"), username=token_data.username)
     if user is None:
         raise credentials_exception
 
@@ -125,9 +132,10 @@ async def get_current_active_user(
 
 @router.post("/token", response_model=Token)
 async def login_for_access_token(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    conn: Annotated[aioredis.Redis, Depends(get_conn)]
 ):
-    user = authenticate_user(users_db, form_data.username, form_data.password)
+    user = authenticate_user(await conn.hgetall("users"), form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -151,16 +159,19 @@ async def read_users_me(
 
 @router.put("/register", response_model=RegisterResponse)
 async def register_user(
-    username: str, password: str, email: str | None = None, full_name: str | None = None
+    username: str, password: str,
+    conn: Annotated[aioredis.Redis, Depends(get_conn)],
+    email: str | None = None, full_name: str | None = None
 ):
+    users = await conn.hgetall("users")
     hashed_password = get_password_hash(password)
-    if get_user(users_db, username):
+    if get_user(users, username):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="username is already taken",
         )
 
-    users_db[username] = UserInDB(
+    users[username] = UserInDB(
         username=username,
         email=email,
         full_name=full_name,
@@ -168,4 +179,5 @@ async def register_user(
         hashed_password=hashed_password,
     )
 
+    await conn.hset("users", mapping=users)
     return RegisterResponse(text="Registered successfully.")
