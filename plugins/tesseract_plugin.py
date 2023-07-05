@@ -32,7 +32,9 @@ class EngTesseractPlugin:
         dys = model_response["height"]
 
         boxes = []
-        for word_count, text, x, y, w, h in zip(words_count, words, xs, ys, dxs, dys):
+        for word_count, text, x, y, w, h in zip(
+            words_count, words, xs, ys, dxs, dys, strict=True
+        ):
             if word_count != 0:
                 boxes.append(
                     ImageTextBox(

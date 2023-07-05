@@ -16,8 +16,8 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
 @lru_cache
-def get_settings():
-    return Settings()
+def get_settings() -> Settings:
+    return Settings()  # type: ignore
 
 
 async def get_conn():
@@ -55,12 +55,12 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/v1/auth/token")
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)  # type: ignore
 
 
-def get_password_hash(password):
-    return pwd_context.hash(password)
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)  # type: ignore
 
 
 def get_user(username: str):
@@ -77,30 +77,29 @@ def get_user(username: str):
 def authenticate_user(username: str, password: str):
     user = get_user(username)
     if not user:
-        return False
+        return None
     if not verify_password(password, user.hashed_password):
-        return False
+        return None
     return user
 
 
-def create_access_token(
-    data: dict,
-    expires_delta: timedelta | None = None,
-):
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, get_settings().SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt: str = jwt.encode(
+        to_encode, get_settings().SECRET_KEY, algorithm=ALGORITHM
+    )
     return encoded_jwt
 
 
 async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     setting: Annotated[Settings, Depends(get_settings)],
-):
+) -> UserInDB:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -127,7 +126,7 @@ async def get_current_user(
 
 async def get_current_active_user(
     current_user: Annotated[User, Depends(get_current_user)]
-):
+) -> User:
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
@@ -149,21 +148,23 @@ async def login_for_access_token(
         data={"sub": user.username},
         expires_delta=access_token_expires,
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return Token(access_token=access_token, token_type="bearer")
 
 
 @router.get("/users/me/", response_model=User)
 async def read_users_me(
     current_user: Annotated[User, Depends(get_current_active_user)]
-):
+) -> User:
     return current_user
 
 
 @router.put("/register", response_model=RegisterResponse)
 async def register_user(
-    username: str, password: str,
+    username: str,
+    password: str,
     conn: Annotated[aioredis.Redis, Depends(get_conn)],
-    email: str | None = None, full_name: str | None = None
+    email: str | None = None,
+    full_name: str | None = None,
 ):
     hashed_password = get_password_hash(password)
     if await conn.hexists("users", username):
@@ -171,12 +172,13 @@ async def register_user(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="username is already taken",
         )
-    encoded_data = UserInDB.json(UserInDB(
+    encoded_data = UserInDB.json(
+        UserInDB(
             username=username,
             email=email,
             full_name=full_name,
             disabled=False,
-            hashed_password=hashed_password
+            hashed_password=hashed_password,
         )
     )
     await conn.hset("users", username, encoded_data)

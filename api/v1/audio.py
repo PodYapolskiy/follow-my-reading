@@ -58,13 +58,13 @@ async def get_models() -> ModelsDataReponse:
 
 
 @router.post("/process", response_model=TaskCreateResponse)
-async def process_audio(request: AudioProcessingRequest):
-    uuid = await create_audio_task(request)
-    return uuid
+async def process_audio(request: AudioProcessingRequest) -> TaskCreateResponse:
+    created_task: TaskCreateResponse = await create_audio_task(request)
+    return created_task
 
 
 @router.get("/download", response_class=FileResponse)
-async def download_audio_file(file: UUID):
+async def download_audio_file(file: UUID) -> str:
     filepath = Path("./temp_data/audio") / str(file)
 
     if not filepath.exists():
@@ -76,7 +76,7 @@ async def download_audio_file(file: UUID):
 
 
 @router.get("/result", response_model=AudioProcessingResponse)
-async def get_response(task_id: UUID):
+async def get_response(task_id: UUID) -> AudioProcessingResponse:
     response = await _get_job_status(task_id)
     if not response.ready:
         raise HTTPException(
@@ -87,8 +87,8 @@ async def get_response(task_id: UUID):
     data = await _get_job_result(task_id)
     try:
         return AudioProcessingResponse.parse_obj(data.dict())
-    except ValidationError:
+    except ValidationError as error:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="There is no such audio processing task",
-        )
+        ) from error
