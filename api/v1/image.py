@@ -57,13 +57,13 @@ async def get_models() -> ModelsDataReponse:
 
 
 @router.post("/process", response_model=TaskCreateResponse)
-async def process_image(request: ImageProcessingRequest):
-    uuid = await create_image_task(request)
-    return uuid
+async def process_image(request: ImageProcessingRequest) -> TaskCreateResponse:
+    created_task: TaskCreateResponse = await create_image_task(request)
+    return created_task
 
 
 @router.get("/download", response_class=FileResponse)
-async def download_image_file(file: UUID):
+async def download_image_file(file: UUID) -> str:
     filepath = Path("./temp_data/image") / str(file)
 
     if not filepath.exists():
@@ -75,7 +75,7 @@ async def download_image_file(file: UUID):
 
 
 @router.get("/result", response_model=ImageProcessingResponse)
-async def get_response(task_id: UUID):
+async def get_response(task_id: UUID) -> ImageProcessingResponse:
     response = await _get_job_status(task_id)
     if not response.ready:
         raise HTTPException(
@@ -83,12 +83,12 @@ async def get_response(task_id: UUID):
             detail="The job is non-existent or not done",
         )
 
-    data = await _get_job_result(task_id)
+    job_results = await _get_job_result(task_id)
 
     try:
-        return ImageProcessingResponse.parse_obj(data.dict())
-    except ValidationError:
+        return ImageProcessingResponse.parse_obj(job_results.dict())
+    except ValidationError as error:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="There is no such image processing task",
-        )
+        ) from error

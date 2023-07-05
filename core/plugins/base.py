@@ -48,6 +48,10 @@ class ImageProcessingResult(BaseModel):
     boxes: List[ImageTextBox]
 
 
+class ImageTaskResult(ImageProcessingResult):
+    pass
+
+
 class TextDiff(BaseModel):
     audio_segment: AudioSegment
     at_char: int

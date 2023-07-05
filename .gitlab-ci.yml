@@ -5,7 +5,13 @@ stages:
 include:
   - template: Code-Quality.gitlab-ci.yml
 
-code_quality:
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG
+
+code_quality:    
   stage: linting
   artifacts:
     expire_in: 14 days
@@ -25,7 +31,6 @@ ruff:
   image: registry.gitlab.com/pipeline-components/ruff:latest
   script:
     - ruff --format=gitlab . > gl-code-quality-report.json
-  allow_failure: true
   artifacts:
     when: always
     expire_in: 14 days
@@ -33,21 +38,13 @@ ruff:
 
 mypy:
   stage: linting
-  image: python:alpine
-  variables:
-    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-  cache:
-    paths:
-      - .cache/pip/
-      - venv/
-      - .mypy_cache/
+  image: python:3.10-slim-buster
   before_script:
-    - python -m venv venv
-    - . venv/bin/activate
+    - pip install poetry 
+    - poetry config virtualenvs.create false
+    - poetry install --only mypy
   script:
-    - pip install mypy mypy-gitlab-code-quality
-    - mypy . --no-error-summary | mypy-gitlab-code-quality > gl-code-quality-report.json
-  allow_failure: true
+    - poetry run sh -lic "(mypy --config-file mypy.ini --no-error-summary . | mypy-gitlab-code-quality > gl-code-quality-report.json) || true"
   artifacts:
     when: always
     expire_in: 14 days

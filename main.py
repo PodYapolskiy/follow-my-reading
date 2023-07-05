@@ -17,7 +17,7 @@ app = FastAPI(dependencies=[Depends(RateLimiter(times=10, seconds=60))])
 
 
 @app.on_event("startup")
-async def startup():
+async def startup() -> None:
     redis = from_url("redis://localhost", encoding="utf-8", decode_responses=True)
     await FastAPILimiter.init(redis)
 
