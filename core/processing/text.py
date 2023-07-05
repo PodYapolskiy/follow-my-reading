@@ -1,7 +1,9 @@
 from typing import List, Tuple
 
 
-def match_words(first_text: str, second_text: str):
+def match_words(
+    first_text_str: str, second_text_str: str
+) -> list[tuple[int, str, str]]:
     # Returns a list of changes that need to be made to the first text to get the second one
     # Matches using whole words
     # The output format is:
@@ -9,8 +11,8 @@ def match_words(first_text: str, second_text: str):
     #            The segment of the first text which is to be removed,
     #            The segment of the second text which is to be substituted in)]
 
-    first_text = first_text.split()
-    second_text = second_text.split()
+    first_text = first_text_str.split()
+    second_text = second_text_str.split()
 
     lev_dp = [
         [461782368126487236] * (len(second_text) + 1)
@@ -58,7 +60,7 @@ def match_words(first_text: str, second_text: str):
     elif cury != 0:
         result.append("_-" + " ".join(second_text[:cury]))
 
-    joined_result: List[List[str] | str] = list()
+    joined_result: List[list[str] | str] = list()
 
     for current_str in result[::-1]:
         if not joined_result:
@@ -70,11 +72,11 @@ def match_words(first_text: str, second_text: str):
             if "-" in current_str:
                 if joined_result[-1][0][-1] != "_":
                     joined_result[-1][0] += " "
-                joined_result[-1][0] += current_str[:current_str.find("-")]
+                joined_result[-1][0] += current_str[: current_str.find("-")]
 
                 if joined_result[-1][1][-1] != "_":
                     joined_result[-1][1] += " "
-                joined_result[-1][1] += current_str[current_str.find("-") + 1:]
+                joined_result[-1][1] += current_str[current_str.find("-") + 1 :]
             else:
                 joined_result.append(current_str)
         else:
@@ -83,7 +85,7 @@ def match_words(first_text: str, second_text: str):
             else:
                 joined_result[-1] += " " + current_str
 
-    for current_str in joined_result:
+    for current_str in joined_result:  # type: ignore
         if isinstance(current_str, list):
             current_str[0] = current_str[0].replace("_", "")
             current_str[1] = current_str[1].replace("_", "")
@@ -91,7 +93,7 @@ def match_words(first_text: str, second_text: str):
     answer = []
     first_index = 0
 
-    for current_str in joined_result:
+    for current_str in joined_result:  # type: ignore
         if type(current_str) == list:
             answer.append((first_index, current_str[0], current_str[1]))
             first_index += len(current_str[0])
@@ -102,12 +104,12 @@ def match_words(first_text: str, second_text: str):
     return answer
 
 
-def match_phrases(phrases, text):
+def match_phrases(phrases: list[str], text: str) -> list[list]:
     # phrases is an iterable of strings to be matched against the text
     # it is assumed that all the strings together resemble the text
     # text is the text to match against
 
-    answers = [[] for i in phrases]
+    answers: list[list[tuple[int, str, str]]] = [[] for i in phrases]
 
     better_text, text_indices = prep_text(text)
     better_phrases, phrase_indices = prep_text(" ".join(phrases))
@@ -120,14 +122,23 @@ def match_phrases(phrases, text):
         while phrase_indices[i[0]] > cur_ind + len(phrases[y]):
             cur_ind += 1 + len(phrases[y])
             y += 1
-        answers[y].append((phrase_indices[i[0]] - cur_ind,
-                           phrases[y][phrase_indices[i[0]] - cur_ind:
-                                      phrase_indices[i[0] + len(i[1]) - 1] + 1 - cur_ind], i[2]))
+        answers[y].append(
+            (
+                phrase_indices[i[0]] - cur_ind,
+                phrases[y][
+                    phrase_indices[i[0]]
+                    - cur_ind : phrase_indices[i[0] + len(i[1]) - 1]
+                    + 1
+                    - cur_ind
+                ],
+                i[2],
+            )
+        )
 
     return answers
 
 
-def prep_text(s):
+def prep_text(s: str) -> tuple[str, list[int]]:
     # function for preparing text parsed from audio for more reliable matching
 
     changed = ""
@@ -138,10 +149,10 @@ def prep_text(s):
             changed += s[i]
             indices.append(i)
 
-    indices = indices[len(changed) - len(changed.lstrip()):]
+    indices = indices[len(changed) - len(changed.lstrip()) :]
 
     if changed.rstrip() != changed:
-        indices = indices[:len(changed.rstrip()) - len(changed)]
+        indices = indices[: len(changed.rstrip()) - len(changed)]
 
     return changed.lower().strip(), indices
 
