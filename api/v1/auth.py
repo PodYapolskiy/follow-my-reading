@@ -63,19 +63,20 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)  # type: ignore
 
 
-def get_user(username: str):
+async def get_user(username: str) -> UserInDB | None:
     conn = aioredis.from_url("redis://localhost", decode_responses=True)
     try:
         db = await conn.hget("users", username)
-        if db:
-            return UserInDB.parse_raw(db)
-        return None
+        if not db:
+            return None
+
+        return UserInDB.parse_raw(db)
     finally:
-        conn.close()
+        await conn.close()
 
 
-def authenticate_user(username: str, password: str):
-    user = get_user(username)
+async def authenticate_user(username: str, password: str) -> UserInDB | None:
+    user = await get_user(username)
     if not user:
         return None
     if not verify_password(password, user.hashed_password):
@@ -117,7 +118,7 @@ async def get_current_user(
     if token_data.username is None:
         raise credentials_exception
 
-    user = get_user(username=token_data.username)
+    user = await get_user(username=token_data.username)
     if user is None:
         raise credentials_exception
 
@@ -135,8 +136,8 @@ async def get_current_active_user(
 @router.post("/token", response_model=Token)
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-):
-    user = authenticate_user(form_data.username, form_data.password)
+) -> Token:
+    user = await authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -165,7 +166,7 @@ async def register_user(
     conn: Annotated[aioredis.Redis, Depends(get_conn)],
     email: str | None = None,
     full_name: str | None = None,
-):
+) -> RegisterResponse:
     hashed_password = get_password_hash(password)
     if await conn.hexists("users", username):
         raise HTTPException(
