@@ -1,14 +1,11 @@
+include:
+  - template: Code-Quality.gitlab-ci.yml
+
 stages:
   - lint
   - quality
   - test
 
-include:
-  - template: Code-Quality.gitlab-ci.yml
-
-workflow:
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
 
 code_quality:    
   stage: quality
