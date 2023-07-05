@@ -41,7 +41,7 @@ mypy:
   before_script:
     - pip install poetry 
     - poetry config virtualenvs.create false
-    - poetry install
+    - poetry install --only dev
     - poetry run pip install mypy-gitlab-code-quality
   script:
     - poetry run "(mypy --config-file mypy.ini --no-error-summary . | mypy-gitlab-code-quality > gl-code-quality-report.json) || true"
