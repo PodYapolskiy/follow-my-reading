@@ -1,6 +1,5 @@
 stages:
   - linting
-  - quality
 
 include:
   - template: Code-Quality.gitlab-ci.yml
@@ -11,13 +10,13 @@ workflow:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH
 
 code_quality:    
-  stage: quality
+  stage: linting
   artifacts:
     expire_in: 14 days
     paths: [gl-code-quality-report.json]
 
 code_quality_html:
-  stage: quality
+  stage: linting
   extends: code_quality
   variables:
     REPORT_FORMAT: html
@@ -38,16 +37,6 @@ ruff:
 mypy:
   stage: linting
   image: python:alpine
-  variables:
-    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-  cache:
-    paths:
-      - .cache/pip/
-      - venv/
-      - .mypy_cache/
-  before_script:
-    - python -m venv venv
-    - . venv/bin/activate
   script:
     - pip install mypy mypy-gitlab-code-quality
     - mypy . --no-error-summary | mypy-gitlab-code-quality > gl-code-quality-report.json
