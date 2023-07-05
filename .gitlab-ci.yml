@@ -1,5 +1,6 @@
 stages:
   - linting
+  - test
 
 include:
   - template: Code-Quality.gitlab-ci.yml
@@ -29,7 +30,6 @@ ruff:
   image: registry.gitlab.com/pipeline-components/ruff:latest
   script:
     - ruff --format=gitlab . > gl-code-quality-report.json
-    - cat gl-code-quality-report.json # debug
   artifacts:
     when: always
     expire_in: 14 days
@@ -43,9 +43,7 @@ mypy:
     - poetry config virtualenvs.create false
     - poetry install --only mypy
   script:
-    - ls -R # debug
     - poetry run sh -lic "(mypy --config-file mypy.ini --no-error-summary . | mypy-gitlab-code-quality > gl-code-quality-report.json) || true"
-    - cat gl-code-quality-report.json # debug
   artifacts:
     when: always
     expire_in: 14 days
