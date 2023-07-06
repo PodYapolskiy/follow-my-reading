@@ -1,6 +1,5 @@
 from math import log10 as lg
 from os import mkdir, path
-from typing import List, Tuple
 
 from librosa import get_duration
 from uuid import uuid4, UUID
@@ -48,7 +47,6 @@ def split_audio(  # type: ignore
     if not path.exists(store_path):
         mkdir(store_path)
 
-<<<<<<< core/processing/audio_split.py
     # Creating the pydub.AudioSegment if it is not already created
     if isinstance(file, str):
         audio: AudioSegment = AudioSegment.from_file(file)  # type: ignore

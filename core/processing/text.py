@@ -1,14 +1,14 @@
-from typing import List
+from typing import List, Tuple
 
 
 def match_words(
     first_text_str: str, second_text_str: str
-) -> list[tuple[int, str, str]]:
+) -> List[Tuple[int, str, str]]:
     """
     Matches two texts and returns the difference via a list of errors
     (i.e. the changes that need to be made to the first text to obtain the second)
-    :param first_text: the text in which we try to find the errors
-    :param second_text: the "correct" text
+    :param first_text_str: the text in which we try to find the errors
+    :param second_text_str: the "correct" text
     :return: a List[Tuple(the index at which the error occurs (the beginning of the phrase to replace),
                           the incorrect phrase,
                           the correct phrase)]
@@ -115,7 +115,6 @@ def match_words(
     return answer
 
 
-<<<<<<< core/processing/text.py
 def match_phrases(phrases: List[str], text: str) -> List[List[Tuple[int, str, str]]]:
     """
     Matches a list of phrases with a text and returns the errors in the phrases
