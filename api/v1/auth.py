@@ -25,7 +25,7 @@ async def get_conn() -> AsyncGenerator[aioredis.Redis, None]:
     try:
         yield conn
     finally:
-        conn.close()
+        await conn.close()
 
 
 class Token(BaseModel):
