@@ -5,9 +5,10 @@ from typing import List, Tuple
 from librosa import get_duration
 from uuid import uuid4, UUID
 from pydub import AudioSegment, silence
+from typing import List, Tuple
 
 
-def duration(audio: str):
+def duration(audio: str) -> float:
     filepath = "./temp_data/audio/" + audio
     return get_duration(path=filepath)
 
@@ -30,7 +31,9 @@ def fraction_to_dbfs(fraction: float) -> float:
     return 20 * lg(fraction)
 
 
-def split_audio(file: str | AudioSegment, intervals: List[Tuple[float, float]]) -> List[UUID]:
+def split_audio(  # type: ignore
+    file: str | AudioSegment, intervals: List[Tuple[float, float]]
+) -> List[UUID]:
     """
     Splits the audio using timestamps for beginning and end
     Supports mul
@@ -39,16 +42,17 @@ def split_audio(file: str | AudioSegment, intervals: List[Tuple[float, float]]) 
     :return: the uuids of the cut-up files (in order of appearance in intervals)
     """
 
-    store_path = "./temp_data/audio"  # a temporal change just for extract_text to work with split audio
+    store_path = "./temp_data/audio"
 
     # Creating the directory to store the files if it does not exist
     if not path.exists(store_path):
         mkdir(store_path)
 
+<<<<<<< core/processing/audio_split.py
     # Creating the pydub.AudioSegment if it is not already created
-    if type(file) == str:
-        audio = AudioSegment.from_file(file)
-    elif type(file) == AudioSegment:
+    if isinstance(file, str):
+        audio: AudioSegment = AudioSegment.from_file(file)  # type: ignore
+    elif isinstance(file, AudioSegment):
         audio = file
     else:
         raise TypeError("Invalid argument")
@@ -65,7 +69,9 @@ def split_audio(file: str | AudioSegment, intervals: List[Tuple[float, float]]) 
     return files
 
 
-def split_silence(file: str, max_interval=30, cutoff_ratio=0.05) -> Tuple[List[UUID], List[Tuple[int, int]]]:
+def split_silence(
+    file: str, max_interval: float = 30, cutoff_ratio: float = 0.05
+) -> Tuple[List[UUID], List[Tuple[int, int]]]:
     """
     Splits the audio file into segments of some length
     Only cuts on silence, never cuts words
@@ -76,8 +82,8 @@ def split_silence(file: str, max_interval=30, cutoff_ratio=0.05) -> Tuple[List[U
     :return: the list of the UUIDs of all the cut-up segments and the intervals at which they were cut
     """
 
-    # Creating the pydub.AudioSegment and preparing some variables
-    audio = AudioSegment.from_file(file, file[file.rfind(".") + 1 :])
+    # Creating the pydub.AudioSegment and preparing some variables for audio processing
+    audio: AudioSegment = AudioSegment.from_file(file, file[file.rfind(".") + 1 :])  # type: ignore
     max_dbfs = audio.max_dBFS
     noise_level = fraction_to_dbfs(cutoff_ratio * dbfs_to_fraction(max_dbfs))
 

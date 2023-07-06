@@ -1,7 +1,9 @@
-from typing import List, Tuple
+from typing import List
 
 
-def match_words(first_text: str, second_text: str) -> List[Tuple[int, str, str]]:
+def match_words(
+    first_text_str: str, second_text_str: str
+) -> list[tuple[int, str, str]]:
     """
     Matches two texts and returns the difference via a list of errors
     (i.e. the changes that need to be made to the first text to obtain the second)
@@ -12,17 +14,17 @@ def match_words(first_text: str, second_text: str) -> List[Tuple[int, str, str]]
                           the correct phrase)]
     """
 
-    # split the text so the algorithm compares whole words
-    first_text = first_text.split()
-    second_text = second_text.split()
+    # Split the text so the algorithm compares whole words
+    first_text = first_text_str.split()
+    second_text = second_text_str.split()
 
-    # this algorithm uses levenshtein distance to determine the most probable matching
+    # This algorithm uses levenshtein distance to determine the most probable matching
     levenshtein_dp = [
         [461782368126487236] * (len(second_text) + 1)
         for i in range(len(first_text) + 1)
     ]
 
-    # count the dynamic programming table as per the usual algorithm
+    # Count the dynamic programming table as per the usual algorithm
     levenshtein_dp[0][0] = 0
     for i in range(1, len(first_text) + 1):
         levenshtein_dp[i][0] = i
@@ -36,7 +38,7 @@ def match_words(first_text: str, second_text: str) -> List[Tuple[int, str, str]]
                 levenshtein_dp[i][j - 1] + 1,
             )
 
-    # backtracks the result getting the list of matched words
+    # Backtracks the result getting the list of matched words
     word_result: List[str] = list()
     current_row = len(first_text)
     current_column = len(second_text)
@@ -80,11 +82,11 @@ def match_words(first_text: str, second_text: str) -> List[Tuple[int, str, str]]
             if "-" in current_str:
                 if joined_result[-1][0][-1] != "_":
                     joined_result[-1][0] += " "
-                joined_result[-1][0] += current_str[:current_str.find("-")]
+                joined_result[-1][0] += current_str[: current_str.find("-")]
 
                 if joined_result[-1][1][-1] != "_":
                     joined_result[-1][1] += " "
-                joined_result[-1][1] += current_str[current_str.find("-") + 1:]
+                joined_result[-1][1] += current_str[current_str.find("-") + 1 :]
             else:
                 joined_result.append(current_str)
         else:
@@ -93,7 +95,7 @@ def match_words(first_text: str, second_text: str) -> List[Tuple[int, str, str]]
             else:
                 joined_result[-1] += " " + current_str
 
-    for current_str in joined_result:
+    for current_str in joined_result:  # type: ignore
         if isinstance(current_str, list):
             current_str[0] = current_str[0].replace("_", "")
             current_str[1] = current_str[1].replace("_", "")
@@ -102,7 +104,7 @@ def match_words(first_text: str, second_text: str) -> List[Tuple[int, str, str]]
     answer: List[Tuple[int, str, str]] = []
     first_index = 0
 
-    for current_str in joined_result:
+    for current_str in joined_result:  # type: ignore
         if type(current_str) == list:
             answer.append((first_index, current_str[0], current_str[1]))
             first_index += len(current_str[0])
@@ -113,6 +115,7 @@ def match_words(first_text: str, second_text: str) -> List[Tuple[int, str, str]]
     return answer
 
 
+<<<<<<< core/processing/text.py
 def match_phrases(phrases: List[str], text: str) -> List[List[Tuple[int, str, str]]]:
     """
     Matches a list of phrases with a text and returns the errors in the phrases
@@ -133,16 +136,25 @@ def match_phrases(phrases: List[str], text: str) -> List[List[Tuple[int, str, st
     full_answer = match_words(better_phrases, better_text)
 
     # Cross-referencing the indices in the full answer to distribute the errors by phrases
-    answers = [[] for i in phrases]
+    answers: List[List[Tuple[int, str, str]]] = [[] for i in phrases]
     y = 0
     cur_ind = 0
     for i in full_answer:
         while phrase_indices[i[0]] > cur_ind + len(phrases[y]):
             cur_ind += 1 + len(phrases[y])
             y += 1
-        answers[y].append((phrase_indices[i[0]] - cur_ind,
-                           phrases[y][phrase_indices[i[0]] - cur_ind:
-                                      phrase_indices[i[0] + len(i[1]) - 1] + 1 - cur_ind], i[2]))
+        answers[y].append(
+            (
+                phrase_indices[i[0]] - cur_ind,
+                phrases[y][
+                    phrase_indices[i[0]]
+                    - cur_ind : phrase_indices[i[0] + len(i[1]) - 1]
+                    + 1
+                    - cur_ind
+                ],
+                i[2],
+            )
+        )
 
     return answers
 
@@ -168,7 +180,7 @@ def prep_text(text: str) -> Tuple[str, List[int]]:
     indices = indices[len(changed) - len(changed.lstrip()):]
 
     if changed.rstrip() != changed:
-        indices = indices[:len(changed.rstrip()) - len(changed)]
+        indices = indices[: len(changed.rstrip()) - len(changed)]
 
     return changed.lower().strip(), indices
 

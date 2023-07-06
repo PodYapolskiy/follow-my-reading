@@ -16,7 +16,7 @@ def get_audio_plugins() -> Dict[str, PluginInfo]:
     NO negative side effects of running the function or function's body
     several times.
     """
-    return _get_audio_plugins().get(blocking=True)
+    return _get_audio_plugins().get(blocking=True)  # type: ignore
 
 
 @lru_cache
@@ -30,4 +30,4 @@ def get_image_plugins() -> Dict[str, PluginInfo]:
     NO negative side effects of running the function or function's body
     several times.
     """
-    return _get_image_plugins().get(blocking=True)
+    return _get_image_plugins().get(blocking=True)  # type: ignore

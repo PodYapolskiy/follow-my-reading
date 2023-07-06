@@ -2,6 +2,7 @@ import importlib
 import pathlib
 from dataclasses import dataclass
 from typing import Dict, List, Type
+from types import ModuleType
 
 from core.plugins.base import AudioProcessingPlugin, BasePlugin, ImageProcessingPlugin
 
@@ -19,7 +20,7 @@ class PluginInfo:
     languages: List[str]
 
     @staticmethod
-    def from_baseplugin_cls(cls: Type[BasePlugin]):
+    def from_baseplugin_cls(cls: Type[BasePlugin]) -> "PluginInfo":
         """
         `from_baseplugin_cls` is a static method (constructor), which build `PluginInfo`
         using date from a class, that satisfy to `BasePlugin` protocol
@@ -45,16 +46,7 @@ and plugin class names as values. E.g.: 'easyocr' -> 'EasyOCRPlugin'
 IMAGE_PLUGINS: Dict[str, PluginInfo] = {}
 
 
-def register_plugin(plugin_cls: Type[BasePlugin]):
-    """
-    `register_plugin` is a function (decorator) which accepts a class (not an object),
-    that satisfies protocol `BasePlugin`. It checks, weather the class additionally
-    satisfies protocols `ImageProccesingPlugin` or `AudioProcessingPlugin`. If it does,
-    the function adds this plugin into the `IMAGE_PLUGINS` or `AUDIO_PLUGINS` dictionary
-    correspondingly and returns the class.
-    If the class does not satisfy neither of these protocols, the function warn user,
-    and drops the class.
-    """
+def register_plugin(plugin_cls: Type[BasePlugin]) -> Type | None:
     if isinstance(plugin_cls, ImageProcessingPlugin):
         # if class matches ImageModel interface
 
@@ -68,12 +60,12 @@ def register_plugin(plugin_cls: Type[BasePlugin]):
         AUDIO_PLUGINS[plugin_cls.name] = PluginInfo.from_baseplugin_cls(plugin_cls)
     else:
         # todo: warning about not matching interface
-        return
+        return None
 
     return plugin_cls
 
 
-def load_plugins():
+def load_plugins() -> List[ModuleType]:
     """
     `load_plugins` is a function, that iterates over all files in `./plugins` directory,
     which satify the mask "*_plugin.py", and dynamically imports them as modules,

@@ -1,5 +1,6 @@
 import logging
 
+from typing import Any, Dict
 from huey import RedisHuey
 
 from core.plugins import (
@@ -9,9 +10,16 @@ from core.plugins import (
     ImageProcessingResult,
     load_plugins,
 )
-from core.plugins.base import AudioSegment, AudioTaskResult, TaskResult, TextDiff
+from core.plugins.base import (
+    AudioSegment,
+    AudioTaskResult,
+    TaskResult,
+    TextDiff,
+    ImageTaskResult,
+)
+from core.plugins.loader import PluginInfo
 from core.processing.text import match_phrases
-from core.processing.audio_split import split_audio, split_silence
+from core.processing.audio_split import split_audio
 
 scheduler = RedisHuey()
 
@@ -20,7 +28,7 @@ plugins = []
 
 
 @scheduler.on_startup()
-def load_plugins_into_memories():
+def load_plugins_into_memories() -> None:
     """
     Load plugins on startup. This function is introduced
     in order not to load plugins into the module on import.
@@ -32,7 +40,7 @@ def load_plugins_into_memories():
 logger = logging.getLogger("huey")
 
 
-def _plugin_class_method_call(class_name: str, function: str, filepath: str):
+def _plugin_class_method_call(class_name: str, function: str, filepath: str) -> Any:
     """
     `_plugin_class_method_call` is a function, which search each plugin for `class_name`
     object. If the object is not found, it raises KeyError. If found, the function
@@ -64,7 +72,7 @@ def _plugin_class_method_call(class_name: str, function: str, filepath: str):
 
 
 @scheduler.task()
-def dynamic_plugin_call(class_name: str, function: str, filepath: str):
+def dynamic_plugin_call(class_name: str, function: str, filepath: str) -> Any:
     """
     `dynamic_plugin_call` is a sheduled job, which accepts `class_name` (str),
     `function` (str), `filepath` (str) and returns the result of calling
@@ -73,7 +81,9 @@ def dynamic_plugin_call(class_name: str, function: str, filepath: str):
     return _plugin_class_method_call(class_name, function, filepath)
 
 
-def _audio_process(audio_class: str, audio_function: str, audio_path: str):
+def _audio_process(
+    audio_class: str, audio_function: str, audio_path: str
+) -> AudioTaskResult:
     logger.info("Executing audio processing")
     audio_model_response: AudioProcessingResult = _plugin_class_method_call(
         audio_class, audio_function, audio_path
@@ -101,20 +111,26 @@ def _audio_process(audio_class: str, audio_function: str, audio_path: str):
 
 
 @scheduler.task()
-def audio_processing_call(audio_class: str, audio_function: str, audio_path: str):
+def audio_processing_call(
+    audio_class: str, audio_function: str, audio_path: str
+) -> AudioTaskResult:
     return _audio_process(audio_class, audio_function, audio_path)
 
 
-def _image_process(image_class: str, image_function: str, image_path: str):
+def _image_process(
+    image_class: str, image_function: str, image_path: str
+) -> ImageTaskResult:
     logger.info("Executing image processing")
     image_model_response: ImageProcessingResult = _plugin_class_method_call(
         image_class, image_function, image_path
     )
-    return image_model_response
+    return ImageTaskResult.parse_obj(image_model_response.dict())
 
 
 @scheduler.task()
-def image_processing_call(image_class: str, image_function: str, image_path: str):
+def image_processing_call(
+    image_class: str, image_function: str, image_path: str
+) -> ImageTaskResult:
     return _image_process(image_class, image_function, image_path)
 
 
@@ -126,7 +142,7 @@ def compare_image_audio(
     image_class: str,
     image_function: str,
     image_path: str,
-):
+) -> TaskResult:
     """
     `compare_image_audio` is a scheduled job, which accepts these parameters:
     - `audio_class: str`
@@ -173,7 +189,7 @@ def compare_image_audio(
 
 
 @scheduler.task()
-def _get_audio_plugins():
+def _get_audio_plugins() -> Dict[str, PluginInfo]:
     """
     `get_audio_plugins` is a scheduled job, which returns info about
     loaded into the worker audio plugins.
@@ -182,7 +198,7 @@ def _get_audio_plugins():
 
 
 @scheduler.task()
-def _get_image_plugins():
+def _get_image_plugins() -> Dict[str, PluginInfo]:
     """
     `get_image_plugins` is scheduled job, which returns info about
     loaded into the worker image plugins.
