@@ -37,6 +37,30 @@ def _return_headers_with_token(token_info: dict[str, str]):
     }
 
 
+def test_general():
+    with TestClient(app) as client:
+        response = client.post("/v1/audio/upload", data={"upload_file": "some file"})
+        assert response.status_code == 401
+
+        response = client.get("/v1/audio/models")
+        assert response.status_code == 401
+
+        response = client.post(
+            "/v1/audio/process",
+            data={
+                "audio_file": "some audio file",
+                "audio_model": "some model name",
+            },
+        )
+        assert response.status_code == 401
+
+        response = client.get("/v1/audio/download")
+        assert response.status_code == 401
+
+        response = client.get("/v1/audio/result")
+        assert response.status_code == 401
+
+
 def test_request_rate_limit():
     with TestClient(app) as client:
         token_info = _register_and_get_token_info(client)
