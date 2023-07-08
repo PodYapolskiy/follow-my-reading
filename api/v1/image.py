@@ -139,7 +139,7 @@ async def process_image(request: ImageProcessingRequest) -> TaskCreateResponse:
     - 404, No such image file available
     - 404, No such image model available
     """
-    created_task: TaskCreateResponse = await create_image_task(request)
+    created_task: TaskCreateResponse = create_image_task(request)
     return created_task
 
 
@@ -243,14 +243,14 @@ async def get_response(task_id: UUID) -> ImageProcessingResponse:
     - 406, is impossible to get task result (task does not exist or it has not finished yet).
     - 422, if the task was not created as audio processing task
     """
-    response = await _get_job_status(task_id)
+    response = _get_job_status(task_id)
     if not response.ready:
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="The job is non-existent or not done",
         )
 
-    job_results = await _get_job_result(task_id)
+    job_results = _get_job_result(task_id)
 
     try:
         return ImageProcessingResponse.parse_obj(job_results.dict())
