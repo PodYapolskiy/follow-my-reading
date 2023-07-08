@@ -1,68 +1,78 @@
-from typing import List
+from typing import List, Tuple
 
 
 def match_words(
     first_text_str: str, second_text_str: str
-) -> list[tuple[int, str, str]]:
-    # Returns a list of changes that need to be made to the first text to get the second one
-    # Matches using whole words
-    # The output format is:
-    # List[Tuple(Index in the first text where the difference was found,
-    #            The segment of the first text which is to be removed,
-    #            The segment of the second text which is to be substituted in)]
+) -> List[Tuple[int, str, str]]:
+    """
+    Matches two texts and returns the difference via a list of errors
+    (i.e. the changes that need to be made to the first text to obtain the second)
+    :param first_text_str: the text in which we try to find the errors
+    :param second_text_str: the "correct" text
+    :return: a List[Tuple(the index at which the error occurs (the beginning of the phrase to replace),
+                          the incorrect phrase,
+                          the correct phrase)]
+    """
 
+    # Split the text so the algorithm compares whole words
     first_text = first_text_str.split()
     second_text = second_text_str.split()
 
-    lev_dp = [
+    # This algorithm uses levenshtein distance to determine the most probable matching
+    levenshtein_dp = [
         [461782368126487236] * (len(second_text) + 1)
         for i in range(len(first_text) + 1)
     ]
 
-    lev_dp[0][0] = 0
+    # Count the dynamic programming table as per the usual algorithm
+    levenshtein_dp[0][0] = 0
     for i in range(1, len(first_text) + 1):
-        lev_dp[i][0] = i
+        levenshtein_dp[i][0] = i
     for i in range(1, len(second_text) + 1):
-        lev_dp[0][i] = i
+        levenshtein_dp[0][i] = i
     for i in range(1, len(first_text) + 1):
         for j in range(1, len(second_text) + 1):
-            lev_dp[i][j] = min(
-                lev_dp[i - 1][j - 1] + (first_text[i - 1] != second_text[j - 1]),
-                lev_dp[i - 1][j] + 1,
-                lev_dp[i][j - 1] + 1,
+            levenshtein_dp[i][j] = min(
+                levenshtein_dp[i - 1][j - 1] + (first_text[i - 1] != second_text[j - 1]),
+                levenshtein_dp[i - 1][j] + 1,
+                levenshtein_dp[i][j - 1] + 1,
             )
 
-    result: List[str] = list()
-    curx = len(first_text)
-    cury = len(second_text)
-    while curx * cury != 0:
-        if first_text[curx - 1] == second_text[cury - 1]:
-            result.append(first_text[curx - 1])
-            curx -= 1
-            cury -= 1
+    # Backtracks the result getting the list of matched words
+    word_result: List[str] = list()
+    current_row = len(first_text)
+    current_column = len(second_text)
+    while current_row * current_column != 0:
+        if first_text[current_row - 1] == second_text[current_column - 1]:
+            word_result.append(first_text[current_row - 1])
+            current_row -= 1
+            current_column -= 1
             continue
         optimal = min(
-            lev_dp[curx - 1][cury - 1], lev_dp[curx - 1][cury], lev_dp[curx][cury - 1]
+            levenshtein_dp[current_row - 1][current_column - 1],
+            levenshtein_dp[current_row - 1][current_column],
+            levenshtein_dp[current_row][current_column - 1]
         )
-        if optimal == lev_dp[curx - 1][cury - 1]:
-            result.append(first_text[curx - 1] + "-" + second_text[cury - 1])
-            curx -= 1
-            cury -= 1
-        elif optimal == lev_dp[curx - 1][cury]:
-            result.append(first_text[curx - 1] + "-_")
-            curx -= 1
-        elif optimal == lev_dp[curx][cury - 1]:
-            result.append("_-" + second_text[cury - 1])
-            cury -= 1
+        if optimal == levenshtein_dp[current_row - 1][current_column - 1]:
+            word_result.append(first_text[current_row - 1] + "-" + second_text[current_column - 1])
+            current_row -= 1
+            current_column -= 1
+        elif optimal == levenshtein_dp[current_row - 1][current_column]:
+            word_result.append(first_text[current_row - 1] + "-_")
+            current_row -= 1
+        elif optimal == levenshtein_dp[current_row][current_column - 1]:
+            word_result.append("_-" + second_text[current_column - 1])
+            current_column -= 1
 
-    if curx != 0:
-        result.append(" ".join(first_text[:curx]) + "-_")
-    elif cury != 0:
-        result.append("_-" + " ".join(second_text[:cury]))
+    if current_row != 0:
+        word_result.append(" ".join(first_text[:current_row]) + "-_")
+    elif current_column != 0:
+        word_result.append("_-" + " ".join(second_text[:current_column]))
 
-    joined_result: List[list[str] | str] = list()
+    # joining all separate words so we have a unified answer
+    joined_result: List[List[str] | str] = list()
 
-    for current_str in result[::-1]:
+    for current_str in word_result[::-1]:
         if not joined_result:
             if "-" in current_str:
                 joined_result.append(current_str.split("-"))
@@ -90,7 +100,8 @@ def match_words(
             current_str[0] = current_str[0].replace("_", "")
             current_str[1] = current_str[1].replace("_", "")
 
-    answer = []
+    # Calculating the final answer by cross-referencing the joined answers with the initial text
+    answer: List[Tuple[int, str, str]] = []
     first_index = 0
 
     for current_str in joined_result:  # type: ignore
@@ -104,18 +115,27 @@ def match_words(
     return answer
 
 
-def match_phrases(phrases: list[str], text: str) -> list[list]:
-    # phrases is an iterable of strings to be matched against the text
-    # it is assumed that all the strings together resemble the text
-    # text is the text to match against
+def match_phrases(phrases: List[str], text: str) -> List[List[Tuple[int, str, str]]]:
+    """
+    Matches a list of phrases with a text and returns the errors in the phrases
+    Assumes that the list of phrases combines into the text
+    :param phrases: a list of phrases to be checked
+    :param text: the "correct" text
+    :return: the list of errors by phrases, i.e.
+            List[List[Tuple[the index at which the error occurs (the beginning of the phrase to replace],
+                          the incorrect phrase,
+                          the correct phrase]]]
+    """
 
-    answers: list[list[tuple[int, str, str]]] = [[] for i in phrases]
-
+    # Preparing the texts so that capital letters and non-letter symbols are ignored
     better_text, text_indices = prep_text(text)
     better_phrases, phrase_indices = prep_text(" ".join(phrases))
 
+    # Calculating the full answer using levenshtein distance
     full_answer = match_words(better_phrases, better_text)
 
+    # Cross-referencing the indices in the full answer to distribute the errors by phrases
+    answers: List[List[Tuple[int, str, str]]] = [[] for i in phrases]
     y = 0
     cur_ind = 0
     for i in full_answer:
@@ -138,18 +158,25 @@ def match_phrases(phrases: list[str], text: str) -> list[list]:
     return answers
 
 
-def prep_text(s: str) -> tuple[str, list[int]]:
-    # function for preparing text parsed from audio for more reliable matching
+def prep_text(text: str) -> Tuple[str, List[int]]:
+    """
+    Prepares the text so it is fully lowercase and does not contain any non-letter symbols
+    It is using inbuilt isalpha() and lower() functions so it should support multiple languages
+    :param text: the text to be prepared
+    :return: the changed text and a list of indices that map the changed text to the initial one
+    """
 
-    changed = ""
-    indices = []
+    changed: str = ""
+    indices: List[int] = []
 
-    for i in range(len(s)):
-        if s[i].isalpha() or s[i] == " " and (len(changed) == 0 or changed[-1] != " "):
-            changed += s[i]
+    # Remove any non-letter symbols
+    for i in range(len(text)):
+        if text[i].isalpha() or text[i] == " " and (len(changed) == 0 or changed[-1] != " "):
+            changed += text[i]
             indices.append(i)
 
-    indices = indices[len(changed) - len(changed.lstrip()) :]
+    # Cut off any unnecessary spaces in the beginning and end
+    indices = indices[len(changed) - len(changed.lstrip()):]
 
     if changed.rstrip() != changed:
         indices = indices[: len(changed.rstrip()) - len(changed)]
