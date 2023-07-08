@@ -1,6 +1,5 @@
 from typing import Any
 from uuid import UUID
-from pathlib import Path
 from pydantic.error_wrappers import ValidationError
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -10,7 +9,7 @@ from core import task_system
 from core.plugins.base import AudioProcessingFunction, ImageProcessingFunction
 from core.plugins.no_mem import get_audio_plugins, get_image_plugins
 from core.task_system import scheduler
-
+from config import get_config
 from .auth import get_current_active_user
 from .models import (
     TaskCreateRequest,
@@ -21,6 +20,8 @@ from .models import (
     ImageProcessingRequest,
 )
 
+config = get_config()
+
 router = APIRouter(
     prefix="/task", tags=["task"], dependencies=[Depends(get_current_active_user)]
 )
@@ -28,8 +29,7 @@ router = APIRouter(
 
 async def create_audio_task(request: AudioProcessingRequest) -> TaskCreateResponse:
     audio_plugin_info = get_audio_plugins().get(request.audio_model)
-    files_dir = Path("./temp_data")
-    audio_file_path = files_dir / "audio" / str(request.audio_file)
+    audio_file_path = config.storage.audio_dir / str(request.audio_file)
 
     if audio_plugin_info is None:
         raise HTTPException(
@@ -43,7 +43,9 @@ async def create_audio_task(request: AudioProcessingRequest) -> TaskCreateRespon
         )
 
     job: Result = task_system.audio_processing_call(  # type: ignore
-        audio_plugin_info.class_name, AudioProcessingFunction, str(audio_file_path)
+        audio_plugin_info.class_name,
+        AudioProcessingFunction,
+        audio_file_path.as_posix(),
     )
 
     return TaskCreateResponse(task_id=UUID(job.id))
@@ -51,8 +53,7 @@ async def create_audio_task(request: AudioProcessingRequest) -> TaskCreateRespon
 
 async def create_image_task(request: ImageProcessingRequest) -> TaskCreateResponse:
     image_plugin_info = get_image_plugins().get(request.image_model)
-    files_dir = Path("./temp_data")
-    image_file_path = files_dir / "image" / str(request.image_file)
+    image_file_path = config.storage.image_dir / str(request.image_file)
 
     if image_plugin_info is None:
         raise HTTPException(
@@ -66,7 +67,9 @@ async def create_image_task(request: ImageProcessingRequest) -> TaskCreateRespon
         )
 
     job: Result = task_system.image_processing_call(  # type: ignore
-        image_plugin_info.class_name, ImageProcessingFunction, str(image_file_path)
+        image_plugin_info.class_name,
+        ImageProcessingFunction,
+        image_file_path.as_posix(),
     )
 
     return TaskCreateResponse(task_id=UUID(job.id))
@@ -76,9 +79,9 @@ async def create_image_task(request: ImageProcessingRequest) -> TaskCreateRespon
 async def create_task(request: TaskCreateRequest) -> TaskCreateResponse:
     image_plugin_info = get_image_plugins().get(request.image_model)
     audio_plugin_info = get_audio_plugins().get(request.audio_model)
-    files_dir = Path("./temp_data")
-    image_file_path = files_dir / "image" / str(request.image_file)
-    audio_file_path = files_dir / "audio" / str(request.audio_file)
+
+    image_file_path = config.storage.image_dir / str(request.image_file)
+    audio_file_path = config.storage.audio_dir / str(request.audio_file)
 
     if image_plugin_info is None:
         raise HTTPException(
@@ -107,10 +110,10 @@ async def create_task(request: TaskCreateRequest) -> TaskCreateResponse:
     job: Result = task_system.compare_image_audio(  # type: ignore
         audio_plugin_info.class_name,
         AudioProcessingFunction,
-        str(audio_file_path),
+        audio_file_path.as_posix(),
         image_plugin_info.class_name,
         ImageProcessingFunction,
-        str(image_file_path),
+        image_file_path.as_posix(),
     )
     return TaskCreateResponse(task_id=UUID(job.id))
 

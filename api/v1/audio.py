@@ -4,9 +4,8 @@ import aiofiles
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 
-from pathlib import Path
 from pydantic.error_wrappers import ValidationError
-
+from config import get_config
 from core.plugins.no_mem import get_audio_plugins
 from .task import create_audio_task, _get_job_status, _get_job_result
 from .auth import get_current_active_user
@@ -19,6 +18,7 @@ from .models import (
     TaskCreateResponse,
 )
 
+config = get_config()
 router = APIRouter(
     prefix="/audio", tags=["audio"], dependencies=[Depends(get_current_active_user)]
 )
@@ -41,7 +41,7 @@ async def upload_audio(upload_file: UploadFile) -> UploadFileResponse:
             detail="Only audio files uploads are allowed",
         )
 
-    async with aiofiles.open("./temp_data/audio/" + str(file_id), "wb") as file:
+    async with aiofiles.open(config.storage.audio_dir / str(file_id), "wb") as file:
         byte_content = await upload_file.read()
         await file.write(byte_content)
 
@@ -65,7 +65,7 @@ async def process_audio(request: AudioProcessingRequest) -> TaskCreateResponse:
 
 @router.get("/download", response_class=FileResponse)
 async def download_audio_file(file: UUID) -> str:
-    filepath = Path("./temp_data/audio") / str(file)
+    filepath = config.storage.audio_dir / str(file)
 
     if not filepath.exists():
         raise HTTPException(

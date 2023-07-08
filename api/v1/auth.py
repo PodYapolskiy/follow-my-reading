@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from functools import lru_cache
 from typing import Annotated, AsyncGenerator
 import aioredis
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -8,24 +7,19 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 
-from .config import Settings
+from config import get_config
 from .models import RegisterResponse
 
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+config = get_config()
 
 
-@lru_cache
-def get_settings() -> Settings:
-    return Settings()  # type: ignore
-
-
-async def get_conn() -> AsyncGenerator[aioredis.Redis, None]:
-    conn = aioredis.from_url("redis://localhost", decode_responses=True)
+async def get_redis_connection() -> AsyncGenerator[aioredis.Redis, None]:
+    connection = aioredis.from_url(config.redis.url, decode_responses=True)
     try:
-        yield conn
+        yield connection
     finally:
-        conn.close()
+        await connection.close()
 
 
 class Token(BaseModel):
@@ -64,15 +58,13 @@ def get_password_hash(password: str) -> str:
 
 
 async def get_user(username: str) -> UserInDB | None:
-    conn = aioredis.from_url("redis://localhost", decode_responses=True)
-    try:
-        db = await conn.hget("users", username)
+    async for connection in get_redis_connection():  # async generator syntax
+        db: bytes | None = await connection.hget("users", username)
         if not db:
             return None
 
         return UserInDB.parse_raw(db)
-    finally:
-        await conn.close()
+    return None
 
 
 async def authenticate_user(username: str, password: str) -> UserInDB | None:
@@ -92,22 +84,25 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
     encoded_jwt: str = jwt.encode(
-        to_encode, get_settings().SECRET_KEY, algorithm=ALGORITHM
+        to_encode,
+        config.token.secket_key,
+        algorithm=config.token.jwt_algorithm,
     )
     return encoded_jwt
 
 
-async def get_current_user(
-    token: Annotated[str, Depends(oauth2_scheme)],
-    setting: Annotated[Settings, Depends(get_settings)],
-) -> UserInDB:
+async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> UserInDB:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, setting.SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(
+            token,
+            config.token.secket_key,
+            algorithms=[config.token.jwt_algorithm],
+        )
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
@@ -144,7 +139,7 @@ async def login_for_access_token(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(minutes=config.token.access_expire_minutes)
     access_token = create_access_token(
         data={"sub": user.username},
         expires_delta=access_token_expires,
@@ -163,7 +158,7 @@ async def read_users_me(
 async def register_user(
     username: str,
     password: str,
-    conn: Annotated[aioredis.Redis, Depends(get_conn)],
+    conn: Annotated[aioredis.Redis, Depends(get_redis_connection)],
     email: str | None = None,
     full_name: str | None = None,
 ) -> RegisterResponse:

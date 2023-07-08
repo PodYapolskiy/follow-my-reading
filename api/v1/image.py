@@ -19,6 +19,11 @@ from .models import (
     TaskCreateResponse,
 )
 
+from config import get_config
+
+
+config = get_config()
+
 router = APIRouter(
     prefix="/image", tags=["image"], dependencies=[Depends(get_current_active_user)]
 )
@@ -41,7 +46,7 @@ async def upload_image(upload_file: UploadFile) -> UploadFileResponse:
             detail="Only image files uploads are allowed",
         )
 
-    async with aiofiles.open("./temp_data/image/" + str(file_id), "wb") as file:
+    async with aiofiles.open(config.storage.image_dir / str(file_id), "wb") as file:
         byte_content = await upload_file.read()
         await file.write(byte_content)
     return UploadFileResponse(file_id=file_id)
@@ -64,7 +69,7 @@ async def process_image(request: ImageProcessingRequest) -> TaskCreateResponse:
 
 @router.get("/download", response_class=FileResponse)
 async def download_image_file(file: UUID) -> str:
-    filepath = Path("./temp_data/image") / str(file)
+    filepath = config.storage.image_dir / str(file)
 
     if not filepath.exists():
         raise HTTPException(
