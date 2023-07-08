@@ -164,6 +164,9 @@ async def download_audio_file(file: UUID) -> FileResponse:
     """
     The endpoint `/download` takes a file UUID as input, checks if the file exists in the
     audio directory, and returns the file as bytes. If file does not exist, returns 404 HTTP response code
+
+    Responses:
+    - 200, file bytes
     """
     filepath = config.storage.audio_dir / str(file)
 
