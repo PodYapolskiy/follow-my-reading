@@ -1,23 +1,24 @@
 from typing import Any
 from uuid import UUID
-from pydantic.error_wrappers import ValidationError
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from huey.api import Result
+from pydantic.error_wrappers import ValidationError
 
+from config import get_config
 from core import task_system
 from core.plugins.base import AudioProcessingFunction, ImageProcessingFunction
 from core.plugins.no_mem import get_audio_plugins, get_image_plugins
 from core.task_system import scheduler
-from config import get_config
+
 from .auth import get_current_active_user
 from .models import (
+    AudioProcessingRequest,
+    ImageProcessingRequest,
     TaskCreateRequest,
     TaskCreateResponse,
     TaskResultsResponse,
     TaskStatusResponse,
-    AudioProcessingRequest,
-    ImageProcessingRequest,
 )
 
 config = get_config()

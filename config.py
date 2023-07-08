@@ -1,6 +1,7 @@
-from pydantic import BaseSettings, BaseConfig, BaseModel, Field
-from pathlib import Path
 from functools import lru_cache
+from pathlib import Path
+
+from pydantic import BaseConfig, BaseSettings, Field
 
 
 class Config(BaseSettings):

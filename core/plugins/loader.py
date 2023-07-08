@@ -1,8 +1,8 @@
 import importlib
 import pathlib
 from dataclasses import dataclass
-from typing import Dict, List, Type
 from types import ModuleType
+from typing import Dict, List, Type
 
 from core.plugins.base import AudioProcessingPlugin, BasePlugin, ImageProcessingPlugin
 

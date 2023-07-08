@@ -1,10 +1,10 @@
 from math import log10 as lg
-
+from typing import List, Tuple
+from uuid import UUID, uuid4
 
 from librosa import get_duration
-from uuid import uuid4, UUID
 from pydub import AudioSegment, silence
-from typing import List, Tuple
+
 from config import get_config
 
 config = get_config()

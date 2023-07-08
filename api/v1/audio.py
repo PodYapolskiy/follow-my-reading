@@ -1,22 +1,23 @@
-from uuid import uuid4, UUID
+from uuid import UUID, uuid4
 
 import aiofiles
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
-
 from pydantic.error_wrappers import ValidationError
+
 from config import get_config
 from core.plugins.no_mem import get_audio_plugins
-from .task import create_audio_task, _get_job_status, _get_job_result
+
 from .auth import get_current_active_user
 from .models import (
     AudioProcessingRequest,
     AudioProcessingResponse,
     ModelData,
     ModelsDataReponse,
-    UploadFileResponse,
     TaskCreateResponse,
+    UploadFileResponse,
 )
+from .task import _get_job_result, _get_job_status, create_audio_task
 
 config = get_config()
 router = APIRouter(

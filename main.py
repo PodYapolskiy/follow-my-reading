@@ -1,17 +1,15 @@
 import nest_asyncio
-from fastapi import FastAPI, Depends
+from fastapi import Depends, FastAPI
 from fastapi_limiter import FastAPILimiter
 from fastapi_limiter.depends import RateLimiter
-
-from config import get_config
-
 from redis.asyncio import from_url
 
 import api.v1
+from config import get_config
+from core.plugins.no_mem import get_audio_plugins, get_image_plugins
 
 nest_asyncio.apply()
 
-from core.plugins.no_mem import get_audio_plugins, get_image_plugins
 
 config = get_config()
 

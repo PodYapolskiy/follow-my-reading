@@ -1,26 +1,23 @@
-from uuid import uuid4, UUID
+from uuid import UUID, uuid4
 
 import aiofiles
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
-
-from pathlib import Path
 from pydantic.error_wrappers import ValidationError
 
+from config import get_config
 from core.plugins.no_mem import get_image_plugins
-from .task import _get_job_status, _get_job_result, create_image_task
+
 from .auth import get_current_active_user
 from .models import (
     ImageProcessingRequest,
     ImageProcessingResponse,
     ModelData,
     ModelsDataReponse,
-    UploadFileResponse,
     TaskCreateResponse,
+    UploadFileResponse,
 )
-
-from config import get_config
-
+from .task import _get_job_result, _get_job_status, create_image_task
 
 config = get_config()
 

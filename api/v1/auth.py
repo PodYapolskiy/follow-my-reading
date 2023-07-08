@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Annotated, AsyncGenerator
+
 import aioredis
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -8,8 +9,8 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 
 from config import get_config
-from .models import RegisterResponse
 
+from .models import RegisterResponse
 
 config = get_config()
 
