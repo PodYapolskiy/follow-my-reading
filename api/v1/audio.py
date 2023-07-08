@@ -1,7 +1,6 @@
 from io import BytesIO
 from uuid import UUID, uuid4
 
-import aiofiles
 import pydub
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
