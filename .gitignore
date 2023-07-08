@@ -2,6 +2,7 @@
 .idea
 temp_data
 dump.rdb
+.config.json
 
 # Created by https://www.toptal.com/developers/gitignore/api/python
 # Edit at https://www.toptal.com/developers/gitignore?templates=python

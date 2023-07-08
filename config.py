@@ -1,4 +1,4 @@
-from pydantic import BaseSettings, BaseConfig, Field
+from pydantic import BaseSettings, BaseConfig, BaseModel, Field
 from pathlib import Path
 from functools import lru_cache
 
@@ -6,7 +6,6 @@ from functools import lru_cache
 class Config(BaseSettings):
     class Config(BaseConfig):
         env_file = ".env"
-        fields = {}
 
     class Redis(BaseSettings):
         host: str = "localhost"
@@ -23,11 +22,11 @@ class Config(BaseSettings):
         jwt_algorithm: str = "HS256"
         access_expire_minutes: int = 30
 
-    redis = Redis()
-    storage = Storage()
-    token = Token()  # type: ignore
+    redis: Redis
+    storage: Storage
+    token: Token
 
 
 @lru_cache
 def get_config() -> Config:
-    return Config()
+    return Config.parse_file(".config.json")  # read settings from .config.json file
