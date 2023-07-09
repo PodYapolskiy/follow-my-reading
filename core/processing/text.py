@@ -33,7 +33,8 @@ def match_words(
     for i in range(1, len(first_text) + 1):
         for j in range(1, len(second_text) + 1):
             levenshtein_dp[i][j] = min(
-                levenshtein_dp[i - 1][j - 1] + (first_text[i - 1] != second_text[j - 1]),
+                levenshtein_dp[i - 1][j - 1]
+                + (first_text[i - 1] != second_text[j - 1]),
                 levenshtein_dp[i - 1][j] + 1,
                 levenshtein_dp[i][j - 1] + 1,
             )
@@ -51,10 +52,12 @@ def match_words(
         optimal = min(
             levenshtein_dp[current_row - 1][current_column - 1],
             levenshtein_dp[current_row - 1][current_column],
-            levenshtein_dp[current_row][current_column - 1]
+            levenshtein_dp[current_row][current_column - 1],
         )
         if optimal == levenshtein_dp[current_row - 1][current_column - 1]:
-            word_result.append(first_text[current_row - 1] + "-" + second_text[current_column - 1])
+            word_result.append(
+                first_text[current_row - 1] + "-" + second_text[current_column - 1]
+            )
             current_row -= 1
             current_column -= 1
         elif optimal == levenshtein_dp[current_row - 1][current_column]:
@@ -171,12 +174,16 @@ def prep_text(text: str) -> Tuple[str, List[int]]:
 
     # Remove any non-letter symbols
     for i in range(len(text)):
-        if text[i].isalpha() or text[i] == " " and (len(changed) == 0 or changed[-1] != " "):
+        if (
+            text[i].isalpha()
+            or text[i] == " "
+            and (len(changed) == 0 or changed[-1] != " ")
+        ):
             changed += text[i]
             indices.append(i)
 
     # Cut off any unnecessary spaces in the beginning and end
-    indices = indices[len(changed) - len(changed.lstrip()):]
+    indices = indices[len(changed) - len(changed.lstrip()) :]
 
     if changed.rstrip() != changed:
         indices = indices[: len(changed.rstrip()) - len(changed)]

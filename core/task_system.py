@@ -1,6 +1,6 @@
 import logging
-
 from typing import Any, Dict
+
 from huey import RedisHuey
 
 from core.plugins import (
@@ -13,13 +13,13 @@ from core.plugins import (
 from core.plugins.base import (
     AudioSegment,
     AudioTaskResult,
+    ImageTaskResult,
     TaskResult,
     TextDiff,
-    ImageTaskResult,
 )
 from core.plugins.loader import PluginInfo
-from core.processing.text import match_phrases
 from core.processing.audio_split import split_audio
+from core.processing.text import match_phrases
 
 scheduler = RedisHuey()
 

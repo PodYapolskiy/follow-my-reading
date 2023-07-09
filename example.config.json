@@ -1,0 +1,17 @@
+{
+    "redis": {
+        "host": "localhost",
+        "port": 6379,
+        "url": "redis:localhost:6379"
+    },
+    "storage": {
+        "files_dir": "temp_data",
+        "image_dir": "temp_data/image",
+        "audio_dir": "temp_data/audio"
+    },
+    "token": {
+        "secket_key": "YOUR SECRET KEY HERE",
+        "jwt_algorithm": "HS256",
+        "access_expire_minutes": 30
+    }
+}
