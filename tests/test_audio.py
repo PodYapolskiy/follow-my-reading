@@ -167,8 +167,34 @@ def test_models():
 #     pass
 
 
-# def test_download():
-#     pass
+def test_download():
+    with TestClient(app) as client:
+        filename = "940ed60d-7c9b-48dd-aeb6-3a93e1412f44"  # uploaded audio file
+
+        # not auth
+        response = client.get(f"/v1/audio/download?file={filename}")
+        assert response.status_code == 401
+
+        # authorize and get the token
+        token_info = _register_and_get_token_info(client)
+        headers = _return_headers_with_token(token_info)
+
+        # file does not exist
+        response = client.get(
+            "/v1/audio/download?file=01234567-8910-1112-1314-151617181920",
+            headers=headers,
+        )
+        assert response.status_code == 404
+
+        # on wrong format
+        response = client.get("/v1/audio/download?file=bruh", headers=headers)
+        assert response.status_code == 422
+
+        # everything ok
+        response = client.get(f"/v1/audio/download?file={filename}", headers=headers)
+        assert response.status_code == 200
+
+        # TODO: path injections
 
 
 # def test_result():
