@@ -1,4 +1,5 @@
 from typing import List, Tuple
+import itertools
 
 
 def match_words(
@@ -30,13 +31,12 @@ def match_words(
         levenshtein_dp[i][0] = i
     for i in range(1, len(second_text) + 1):
         levenshtein_dp[0][i] = i
-    for i in range(1, len(first_text) + 1):
-        for j in range(1, len(second_text) + 1):
-            levenshtein_dp[i][j] = min(
-                levenshtein_dp[i - 1][j - 1] + (first_text[i - 1] != second_text[j - 1]),
-                levenshtein_dp[i - 1][j] + 1,
-                levenshtein_dp[i][j - 1] + 1,
-            )
+    for i, j in itertools.product(range(1, len(first_text) + 1), range(1, len(second_text) + 1)):
+        levenshtein_dp[i][j] = min(
+            levenshtein_dp[i - 1][j - 1] + (first_text[i - 1] != second_text[j - 1]),
+            levenshtein_dp[i - 1][j] + 1,
+            levenshtein_dp[i][j - 1] + 1,
+        )
 
     # Backtracks the result getting the list of matched words
     word_result: List[str] = list()
@@ -48,6 +48,7 @@ def match_words(
             current_row -= 1
             current_column -= 1
             continue
+
         optimal = min(
             levenshtein_dp[current_row - 1][current_column - 1],
             levenshtein_dp[current_row - 1][current_column],
@@ -147,7 +148,7 @@ def match_phrases(phrases: List[str], text: str) -> List[List[Tuple[int, str, st
                 phrase_indices[i[0]] - cur_ind,
                 phrases[y][
                     phrase_indices[i[0]]
-                    - cur_ind : phrase_indices[i[0] + len(i[1]) - 1]
+                    - cur_ind: phrase_indices[i[0] + len(i[1]) - 1]
                     + 1
                     - cur_ind
                 ],
@@ -171,7 +172,13 @@ def prep_text(text: str) -> Tuple[str, List[int]]:
 
     # Remove any non-letter symbols
     for i in range(len(text)):
-        if text[i].isalpha() or text[i] == " " and (len(changed) == 0 or changed[-1] != " "):
+        if any([
+                text[i].isalpha(),
+                all([
+                    text[i] == " ",
+                    len(changed) == 0 or changed[-1] != " "
+                    ])
+                ]):
             changed += text[i]
             indices.append(i)
 
@@ -184,25 +191,25 @@ def prep_text(text: str) -> Tuple[str, List[int]]:
     return changed.lower().strip(), indices
 
 
-# phrases = [
-#  " The headache won't go away. She's taking medicine but even that didn't help.",
-#  " The monster's throbbing in her head continued.",
-#  " This happened to her only once before in her life and she realized that only one thing could be happening."
-#  ]
-# ans = match_phrases(phrases,
-#     "The headache wouldn't go away. She's taken medicine but even that didn't help. The monstrous throbbing in her head continued. She had this happen to her only once before in her life and she realized that only one thing could be happening. 21:210")
-#
-# phrases = ["В кабинете, полном дыма, шел разгaвор о войне,", "которая была объявлена манифестом, о наборе манифеста",
-#                         "еще никто не читал, но все знали о его появлении. граф сидел на манке между", "двумя куреювшими и разговаривавшими соседями. Граф сам",
-#                         "не курил и говорил, а, наклоняя свой амогус то на один бок, то на другой, с видимым удовольствием смотрел на куривших",
-#                         "и слушал разговор двух соседей своих, которых он отравил между собой."]
-# ans = match_phrases(phrases,
-#     "В кабинете, полном дыма, шел разговор о войне, которая была объявлена манифестом, о наборе. Манифеста еще никто не читал, но все знали о его появлении. Граф сидел на оттоманке между двумя курившими и разговаривавшими соседями. Граф сам не курил и не говорил, а, наклоняя голову то на один бок, то на другой, с видимым удовольствием смотрел на куривших и слушал разговор двух соседей своих, которых он стравил между собой.")
-#
-# for i in range(len(phrases)):
-#     print(phrases[i])
-#     print(ans[i])
-#     for j in ans[i]:
-#         print(phrases[i][j[0]:j[0] + len(j[1])])
-#
-# print(match_phrases(["this is soft wear project follow my reading"], "This is software project Follow My Reading."))
+phrases = [
+ " The headache won't go away. She's taking medicine but even that didn't help.",
+ " The monster's throbbing in her head continued.",
+ " This happened to her only once before in her life and she realized that only one thing could be happening."
+ ]
+ans = match_phrases(phrases,
+    "The headache wouldn't go away. She's taken medicine but even that didn't help. The monstrous throbbing in her head continued. She had this happen to her only once before in her life and she realized that only one thing could be happening. 21:210")
+
+phrases = ["В кабинете, полном дыма, шел разгaвор о войне,", "которая была объявлена манифестом, о наборе манифеста",
+                        "еще никто не читал, но все знали о его появлении. граф сидел на манке между", "двумя куреювшими и разговаривавшими соседями. Граф сам",
+                        "не курил и говорил, а, наклоняя свой амогус то на один бок, то на другой, с видимым удовольствием смотрел на куривших",
+                        "и слушал разговор двух соседей своих, которых он отравил между собой."]
+ans = match_phrases(phrases,
+    "В кабинете, полном дыма, шел разговор о войне, которая была объявлена манифестом, о наборе. Манифеста еще никто не читал, но все знали о его появлении. Граф сидел на оттоманке между двумя курившими и разговаривавшими соседями. Граф сам не курил и не говорил, а, наклоняя голову то на один бок, то на другой, с видимым удовольствием смотрел на куривших и слушал разговор двух соседей своих, которых он стравил между собой.")
+
+for i in range(len(phrases)):
+    print(phrases[i])
+    print(ans[i])
+    for j in ans[i]:
+        print(phrases[i][j[0]:j[0] + len(j[1])])
+
+print(match_phrases(["this is soft wear project follow my reading"], "This is software project Follow My Reading."))
