@@ -3,9 +3,13 @@
 # python C:\Users\PodYapolsky\AppData\Local\pypoetry\Cache\virtualenvs\follow-my-reading-2GbujRK9-py3.10\Scripts\huey_consumer.py core.task_system.scheduler -n -k thread
 # -s = --capture=no how print statements in console
 import os
+import uuid
 from fastapi.testclient import TestClient
 
 from main import app
+
+DEFAULT_UNEXISTENT_FILE = "01234567-8910-1112-1314-151617181920"
+DEFAULT_AUDIO_MODEL = "whisper"
 
 
 def _register_and_get_token_info(client: TestClient) -> dict[str, str]:
@@ -37,6 +41,14 @@ def _return_headers_with_token(token_info: dict[str, str]):
         "Accept": "application/json",
         "Authorization": f"{token_info['token_type']} {token_info['access_token']}",
     }
+
+
+def _is_valid_UUID(string: str) -> bool:
+    try:
+        uuid.UUID(string)
+        return True
+    except ValueError:
+        return False
 
 
 def test_general():
@@ -163,8 +175,74 @@ def test_models():
                 assert isinstance(language, str)
 
 
-# def test_process():
-#     pass
+def test_process():
+    with TestClient(app) as client:
+        # no auth
+        response = client.post(
+            "/v1/audio/process",
+            json={
+                "audio_file": DEFAULT_UNEXISTENT_FILE,
+                "audio_model": DEFAULT_AUDIO_MODEL,
+            },
+        )
+        assert response.status_code == 401
+
+        # authorize and get the token
+        token_info = _register_and_get_token_info(client)
+        headers = _return_headers_with_token(token_info)
+
+        # upload an audio and get the filename (UUID)
+        response = client.post(
+            "/v1/audio/upload",
+            files={
+                "upload_file": (" ", open("tests/audio/audio.mp3", "rb"), "audio/mpeg"),
+            },
+            headers=headers,
+        )
+        assert response.status_code == 200
+        filename = response.json()["file_id"]
+
+        # model does not exist
+        response = client.post(
+            "/v1/audio/process",
+            json={
+                "audio_file": filename,
+                "audio_model": "model that does not exist",
+            },
+            headers=headers,
+        )
+        assert response.status_code == 404
+
+        # file does not exist
+        response = client.post(
+            "/v1/audio/process",
+            json={
+                "audio_file": DEFAULT_UNEXISTENT_FILE,
+                "audio_model": DEFAULT_AUDIO_MODEL,
+            },
+            headers=headers,
+        )
+        assert response.status_code == 404
+
+        # wrong format
+        response = client.post(
+            "/v1/audio/process",
+            json={"bruh": "bruh"},
+            headers=headers,
+        )
+        assert response.status_code == 422
+
+        # everything ok
+        response = client.post(
+            "/v1/audio/process",
+            json={
+                "audio_file": filename,
+                "audio_model": DEFAULT_AUDIO_MODEL,
+            },
+            headers=headers,
+        )
+        assert response.status_code == 200
+        assert _is_valid_UUID(response.json()["task_id"])
 
 
 def test_download():
@@ -179,7 +257,7 @@ def test_download():
 
         # file does not exist
         response = client.get(
-            "/v1/audio/download?file=01234567-8910-1112-1314-151617181920",
+            f"/v1/audio/download?file={DEFAULT_UNEXISTENT_FILE}",
             headers=headers,
         )
         assert response.status_code == 404
