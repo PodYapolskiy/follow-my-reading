@@ -289,5 +289,73 @@ def test_download():
         os.remove(f"temp_data/audio/{filename}")
 
 
-# def test_result():
-#     pass
+def test_result():
+    with TestClient(app) as client:
+        # not auth
+        response = client.get("/v1/audio/result?task_id=bruh")
+        assert response.status_code == 401
+
+        # authorize and get the token
+        token_info = _register_and_get_token_info(client)
+        headers = _return_headers_with_token(token_info)
+
+        # upload the audio
+        response = client.post(
+            "/v1/audio/upload",
+            files={
+                "upload_file": (" ", open("tests/audio/audio.mp3", "rb"), "audio/mpeg"),
+            },
+            headers=headers,
+        )
+        assert response.status_code == 200
+        filename = response.json()["file_id"]
+
+        # process uploaded audio and get task id
+        response = client.post(
+            "/v1/audio/process",
+            json={
+                "audio_file": filename,
+                "audio_model": DEFAULT_AUDIO_MODEL,
+            },
+            headers=headers,
+        )
+        assert response.status_code == 200
+        task_id = response.json()["task_id"]
+        assert _is_valid_UUID(task_id)
+
+        # there no task or no results
+        response = client.get(
+            f"/v1/audio/result?task_id={DEFAULT_UNEXISTENT_FILE}",
+            headers=headers,
+        )
+        assert response.status_code == 406
+
+        # type validation failed
+        response = client.get("/v1/audio/result?task_id=bruh", headers=headers)
+        assert response.status_code == 422
+
+        # everything ok
+        response = client.get(
+            f"/v1/audio/result?task_id={task_id}",
+            headers=headers,
+        )
+
+        return
+
+        # TODO: deal with successful task ending, probably use async client
+        assert response.status_code == 200
+
+        data = response.json()
+        text = data["text"]
+        assert isinstance(text, str)
+
+        segments = data["segments"]
+        assert isinstance(segments, list)
+        for segment in segments:
+            assert isinstance(segment, dict)
+            assert isinstance(segment["start"], int)
+            assert isinstance(segment["end"], int)
+            assert isinstance(segment["text"], str)
+            assert isinstance(segment["file"], str)
+
+        os.remove(f"temp_data/audio/{filename}")
