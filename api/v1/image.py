@@ -18,7 +18,7 @@ from .models import (
     TaskCreateResponse,
     UploadFileResponse,
 )
-from .task import _get_job_result, _get_job_status, create_image_task
+from .task_utils import _get_job_result, _get_job_status, create_image_task
 
 config = get_config()
 
