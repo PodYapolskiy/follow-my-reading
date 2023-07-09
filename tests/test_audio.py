@@ -169,10 +169,8 @@ def test_models():
 
 def test_download():
     with TestClient(app) as client:
-        filename = "940ed60d-7c9b-48dd-aeb6-3a93e1412f44"  # uploaded audio file
-
         # not auth
-        response = client.get(f"/v1/audio/download?file={filename}")
+        response = client.get("/v1/audio/download?file=bruh")
         assert response.status_code == 401
 
         # authorize and get the token
@@ -190,11 +188,25 @@ def test_download():
         response = client.get("/v1/audio/download?file=bruh", headers=headers)
         assert response.status_code == 422
 
+        # upload and then try to download
+        response = client.post(
+            "/v1/audio/upload",
+            files={
+                "upload_file": (" ", open("tests/audio/audio.mp3", "rb"), "audio/mpeg"),
+            },
+            headers=headers,
+        )
+        assert response.status_code == 200
+
+        filename = response.json()["file_id"]
+
         # everything ok
         response = client.get(f"/v1/audio/download?file={filename}", headers=headers)
         assert response.status_code == 200
 
         # TODO: path injections
+
+        os.remove(f"temp_data/audio/{filename}")
 
 
 # def test_result():
