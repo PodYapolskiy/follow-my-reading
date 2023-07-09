@@ -2,8 +2,10 @@
 # pytest -s --disable-warnings tests/test_audio.py
 # python C:\Users\PodYapolsky\AppData\Local\pypoetry\Cache\virtualenvs\follow-my-reading-2GbujRK9-py3.10\Scripts\huey_consumer.py core.task_system.scheduler -n -k thread
 # -s = --capture=no how print statements in console
-from main import app
+import os
 from fastapi.testclient import TestClient
+
+from main import app
 
 
 def _register_and_get_token_info(client: TestClient) -> dict[str, str]:
@@ -79,6 +81,62 @@ def test_request_rate_limit():
             headers=_return_headers_with_token(token_info),
         )
         assert response.status_code == 429
+
+
+def test_upload():
+    """
+    On testing uploading files:
+    https://stackoverflow.com/questions/60783222/how-to-test-a-fastapi-api-endpoint-that-consumes-images
+    """
+    with TestClient(app) as client:
+        filename = "tests/audio/audio.mp3"
+
+        # whether can upload audio if no auth
+        response = client.post(
+            "/v1/audio/upload",
+            files={
+                # ! don't know for what the first argument stands for
+                "upload_file": (" ", open(filename, "rb"), "audio/mpeg"),
+            },
+        )
+        assert response.status_code == 401
+
+        # authorize and get the token
+        token_info = _register_and_get_token_info(client)
+        headers = _return_headers_with_token(token_info)
+
+        # payload is not file
+        response = client.post(
+            "/v1/audio/upload",
+            files={
+                "upload_file": "not a file",
+            },
+            headers=headers,
+        )
+        assert response.status_code == 422
+
+        # file is not audio
+        response = client.post(
+            "/v1/audio/upload",
+            files={
+                "upload_file": (" ", open("tests/image/image.jpg", "rb"), "image/jpeg"),
+            },
+            headers=headers,
+        )
+        assert response.status_code == 422
+
+        # everything should work
+        response = client.post(
+            "/v1/audio/upload",
+            files={
+                "upload_file": (" ", open(filename, "rb"), "audio/mpeg"),
+            },
+            headers=headers,
+        )
+        assert response.status_code == 200
+
+        # delete test file from temp_data/audio
+        os.remove(f"temp_data/audio/{response.json()['file_id']}")
 
 
 def test_models():
