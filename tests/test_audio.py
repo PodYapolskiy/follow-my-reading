@@ -206,7 +206,7 @@ def test_process():
         response = client.post(
             "/v1/audio/process",
             json={
-                "audio_file": filename,
+                "audio_file": filename,  # definitely exists
                 "audio_model": "model that does not exist",
             },
             headers=headers,
@@ -243,6 +243,8 @@ def test_process():
         )
         assert response.status_code == 200
         assert _is_valid_UUID(response.json()["task_id"])
+
+        os.remove(f"temp_data/audio/{filename}")
 
 
 def test_download():
