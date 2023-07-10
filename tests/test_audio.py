@@ -151,6 +151,60 @@ def test_upload():
         os.remove(f"temp_data/audio/{response.json()['file_id']}")
 
 
+##############
+### MODELS ###
+##############
+def test_models_no_auth():
+    with TestClient(app) as client:
+        response = client.get("/v1/audio/models")
+        assert response.status_code == 401  # if not authenticated
+
+
+def test_models_success():
+    with TestClient(app) as client:
+        token_info = _register_and_get_token_info(client)
+        headers = _return_headers_with_token(token_info)
+
+        response = client.get(
+            "/v1/audio/models",
+            headers=headers,
+        )
+        assert response.status_code == 200
+
+
+def test_models_not_empty():
+    with TestClient(app) as client:
+        token_info = _register_and_get_token_info(client)
+        headers = _return_headers_with_token(token_info)
+
+        response = client.get(
+            "/v1/audio/models",
+            headers=headers,
+        )
+        models: list[dict] = response.json()["models"]
+        assert models != []  # models are not empty
+
+
+def test_models_structure():
+    with TestClient(app) as client:
+        token_info = _register_and_get_token_info(client)
+        headers = _return_headers_with_token(token_info)
+
+        response = client.get(
+            "/v1/audio/models",
+            headers=headers,
+        )
+        models: list[dict] = response.json()["models"]
+        for model in models:  # models have appropriate type structure
+            assert isinstance(model.get("name"), str)
+            assert isinstance(model.get("description"), str)
+
+            languages = model.get("languages")
+            assert isinstance(languages, list)
+            for language in languages:
+                assert isinstance(language, str)
+
+
 def test_models():
     with TestClient(app) as client:
         response = client.get("/v1/audio/models")
