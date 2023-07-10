@@ -6,10 +6,10 @@ from core.plugins import AudioChunk, AudioProcessingResult, register_plugin
 @register_plugin
 class WhisperPlugin:
     name = "whisper"
-    languages = ["en", "ru"]
+    languages = ["en", "ru", "ar"]
     description = "Robust Speech Recognition via Large-Scale Weak Supervision By OpenAI"
 
-    model = whisper.load_model("small")  # large-v2
+    model = whisper.load_model("base")  # large-v2
 
     @staticmethod
     def process_audio(filename: str) -> AudioProcessingResult:

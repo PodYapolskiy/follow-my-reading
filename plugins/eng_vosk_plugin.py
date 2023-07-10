@@ -8,8 +8,8 @@ from core.plugins import AudioChunk, AudioProcessingResult, register_plugin
 
 
 @register_plugin
-class VoskPlugin:
-    name = "vosk"
+class EngVoskPlugin:
+    name = "eng_vosk"
     languages = ["eng"]
     description = (
         "The Vosk API is a library for real-time speech recognition"
@@ -29,7 +29,7 @@ class VoskPlugin:
     def process_audio(filename: str) -> AudioProcessingResult:
         AudioSegment.from_file(filename).export(filename, format="wav")
         wf = wave.open(filename, "rb")
-        rec = KaldiRecognizer(VoskPlugin.model, wf.getframerate())
+        rec = KaldiRecognizer(EngVoskPlugin.model, wf.getframerate())
         rec.SetWords(True)
         rec.SetPartialWords(True)
 

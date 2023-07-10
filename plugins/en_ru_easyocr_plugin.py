@@ -10,8 +10,8 @@ from core.plugins import (
 
 
 @register_plugin
-class EasyOCRPlugin:
-    name = "easyocr"
+class EnRuEasyOCRPlugin:
+    name = "en_ru_easyocr"
     description = (
         "An open source library for certain languages and alphabets,"
         "mainly used for working with text on an image"
@@ -24,7 +24,7 @@ class EasyOCRPlugin:
 
     @staticmethod
     def process_image(filename: str) -> ImageProcessingResult:
-        model_response = EasyOCRPlugin.reader.readtext(filename)
+        model_response = EnRuEasyOCRPlugin.reader.readtext(filename)
         boxes = []
         for coordinates, text, _ in model_response:
             lt, rt, rb, lb = coordinates
