@@ -22,7 +22,6 @@ class EngTesseractPlugin:
         model_response = pytesseract.image_to_data(
             filename, lang="+".join(EngTesseractPlugin.languages), output_type="dict"
         )
-        print(model_response)
 
         words_count = model_response["word_num"]
         words = model_response["text"]
