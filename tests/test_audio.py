@@ -89,20 +89,18 @@ def test_general():
 
 def test_request_rate_limit():
     with TestClient(app) as client:
-        token_info = _register_and_get_token_info(client)
-
         # try to knock knock 10 times
         for _ in range(10):
             response = client.get(
                 "/v1/auth/users/me",
-                headers=_return_headers_with_token(token_info),
+                headers=GLOBAL_HEADERS,
             )
             assert response.status_code == 200
 
         # the eleventh one should exceed and raise error
         response = client.get(
             "/v1/auth/users/me",
-            headers=_return_headers_with_token(token_info),
+            headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 429
 
