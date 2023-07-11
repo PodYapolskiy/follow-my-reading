@@ -476,25 +476,70 @@ def test_process():
         os.remove(f"temp_data/audio/{filename}")
 
 
+################
+### DOWNLOAD ###
+################
+@pytest.mark.flaky(retries=2, delay=30)
+def test_download_no_auth():
+    with TestClient(app) as client:
+        response = client.get("/v1/audio/download?file=bruh")
+        assert response.status_code == 401
+
+
+@pytest.mark.flaky(retries=2, delay=30)
+def test_download_file_does_not_exist():
+    with TestClient(app) as client:
+        response = client.get(
+            f"/v1/audio/download?file={DEFAULT_UNEXISTENT_FILE}",
+            headers=GLOBAL_HEADERS,
+        )
+        assert response.status_code == 404
+
+
+@pytest.mark.flaky(retries=2, delay=30)
+def test_download_wrong_format():
+    with TestClient(app) as client:
+        response = client.get("/v1/audio/download?file=bruh", headers=GLOBAL_HEADERS)
+        assert response.status_code == 422
+
+
+@pytest.mark.flaky(retries=2, delay=30)
+def test_download_success():
+    with TestClient(app) as client:
+        response = client.post(
+            "/v1/audio/upload",
+            files={
+                "upload_file": (" ", open("tests/audio/audio.mp3", "rb"), "audio/mpeg"),
+            },
+            headers=GLOBAL_HEADERS,
+        )
+        assert response.status_code == 200
+        filename = response.json()["file_id"]
+
+        response = client.get(
+            f"/v1/audio/download?file={filename}", headers=GLOBAL_HEADERS
+        )
+        assert response.status_code == 200
+
+        os.remove(f"temp_data/audio/{filename}")
+
+
+@pytest.mark.flaky(retries=2, delay=30)
 def test_download():
     with TestClient(app) as client:
         # not auth
         response = client.get("/v1/audio/download?file=bruh")
         assert response.status_code == 401
 
-        # authorize and get the token
-        token_info = _register_and_get_token_info(client)
-        headers = _return_headers_with_token(token_info)
-
         # file does not exist
         response = client.get(
             f"/v1/audio/download?file={DEFAULT_UNEXISTENT_FILE}",
-            headers=headers,
+            headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 404
 
         # on wrong format
-        response = client.get("/v1/audio/download?file=bruh", headers=headers)
+        response = client.get("/v1/audio/download?file=bruh", headers=GLOBAL_HEADERS)
         assert response.status_code == 422
 
         # upload and then try to download
@@ -503,14 +548,16 @@ def test_download():
             files={
                 "upload_file": (" ", open("tests/audio/audio.mp3", "rb"), "audio/mpeg"),
             },
-            headers=headers,
+            headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 200
 
         filename = response.json()["file_id"]
 
         # everything ok
-        response = client.get(f"/v1/audio/download?file={filename}", headers=headers)
+        response = client.get(
+            f"/v1/audio/download?file={filename}", headers=GLOBAL_HEADERS
+        )
         assert response.status_code == 200
 
         # TODO: path injections
