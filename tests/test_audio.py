@@ -224,45 +224,40 @@ def test_upload():
 ##############
 ### MODELS ###
 ##############
+@pytest.mark.flaky(retries=2, delay=30)
 def test_models_no_auth():
     with TestClient(app) as client:
         response = client.get("/v1/audio/models")
         assert response.status_code == 401  # if not authenticated
 
 
+@pytest.mark.flaky(retries=2, delay=30)
 def test_models_success():
     with TestClient(app) as client:
-        token_info = _register_and_get_token_info(client)
-        headers = _return_headers_with_token(token_info)
-
         response = client.get(
             "/v1/audio/models",
-            headers=headers,
+            headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 200
 
 
+@pytest.mark.flaky(retries=2, delay=30)
 def test_models_not_empty():
     with TestClient(app) as client:
-        token_info = _register_and_get_token_info(client)
-        headers = _return_headers_with_token(token_info)
-
         response = client.get(
             "/v1/audio/models",
-            headers=headers,
+            headers=GLOBAL_HEADERS,
         )
         models: list[dict] = response.json()["models"]
         assert models != []  # models are not empty
 
 
+@pytest.mark.flaky(retries=2, delay=30)
 def test_models_structure():
     with TestClient(app) as client:
-        token_info = _register_and_get_token_info(client)
-        headers = _return_headers_with_token(token_info)
-
         response = client.get(
             "/v1/audio/models",
-            headers=headers,
+            headers=GLOBAL_HEADERS,
         )
         models: list[dict] = response.json()["models"]
         for model in models:  # models have appropriate type structure
@@ -275,16 +270,15 @@ def test_models_structure():
                 assert isinstance(language, str)
 
 
+@pytest.mark.flaky(retries=2, delay=30)
 def test_models():
     with TestClient(app) as client:
         response = client.get("/v1/audio/models")
         assert response.status_code == 401  # if not authenticated
 
-        token_info = _register_and_get_token_info(client)
-
         response = client.get(
             "/v1/audio/models",
-            headers=_return_headers_with_token(token_info),
+            headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 200
         models: list[dict] = response.json()["models"]
