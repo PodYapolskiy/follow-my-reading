@@ -4,12 +4,14 @@
 # -s = --capture=no how print statements in console
 import os
 import uuid
+import pytest
 from fastapi.testclient import TestClient
 
 from main import app
 
 DEFAULT_UNEXISTENT_FILE = "01234567-8910-1112-1314-151617181920"
 DEFAULT_AUDIO_MODEL = "whisper"
+GLOBAL_HEADERS = {}
 
 
 def _register_and_get_token_info(client: TestClient) -> dict[str, str]:
@@ -49,6 +51,16 @@ def _is_valid_UUID(string: str) -> bool:
         return True
     except ValueError:
         return False
+
+
+def test_start():
+    with TestClient(app) as client:
+        token_info = _register_and_get_token_info(client)
+        headers = _return_headers_with_token(token_info)
+
+        global GLOBAL_HEADERS
+        GLOBAL_HEADERS = headers
+        assert GLOBAL_HEADERS != {}
 
 
 def test_general():
@@ -229,6 +241,121 @@ def test_models():
                 assert isinstance(language, str)
 
 
+###############
+### PROCESS ###
+###############
+@pytest.mark.flaky(retries=2, delay=30)
+def test_process_no_auth():
+    with TestClient(app) as client:
+        response = client.post(
+            "/v1/audio/process",
+            json={
+                "audio_file": DEFAULT_UNEXISTENT_FILE,
+                "audio_model": DEFAULT_AUDIO_MODEL,
+            },
+        )
+        assert response.status_code == 401
+
+
+@pytest.mark.flaky(retries=2, delay=30)
+def test_process_model_does_not_exist():
+    with TestClient(app) as client:
+        response = client.post(
+            "/v1/audio/upload",
+            files={
+                "upload_file": (" ", open("tests/audio/audio.mp3", "rb"), "audio/mpeg"),
+            },
+            headers=GLOBAL_HEADERS,
+        )
+        filename = response.json()["file_id"]
+
+        response = client.post(
+            "/v1/audio/process",
+            json={
+                "audio_file": filename,  # definitely exists
+                "audio_model": "model that does not exist",
+            },
+            headers=GLOBAL_HEADERS,
+        )
+        assert response.status_code == 404
+
+        os.remove(f"temp_data/audio/{filename}")
+
+
+@pytest.mark.flaky(retries=2, delay=30)
+def test_process_file_does_not_exist():
+    with TestClient(app) as client:
+        response = client.post(
+            "/v1/audio/upload",
+            files={
+                "upload_file": (" ", open("tests/audio/audio.mp3", "rb"), "audio/mpeg"),
+            },
+            headers=GLOBAL_HEADERS,
+        )
+        filename = response.json()["file_id"]
+
+        response = client.post(
+            "/v1/audio/process",
+            json={
+                "audio_file": DEFAULT_UNEXISTENT_FILE,
+                "audio_model": DEFAULT_AUDIO_MODEL,
+            },
+            headers=GLOBAL_HEADERS,
+        )
+        assert response.status_code == 404
+
+        os.remove(f"temp_data/audio/{filename}")
+
+
+@pytest.mark.flaky(retries=2, delay=30)
+def test_process_wrong_format():
+    with TestClient(app) as client:
+        response = client.post(
+            "/v1/audio/upload",
+            files={
+                "upload_file": (" ", open("tests/audio/audio.mp3", "rb"), "audio/mpeg"),
+            },
+            headers=GLOBAL_HEADERS,
+        )
+        filename = response.json()["file_id"]
+
+        response = client.post(
+            "/v1/audio/process",
+            json={"bruh": "bruh"},
+            headers=GLOBAL_HEADERS,
+        )
+        assert response.status_code == 422
+
+        os.remove(f"temp_data/audio/{filename}")
+
+
+@pytest.mark.flaky(retries=2, delay=30)
+def test_process_success():
+    with TestClient(app) as client:
+        response = client.post(
+            "/v1/audio/upload",
+            files={
+                "upload_file": (" ", open("tests/audio/audio.mp3", "rb"), "audio/mpeg"),
+            },
+            headers=GLOBAL_HEADERS,
+        )
+        filename = response.json()["file_id"]
+
+        response = client.post(
+            "/v1/audio/process",
+            json={
+                "audio_file": filename,
+                "audio_model": DEFAULT_AUDIO_MODEL,
+            },
+            headers=GLOBAL_HEADERS,
+        )
+        assert response.status_code == 200
+        assert _is_valid_UUID(response.json()["task_id"])
+
+        os.remove(f"temp_data/audio/{filename}")
+
+
+@pytest.mark.flaky(retries=2, delay=30)
 def test_process():
     with TestClient(app) as client:
         # no auth
@@ -240,18 +367,14 @@ def test_process():
             },
         )
         assert response.status_code == 401
-
-        # authorize and get the token
-        token_info = _register_and_get_token_info(client)
-        headers = _return_headers_with_token(token_info)
-
+        
         # upload an audio and get the filename (UUID)
         response = client.post(
             "/v1/audio/upload",
             files={
                 "upload_file": (" ", open("tests/audio/audio.mp3", "rb"), "audio/mpeg"),
             },
-            headers=headers,
+            headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 200
         filename = response.json()["file_id"]
@@ -263,7 +386,7 @@ def test_process():
                 "audio_file": filename,  # definitely exists
                 "audio_model": "model that does not exist",
             },
-            headers=headers,
+            headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 404
 
@@ -274,7 +397,7 @@ def test_process():
                 "audio_file": DEFAULT_UNEXISTENT_FILE,
                 "audio_model": DEFAULT_AUDIO_MODEL,
             },
-            headers=headers,
+            headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 404
 
@@ -282,7 +405,7 @@ def test_process():
         response = client.post(
             "/v1/audio/process",
             json={"bruh": "bruh"},
-            headers=headers,
+            headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 422
 
@@ -293,7 +416,7 @@ def test_process():
                 "audio_file": filename,
                 "audio_model": DEFAULT_AUDIO_MODEL,
             },
-            headers=headers,
+            headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 200
         assert _is_valid_UUID(response.json()["task_id"])
