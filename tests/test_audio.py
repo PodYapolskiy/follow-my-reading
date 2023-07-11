@@ -107,6 +107,68 @@ def test_request_rate_limit():
         assert response.status_code == 429
 
 
+##############
+### UPLOAD ###
+##############
+@pytest.mark.flaky(retries=2, delay=30)
+def test_upload_no_auth():
+    with TestClient(app) as client:
+        filename = "tests/audio/audio.mp3"
+
+        # whether can upload audio if no auth
+        response = client.post(
+            "/v1/audio/upload",
+            files={
+                "upload_file": (" ", open(filename, "rb"), "audio/mpeg"),
+            },
+        )
+        assert response.status_code == 401
+
+
+@pytest.mark.flaky(retries=2, delay=30)
+def test_upload_payload_not_a_file():
+    with TestClient(app) as client:
+        response = client.post(
+            "/v1/audio/upload",
+            files={
+                "upload_file": "not a file",
+            },
+            headers=GLOBAL_HEADERS,
+        )
+        assert response.status_code == 422
+
+
+@pytest.mark.flaky(retries=2, delay=30)
+def test_upload_file_is_not_an_audio():
+    with TestClient(app) as client:
+        response = client.post(
+            "/v1/audio/upload",
+            files={
+                "upload_file": (" ", open("tests/image/image.jpg", "rb"), "image/jpeg"),
+            },
+            headers=GLOBAL_HEADERS,
+        )
+        assert response.status_code == 422
+
+
+@pytest.mark.flaky(retries=2, delay=30)
+def test_upload_success():
+    with TestClient(app) as client:
+        filename = "tests/audio/audio.mp3"
+
+        response = client.post(
+            "/v1/audio/upload",
+            files={
+                "upload_file": (" ", open(filename, "rb"), "audio/mpeg"),
+            },
+            headers=GLOBAL_HEADERS,
+        )
+        assert response.status_code == 200
+
+        os.remove(f"temp_data/audio/{response.json()['file_id']}")
+
+
+@pytest.mark.flaky(retries=2, delay=30)
 def test_upload():
     """
     On testing uploading files:
@@ -125,17 +187,13 @@ def test_upload():
         )
         assert response.status_code == 401
 
-        # authorize and get the token
-        token_info = _register_and_get_token_info(client)
-        headers = _return_headers_with_token(token_info)
-
         # payload is not file
         response = client.post(
             "/v1/audio/upload",
             files={
                 "upload_file": "not a file",
             },
-            headers=headers,
+            headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 422
 
@@ -145,7 +203,7 @@ def test_upload():
             files={
                 "upload_file": (" ", open("tests/image/image.jpg", "rb"), "image/jpeg"),
             },
-            headers=headers,
+            headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 422
 
@@ -155,7 +213,7 @@ def test_upload():
             files={
                 "upload_file": (" ", open(filename, "rb"), "audio/mpeg"),
             },
-            headers=headers,
+            headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 200
 
