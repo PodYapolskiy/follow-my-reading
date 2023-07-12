@@ -60,10 +60,16 @@ class TextDiff(BaseModel):
     expected: str
 
 
-class TaskResult(BaseModel):
+class ImageAudioCompareResult(BaseModel):
     audio: AudioTaskResult
     image: ImageProcessingResult
     errors: List[TextDiff]
+
+
+class TextAudioCompareResult(BaseModel):
+    audio: AudioTaskResult
+    original_text: str | List[str]
+    error: List[TextDiff]
 
 
 @runtime_checkable

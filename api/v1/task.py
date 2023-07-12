@@ -12,7 +12,8 @@ from core.task_system import scheduler
 
 from .auth import get_current_active_user
 from .models import (
-    TaskCreateRequest,
+    ImageAudioCompareRequest,
+    TextAudioCompareRequest,
     TaskCreateResponse,
     TaskResultsResponse,
     TaskStatusResponse,
@@ -27,10 +28,10 @@ router = APIRouter(
 
 
 @router.post(
-    "/create",
+    "/compare_image_and_audio",
     response_model=TaskCreateResponse,
     status_code=200,
-    summary="""The endpoint `/create` creates a task to compare an image and audio file using specified
+    summary="""The endpoint `/compare_image_and_audio` creates a task to compare an image and audio file using specified
     models and returns the task ID.""",
     responses={
         200: {"description": "Task was successfully created and scheduled"},
@@ -46,7 +47,7 @@ router = APIRouter(
         },
     },
 )
-async def create_task(request: TaskCreateRequest) -> TaskCreateResponse:
+async def compare_image_and_audio(request: ImageAudioCompareRequest) -> TaskCreateResponse:
     """
     Parameters:
     - **audio_file**: an uuid of file to process
@@ -99,6 +100,37 @@ async def create_task(request: TaskCreateRequest) -> TaskCreateResponse:
         image_plugin_info.class_name,
         ImageProcessingFunction,
         image_file_path.as_posix(),
+    )
+    return TaskCreateResponse(task_id=UUID(job.id))
+
+
+@router.post(
+    "/compare_text_and_audio",
+    response_model=TaskCreateResponse,
+    summary="""The endpoint '/compare_text_and_audio' creates a task to compare text from user input 
+    and audio file using specified models and returns the task ID."""
+)
+async def compare_text_and_audio(request: TextAudioCompareRequest) -> TaskCreateResponse:
+    audio_plugin_info = get_audio_plugins().get(request.audio_model)
+    audio_file_path = config.storage.audio_dir / str(request.audio_file)
+
+    if audio_plugin_info is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No such audio model available",
+        )
+
+    if not audio_file_path.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No such audio file available",
+        )
+
+    job: Result = task_system.compare_text_audio(
+        audio_plugin_info.class_name,
+        AudioProcessingFunction,
+        audio_file_path.as_posix(),
+        request.text
     )
     return TaskCreateResponse(task_id=UUID(job.id))
 

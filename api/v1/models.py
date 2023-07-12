@@ -69,11 +69,17 @@ class AudioProcessingResponse(BaseModel):
     segments: List[AudioChunk]
 
 
-class TaskCreateRequest(BaseModel):
+class ImageAudioCompareRequest(BaseModel):
     audio_file: UUID
     image_file: UUID
     audio_model: str
     image_model: str
+
+
+class TextAudioCompareRequest(BaseModel):
+    audio_file: UUID
+    text: List[str] | str
+    audio_model: str
 
 
 class TaskCreateResponse(BaseModel):
