@@ -116,7 +116,7 @@ async def compare_image_and_audio(request: AudioToImageComparisonRequest) -> Tas
             "content": {
                 "application/json": {
                     "example": {
-                        "detail": "No such image model available",
+                        "detail": "No such audio model available",
                     }
                 }
             },
