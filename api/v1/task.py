@@ -28,10 +28,10 @@ router = APIRouter(
 
 
 @router.post(
-    "/compare_image_and_audio",
+    "/comparison/image",
     response_model=TaskCreateResponse,
     status_code=200,
-    summary="""The endpoint `/compare_image_and_audio` creates a task to compare an image and audio file using specified
+    summary="""The endpoint `/comparison/image` creates a task to compare an image and audio file using specified
     models and returns the task ID.""",
     responses={
         200: {"description": "Task was successfully created and scheduled"},
@@ -105,12 +105,38 @@ async def compare_image_and_audio(request: ImageAudioCompareRequest) -> TaskCrea
 
 
 @router.post(
-    "/compare_text_and_audio",
+    "/comparison/text",
     response_model=TaskCreateResponse,
-    summary="""The endpoint '/compare_text_and_audio' creates a task to compare text from user input 
-    and audio file using specified models and returns the task ID."""
+    summary="""The endpoint '/comparison/text' creates a task to compare text from user input 
+    and audio file using specified models and returns the task ID.""",
+    responses={
+        200: {"description": "Task was successfully created and scheduled"},
+        404: {
+            "description": "The specified file or model was not found.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "No such image model available",
+                    }
+                }
+            },
+        },
+    },
 )
 async def compare_text_and_audio(request: TextAudioCompareRequest) -> TaskCreateResponse:
+    """
+    Parameters:
+    - **audio_file**: an uuid of file to process
+    - **audio_model**: an audio processing model name (check '_/audio/models_' for available models)
+
+
+    Responses:
+    - 200, Task created
+    - 404, No such audio file available
+    - 404, No such audio model available
+    - 404, No such image file available
+    - 404, No such image model available
+    """
     audio_plugin_info = get_audio_plugins().get(request.audio_model)
     audio_file_path = config.storage.audio_dir / str(request.audio_file)
 

@@ -78,7 +78,7 @@ class ImageAudioCompareRequest(BaseModel):
 
 class TextAudioCompareRequest(BaseModel):
     audio_file: UUID
-    text: List[str] | str
+    text: List[str]
     audio_model: str
 
 

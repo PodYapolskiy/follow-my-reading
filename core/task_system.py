@@ -201,45 +201,26 @@ def compare_text_audio(
     )
     logger.info("Text matching from query")
     phrases = [x.text for x in audio_model_response.segments]
-    if not type(text) == str:
-        original_text = ''
-        for phrase in text:
-            original_text += phrase + " "
-        text_diffs = match_phrases(phrases, original_text)
+    original_text = ''
+    for phrase in text:
+        original_text += phrase + " "
+    text_diffs = match_phrases(phrases, original_text)
 
-        data = []
-        for index, diff in enumerate(text_diffs):
-            for at_char, found, expected in diff:
-                data.append(
-                    TextDiff(
-                        audio_segment=audio_model_response.segments[index],
-                        at_char=at_char,
-                        found=found,
-                        expected=expected,
-                    )
+    data = []
+    for index, diff in enumerate(text_diffs):
+        for at_char, found, expected in diff:
+            data.append(
+                TextDiff(
+                    audio_segment=audio_model_response.segments[index],
+                    at_char=at_char,
+                    found=found,
+                    expected=expected,
                 )
+            )
 
-        return TextAudioCompareResult(
-            audio=audio_model_response, original_text=text, errors=data
-        )
-    else:
-        text_diffs = match_phrases(phrases, text)
-
-        data = []
-        for index, diff in enumerate(text_diffs):
-            for at_char, found, expected in diff:
-                data.append(
-                    TextDiff(
-                        audio_segment=audio_model_response.segments[index],
-                        at_char=at_char,
-                        found=found,
-                        expected=expected,
-                    )
-                )
-
-        return TextAudioCompareResult(
-            audio=audio_model_response, original_text=text, errors=data
-        )
+    return TextAudioCompareResult(
+        audio=audio_model_response, original_text=text, errors=data
+    )
 
 
 @scheduler.task()
