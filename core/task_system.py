@@ -194,7 +194,7 @@ def compare_text_audio(
         audio_class: str,
         audio_function: str,
         audio_path: str,
-        text: List[str] | str
+        text: List[str]
 ) -> AudioToTextComparisonResponse:
     audio_model_response: AudioTaskResult = _audio_process(
         audio_class, audio_function, audio_path
