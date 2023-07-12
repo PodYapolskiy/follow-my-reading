@@ -351,68 +351,68 @@ def find_phrases(phrases: List[str], to_find: str, margin: float = 1.05) -> List
 
     return answer
 
-tests = {
-    "test_cases": [
-        {
-            "phrases": [
-                "The headache won't go away. She's taking medicine but even that didn't help.",
-                "The monster's throbbing in her head continued.",
-                "This happened to her only once before in her life and she realized that only one thing could be happening."
-            ],
-            "to_find": "she realized that only one thing could be happening",
-            "answer": [
-                2
-            ]
-        },
-        {
-            "phrases": [
-                "The headache won't go away. She's taking medicine but even that didn't help.",
-                "The monster's throbbing in her head continued.",
-                "This happened to her only once before in her life and she realized that only one thing could be happening."
-            ],
-            "to_find": "she has taken medicine",
-            "answer": [
-                1
-            ]
-        },
-        {
-            "phrases": [
-                "The headache won't go away. She's taking medicine but even that didn't help.",
-                "The monster's throbbing in her head continued.",
-                "This happened to her only once before in her life and she realized that only one thing could be happening."
-            ],
-            "to_find": "throbbing in her head continued this happened to her",
-            "answer": [
-                2,
-                3
-            ]
-        }
-    ]
-}
-
-for test in tests["test_cases"]:
-    print(find_phrases(test["phrases"], test["to_find"]))
-    print(test["answer"])
-
-phrases = [
- " The headache won't go away. She's taking medicine but even that didn't help.",
- " The monster's throbbing in her head continued.",
- " This happened to her only once before in her life and she realized that only one thing could be happening."
- ]
-ans = match_phrases(phrases,
-    "The headache wouldn't go away. She's taken medicine but even that didn't help. The monstrous throbbing in her head continued. She had this happen to her only once before in her life and she realized that only one thing could be happening. 21:210")
-
-phrases = ["В кабинете, полном дыма, шел разгaвор о войне,", "которая была объявлена манифестом, о наборе манифеста",
-                        "еще никто не читал, но все знали о его появлении. граф сидел на манке между", "двумя куреювшими и разговаривавшими соседями. Граф сам",
-                        "не курил и говорил, а, наклоняя свой амогус то на один бок, то на другой, с видимым удовольствием смотрел на куривших",
-                        "и слушал разговор двух соседей своих, которых он отравил между собой."]
-ans = match_phrases(phrases,
-    "В кабинете, полном дыма, шел разговор о войне, которая была объявлена манифестом, о наборе. Манифеста еще никто не читал, но все знали о его появлении. Граф сидел на оттоманке между двумя курившими и разговаривавшими соседями. Граф сам не курил и не говорил, а, наклоняя голову то на один бок, то на другой, с видимым удовольствием смотрел на куривших и слушал разговор двух соседей своих, которых он стравил между собой.")
-
-for i in range(len(phrases)):
-    print(phrases[i])
-    print(ans[i])
-    for j in ans[i]:
-        print(phrases[i][j[0]:j[0] + len(j[1])])
-
-print(match_phrases(["this is soft wear project follow my reading"], "This is software project Follow My Reading."))
+# tests = {
+#     "test_cases": [
+#         {
+#             "phrases": [
+#                 "The headache won't go away. She's taking medicine but even that didn't help.",
+#                 "The monster's throbbing in her head continued.",
+#                 "This happened to her only once before in her life and she realized that only one thing could be happening."
+#             ],
+#             "to_find": "she realized that only one thing could be happening",
+#             "answer": [
+#                 2
+#             ]
+#         },
+#         {
+#             "phrases": [
+#                 "The headache won't go away. She's taking medicine but even that didn't help.",
+#                 "The monster's throbbing in her head continued.",
+#                 "This happened to her only once before in her life and she realized that only one thing could be happening."
+#             ],
+#             "to_find": "she has taken medicine",
+#             "answer": [
+#                 1
+#             ]
+#         },
+#         {
+#             "phrases": [
+#                 "The headache won't go away. She's taking medicine but even that didn't help.",
+#                 "The monster's throbbing in her head continued.",
+#                 "This happened to her only once before in her life and she realized that only one thing could be happening."
+#             ],
+#             "to_find": "throbbing in her head continued this happened to her",
+#             "answer": [
+#                 2,
+#                 3
+#             ]
+#         }
+#     ]
+# }
+#
+# for test in tests["test_cases"]:
+#     print(find_phrases(test["phrases"], test["to_find"]))
+#     print(test["answer"])
+#
+# phrases = [
+#  " The headache won't go away. She's taking medicine but even that didn't help.",
+#  " The monster's throbbing in her head continued.",
+#  " This happened to her only once before in her life and she realized that only one thing could be happening."
+#  ]
+# ans = match_phrases(phrases,
+#     "The headache wouldn't go away. She's taken medicine but even that didn't help. The monstrous throbbing in her head continued. She had this happen to her only once before in her life and she realized that only one thing could be happening. 21:210")
+#
+# phrases = ["В кабинете, полном дыма, шел разгaвор о войне,", "которая была объявлена манифестом, о наборе манифеста",
+#                         "еще никто не читал, но все знали о его появлении. граф сидел на манке между", "двумя куреювшими и разговаривавшими соседями. Граф сам",
+#                         "не курил и говорил, а, наклоняя свой амогус то на один бок, то на другой, с видимым удовольствием смотрел на куривших",
+#                         "и слушал разговор двух соседей своих, которых он отравил между собой."]
+# ans = match_phrases(phrases,
+#     "В кабинете, полном дыма, шел разговор о войне, которая была объявлена манифестом, о наборе. Манифеста еще никто не читал, но все знали о его появлении. Граф сидел на оттоманке между двумя курившими и разговаривавшими соседями. Граф сам не курил и не говорил, а, наклоняя голову то на один бок, то на другой, с видимым удовольствием смотрел на куривших и слушал разговор двух соседей своих, которых он стравил между собой.")
+#
+# for i in range(len(phrases)):
+#     print(phrases[i])
+#     print(ans[i])
+#     for j in ans[i]:
+#         print(phrases[i][j[0]:j[0] + len(j[1])])
+#
+# print(match_phrases(["this is soft wear project follow my reading"], "This is software project Follow My Reading."))
