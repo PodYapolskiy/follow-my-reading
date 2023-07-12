@@ -69,14 +69,14 @@ class AudioProcessingResponse(BaseModel):
     segments: List[AudioChunk]
 
 
-class ImageAudioCompareRequest(BaseModel):
+class AudioToImageComparisonRequest(BaseModel):
     audio_file: UUID
     image_file: UUID
     audio_model: str
     image_model: str
 
 
-class TextAudioCompareRequest(BaseModel):
+class AudioToTextComparisonRequest(BaseModel):
     audio_file: UUID
     text: List[str]
     audio_model: str

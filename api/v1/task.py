@@ -12,8 +12,8 @@ from core.task_system import scheduler
 
 from .auth import get_current_active_user
 from .models import (
-    ImageAudioCompareRequest,
-    TextAudioCompareRequest,
+    AudioToImageComparisonRequest,
+    AudioToTextComparisonRequest,
     TaskCreateResponse,
     TaskResultsResponse,
     TaskStatusResponse,
@@ -47,7 +47,7 @@ router = APIRouter(
         },
     },
 )
-async def compare_image_and_audio(request: ImageAudioCompareRequest) -> TaskCreateResponse:
+async def compare_image_and_audio(request: AudioToImageComparisonRequest) -> TaskCreateResponse:
     """
     Parameters:
     - **audio_file**: an uuid of file to process
@@ -123,7 +123,7 @@ async def compare_image_and_audio(request: ImageAudioCompareRequest) -> TaskCrea
         },
     },
 )
-async def compare_text_and_audio(request: TextAudioCompareRequest) -> TaskCreateResponse:
+async def compare_text_and_audio(request: AudioToTextComparisonRequest) -> TaskCreateResponse:
     """
     Parameters:
     - **audio_file**: an uuid of file to process

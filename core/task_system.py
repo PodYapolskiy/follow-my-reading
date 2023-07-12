@@ -14,8 +14,8 @@ from core.plugins.base import (
     AudioSegment,
     AudioTaskResult,
     ImageTaskResult,
-    ImageAudioCompareResult,
-    TextAudioCompareResult,
+    AudioToImageComparisonResponse,
+    AudioToTextComparisonResponse,
     TextDiff,
 )
 from core.plugins.loader import PluginInfo
@@ -143,7 +143,7 @@ def compare_image_audio(
     image_class: str,
     image_function: str,
     image_path: str,
-) -> ImageAudioCompareResult:
+) -> AudioToImageComparisonResponse:
     """
     `compare_image_audio` is a scheduled job, which accepts these parameters:
     - `audio_class: str`
@@ -184,7 +184,7 @@ def compare_image_audio(
                 )
             )
 
-    return ImageAudioCompareResult(
+    return AudioToImageComparisonResponse(
         audio=audio_model_response, image=image_model_response, errors=data
     )
 
@@ -195,7 +195,7 @@ def compare_text_audio(
         audio_function: str,
         audio_path: str,
         text: List[str] | str
-) -> TextAudioCompareResult:
+) -> AudioToTextComparisonResponse:
     audio_model_response: AudioTaskResult = _audio_process(
         audio_class, audio_function, audio_path
     )
@@ -218,7 +218,7 @@ def compare_text_audio(
                 )
             )
 
-    return TextAudioCompareResult(
+    return AudioToTextComparisonResponse(
         audio=audio_model_response, original_text=text, errors=data
     )
 
