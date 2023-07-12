@@ -54,7 +54,7 @@ def __backtracking_levenshtein(first_text: List[str] | str,
         optimal = min(
             levenshtein_dp[current_row - 1][current_column - 1],
             levenshtein_dp[current_row - 1][current_column],
-            levenshtein_dp[current_row][current_column - 1]
+            levenshtein_dp[current_row][current_column - 1],
         )
         if optimal == levenshtein_dp[current_row - 1][current_column - 1]:
             backtrack_result.append(first_text[current_row - 1] + "-" + second_text[current_column - 1])
@@ -257,12 +257,16 @@ def __prep_text(text: str) -> Tuple[str, List[int]]:
 
     # Remove any non-letter symbols
     for i in range(len(text)):
-        if text[i].isalpha() or text[i] == " " and (len(changed) == 0 or changed[-1] != " "):
+        if (
+            text[i].isalpha()
+            or text[i] == " "
+            and (len(changed) == 0 or changed[-1] != " ")
+        ):
             changed += text[i]
             indices.append(i)
 
     # Cut off any unnecessary spaces in the beginning and end
-    indices = indices[len(changed) - len(changed.lstrip()):]
+    indices = indices[len(changed) - len(changed.lstrip()) :]
 
     if changed.rstrip() != changed:
         indices = indices[: len(changed.rstrip()) - len(changed)]

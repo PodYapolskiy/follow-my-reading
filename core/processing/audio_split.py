@@ -1,14 +1,17 @@
 from math import log10 as lg
-from os import mkdir, path
+from typing import List, Tuple
+from uuid import UUID, uuid4
 
 from librosa import get_duration
-from uuid import uuid4, UUID
 from pydub import AudioSegment, silence
-from typing import List, Tuple
+
+from config import get_config
+
+config = get_config()
 
 
 def duration(audio: str) -> float:
-    filepath = "./temp_data/audio/" + audio
+    filepath = config.storage.audio_dir / audio
     return get_duration(path=filepath)
 
 
@@ -41,12 +44,6 @@ def split_audio(  # type: ignore
     :return: the uuids of the cut-up files (in order of appearance in intervals)
     """
 
-    store_path = "./temp_data/audio"
-
-    # Creating the directory to store the files if it does not exist
-    if not path.exists(store_path):
-        mkdir(store_path)
-
     # Creating the pydub.AudioSegment if it is not already created
     if isinstance(file, str):
         audio: AudioSegment = AudioSegment.from_file(file)  # type: ignore
@@ -59,8 +56,8 @@ def split_audio(  # type: ignore
     files: List[UUID] = []
     for i in range(len(intervals)):
         file_id = uuid4()
-        audio[int(intervals[i][0] * 1000): int(intervals[i][1] * 1000)].export(
-            f"{store_path}/{file_id}", format="mp3"
+        audio[int(intervals[i][0] * 1000) : int(intervals[i][1] * 1000)].export(
+            config.storage.audio_dir / str(file_id), format="mp3"
         )
         files.append(file_id)
 
@@ -113,5 +110,5 @@ def split_silence(
     # Split by counted intervals and return the result
     return (
         split_audio(audio, [(i[0] / 1000, i[1] / 1000) for i in audio_intervals]),
-        audio_intervals
+        audio_intervals,
     )

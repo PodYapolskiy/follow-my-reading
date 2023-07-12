@@ -1,6 +1,7 @@
 from typing import List, Protocol, runtime_checkable
-from pydantic import BaseModel
 from uuid import UUID
+
+from pydantic import BaseModel
 
 
 class AudioChunk(BaseModel):
