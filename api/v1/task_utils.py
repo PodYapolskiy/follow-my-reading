@@ -1,3 +1,4 @@
+from typing import Any
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -103,7 +104,7 @@ def _get_job_status(task_id: UUID) -> TaskStatusResponse:
         return TaskStatusResponse(task_id=task_id, status="finished", ready=True)
 
 
-def _get_job_result(task_id: UUID) -> dict:
+def _get_job_result(task_id: UUID) -> Any:
     """
     The function `_get_job_result` retrieves the result of a job based on its ID, and raises an
     exception if the result is not ready or the task does not exist.
@@ -116,8 +117,7 @@ def _get_job_result(task_id: UUID) -> dict:
     """
     data = scheduler.result(str(task_id), preserve=True)
     if data is not None:
-        data_dict: dict = data.dict()
-        return data_dict
+        return data
     else:
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,

@@ -59,4 +59,5 @@ async def get_job_result(task_id: UUID) -> dict:
     - 200, job results
     - 406, Results are not ready yet or no task with such id exist
     """
-    return _get_job_result(task_id)
+    data: dict = _get_job_result(task_id).dict()
+    return data
