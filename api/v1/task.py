@@ -21,7 +21,7 @@ from .models import (
 from .task_utils import _get_job_status
 
 config = get_config()
-logger.add("./logs/tasklog.log", format="{time:DD-MM-YYYY, HH:mm:ss zzБ} {level} {message}", enqueue=True)
+logger.add("./logs/task.log", format="{time:DD-MM-YYYY, HH:mm:ss zzБ} {level} {message}", enqueue=True)
 router = APIRouter(
     prefix="/task", tags=["task"], dependencies=[Depends(get_current_active_user)]
 )
@@ -191,7 +191,8 @@ async def get_job_status(task_id: UUID) -> TaskStatusResponse:
     Responses:
     - 200, Job status
     """
-    logger.info(f"Getting status of task {task_id}. For more info see logs of task_utils.")
+    logger.info(f"Starting get_job status algorithm. Getting status of task {task_id}.\n"
+                f"For more info see logs of task_utils.")
     return _get_job_status(task_id)
 
 
