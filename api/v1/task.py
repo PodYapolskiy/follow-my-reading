@@ -1,13 +1,12 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 
 from config import get_config
-from core.task_system import scheduler
 
 from .auth import get_current_active_user
 from .models import TaskStatusResponse
-from .task_utils import _get_job_status
+from .task_utils import _get_job_status, _get_job_result
 
 config = get_config()
 
@@ -60,12 +59,4 @@ async def get_job_result(task_id: UUID) -> dict:
     - 200, job results
     - 406, Results are not ready yet or no task with such id exist
     """
-    data = scheduler.result(str(task_id), preserve=True)
-
-    if data is not None:
-        data_dict: dict = data.dict()
-        return data_dict
-    raise HTTPException(
-        status_code=status.HTTP_406_NOT_ACCEPTABLE,
-        detail="Results are not ready yet or no task with such id exist",
-    )
+    return _get_job_result(task_id)

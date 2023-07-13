@@ -1,4 +1,3 @@
-from typing import Any
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -13,7 +12,6 @@ from core.task_system import scheduler
 from .models import (
     AudioProcessingRequest,
     ImageProcessingRequest,
-    TaskCreateRequest,
     TaskCreateResponse,
     TaskStatusResponse,
 )
@@ -105,64 +103,7 @@ def _get_job_status(task_id: UUID) -> TaskStatusResponse:
         return TaskStatusResponse(task_id=task_id, status="finished", ready=True)
 
 
-async def create_task(request: TaskCreateRequest) -> TaskCreateResponse:
-    """
-    Parameters:
-    - **audio_file**: an uuid of file to process
-    - **audio_model**: an audio processing model name (check '_/audio/models_' for available models)
-    - **image_file**: an uuid of file to process
-    - **image_model**: an image processing model name (check '_/image/models_' for available models)
-
-
-    Responses:
-    - 200, Task created
-    - 404, No such audio file available
-    - 404, No such audio model available
-    - 404, No such image file available
-    - 404, No such image model available
-    """
-    image_plugin_info = get_image_plugins().get(request.image_model)
-    audio_plugin_info = get_audio_plugins().get(request.audio_model)
-
-    image_file_path = config.storage.image_dir / str(request.image_file)
-    audio_file_path = config.storage.audio_dir / str(request.audio_file)
-
-    if image_plugin_info is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No such image model available",
-        )
-
-    if audio_plugin_info is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No such audio model available",
-        )
-
-    if not image_file_path.exists():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No such image file available",
-        )
-
-    if not audio_file_path.exists():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No such audio file available",
-        )
-
-    job: Result = task_system.compare_image_audio(  # type: ignore
-        audio_plugin_info.class_name,
-        AudioProcessingFunction,
-        audio_file_path.as_posix(),
-        image_plugin_info.class_name,
-        ImageProcessingFunction,
-        image_file_path.as_posix(),
-    )
-    return TaskCreateResponse(task_id=UUID(job.id))
-
-
-def _get_job_result(task_id: UUID) -> Any:
+def _get_job_result(task_id: UUID) -> dict:
     """
     The function `_get_job_result` retrieves the result of a job based on its ID, and raises an
     exception if the result is not ready or the task does not exist.
@@ -171,11 +112,12 @@ def _get_job_result(task_id: UUID) -> Any:
     task
     :type task_id: UUID
     :return: The function `_get_job_result` returns the result of a job/task with the given `task_id`.
-    The result can be of any type (`Any`).
+    The result are of type `dict`.
     """
     data = scheduler.result(str(task_id), preserve=True)
     if data is not None:
-        return data
+        data_dict: dict = data.dict()
+        return data_dict
     else:
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
