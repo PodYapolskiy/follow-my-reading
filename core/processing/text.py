@@ -1,6 +1,6 @@
-from typing import List, Tuple, Any
 import itertools
 from math import inf
+from typing import Any, List, Tuple
 
 
 def __backtracking_levenshtein(
