@@ -1,6 +1,6 @@
 from typing import Any
 from uuid import UUID
-
+from loguru import logger
 from fastapi import HTTPException, status
 from huey.api import Result
 
@@ -18,6 +18,7 @@ from .models import (
     TaskStatusResponse,
 )
 
+logger.add("./logs/task_utils.log", format="{time:DD-MM-YYYY, HH:mm:ss zz} {level} {message}", enqueue=True)
 config = get_config()
 
 
@@ -31,19 +32,31 @@ def create_audio_task(request: AudioProcessingRequest) -> TaskCreateResponse:
     :type request: AudioProcessingRequest
     :return: a TaskCreateResponse object with a task_id attribute set to the UUID of the job.
     """
+    logger.info("Starting create_audio_task algorithm. Acquiring data.")
+
     audio_plugin_info = get_audio_plugins().get(request.audio_model)
     audio_file_path = config.storage.audio_dir / str(request.audio_file)
 
+    logger.info(f"Checking if audio model ({request.audio_model}) exists.")
+
     if audio_plugin_info is None:
+        logger.error(f"No such audio model ({request.audio_model}) exists. Raising 404 file error.")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No such audio model available",
         )
 
+    logger.info(f"Audio model ({request.audio_model}) exists. Checking if audio file ({request.audio_file}) exists.")
+
     if not audio_file_path.exists():
+        logger.error(f"No such audio file ({request.audio_file}) exists. Raising 404 file error.")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="No such audio file available"
         )
+
+    logger.info(f"Audio file ({request.audio_file}) exists. Creating task for audio processing.\n"
+                f"Check task_system logs for more info.\n"
+                f"Process: audio_processing_call.")
 
     job: Result = task_system.audio_processing_call(  # type: ignore
         audio_plugin_info.class_name,
@@ -51,6 +64,9 @@ def create_audio_task(request: AudioProcessingRequest) -> TaskCreateResponse:
         audio_file_path.as_posix(),
     )
 
+    logger.info(f"Task for processing audio (file: ({request.audio_file}), model: ({request.audio_model}))\n"
+                f"has been created successfully."
+                f"Task id: {UUID(job.id)}")
     return TaskCreateResponse(task_id=UUID(job.id))
 
 
@@ -64,26 +80,38 @@ def create_image_task(request: ImageProcessingRequest) -> TaskCreateResponse:
     :type request: ImageProcessingRequest
     :return: a TaskCreateResponse object with a task_id attribute set to the UUID of the job.
     """
+    logger.info("Starting create_image_task algorithm. Acquiring data.")
+
     image_plugin_info = get_image_plugins().get(request.image_model)
     image_file_path = config.storage.image_dir / str(request.image_file)
 
+    logger.info(f"Checking if image model ({request.image_model}) exists.")
     if image_plugin_info is None:
+        logger.error(f"No such image model ({request.image_model}) exists. Raising 404 file error.")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No such image model available",
         )
 
+    logger.info(f"Image model ({request.image_model}) exists. Checking if image file ({request.image_file}) exists.")
     if not image_file_path.exists():
+        logger.error(f"No such image file ({request.image_file}) exists.")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="No such image file available"
         )
 
+    logger.info(f"Image file ({request.image_file}) exists. Creating task for image processing.\n"
+                f"Check task_system logs for more info.\n"
+                f"Process: image_processing_call")
     job: Result = task_system.image_processing_call(  # type: ignore
         image_plugin_info.class_name,
         ImageProcessingFunction,
         image_file_path.as_posix(),
     )
 
+    logger.info(f"Task for processing image (file: ({request.image_file}), model: ({request.image_model}))\n"
+                f"has been created successfully."
+                f"Task id: {UUID(job.id)}")
     return TaskCreateResponse(task_id=UUID(job.id))
 
 
@@ -97,11 +125,14 @@ def _get_job_status(task_id: UUID) -> TaskStatusResponse:
     :type task_id: UUID
     :return: a TaskStatusResponse object.
     """
+    logger.info(f"Starting _get_job_status algorithm. Checking if the results of the task ({task_id}) are available yet.")
     if scheduler.result(str(task_id), preserve=True) is None:
+        logger.info(f"Results of the task ({task_id}) are not available")
         return TaskStatusResponse(
             task_id=task_id, status="results are not available", ready=False
         )
     else:
+        logger.info(f"The task ({task_id}) is already finished.")
         return TaskStatusResponse(task_id=task_id, status="finished", ready=True)
 
 
