@@ -92,9 +92,11 @@ def split_silence(
     max_interval *= 1000
     if silence_chunks[0][0] != 0:
         audio = AudioSegment.silent(100) + audio
-        for i in range(len(silence_chunks)):
-            silence_chunks[i] = (silence_chunks[i][0] + 100, silence_chunks[i][1] + 100)
-        silence_chunks.insert((0, 100), 0)
+        silence_chunks = [
+            (silence_chunks[i][0] + 100, silence_chunks[i][1] + 100)
+            for i in range(len(silence_chunks))
+        ]
+        silence_chunks.insert(0, (0, 100))
     if silence_chunks[-1][1] != len(audio):
         silence_chunks.append((len(audio), len(audio) + 100))
         audio = audio + AudioSegment.silent(100)
