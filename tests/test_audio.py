@@ -1,7 +1,3 @@
-# https://github.com/tiangolo/fastapi/issues/4845 - auth problem
-# pytest -s --disable-warnings tests/test_audio.py
-# python C:\Users\PodYapolsky\AppData\Local\pypoetry\Cache\virtualenvs\follow-my-reading-2GbujRK9-py3.10\Scripts\huey_consumer.py core.task_system.scheduler -n -k thread
-# -s = --capture=no how print statements in console
 import os
 import uuid
 import pytest
@@ -342,6 +338,7 @@ def test_process_file_does_not_exist():
             },
             headers=GLOBAL_HEADERS,
         )
+        assert response.status_code == 200
         filename = response.json()["file_id"]
 
         response = client.post(
@@ -417,7 +414,7 @@ def test_process():
             },
         )
         assert response.status_code == 401
-        
+
         # upload an audio and get the filename (UUID)
         response = client.post(
             "/v1/audio/upload",
