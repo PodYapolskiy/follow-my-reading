@@ -3,8 +3,9 @@ import itertools
 from math import inf
 
 
-def __backtracking_levenshtein(first_text: List[str] | str,
-                               second_text: List[str] | str) -> Tuple[List[str], int]:
+def __backtracking_levenshtein(
+    first_text: List[str] | str, second_text: List[str] | str
+) -> Tuple[List[str], int]:
     """
     Levenshtein distance algorithm that takes two texts and returns the optimal transitions list and the final distance
     Treats a list as a collection of words separated by spaces
@@ -23,8 +24,7 @@ def __backtracking_levenshtein(first_text: List[str] | str,
 
     # Initialize the dynamic programming table
     levenshtein_dp = [
-        [inf] * (len(second_text) + 1)
-        for i in range(len(first_text) + 1)
+        [inf] * (len(second_text) + 1) for i in range(len(first_text) + 1)
     ]
 
     # Count the dynamic programming table as per the usual algorithm
@@ -33,7 +33,9 @@ def __backtracking_levenshtein(first_text: List[str] | str,
         levenshtein_dp[i][0] = i
     for i in range(1, len(second_text) + 1):
         levenshtein_dp[0][i] = i
-    for i, j in itertools.product(range(1, len(first_text) + 1), range(1, len(second_text) + 1)):
+    for i, j in itertools.product(
+        range(1, len(first_text) + 1), range(1, len(second_text) + 1)
+    ):
         levenshtein_dp[i][j] = min(
             levenshtein_dp[i - 1][j - 1] + (first_text[i - 1] != second_text[j - 1]),
             levenshtein_dp[i - 1][j] + 1,
@@ -57,7 +59,9 @@ def __backtracking_levenshtein(first_text: List[str] | str,
             levenshtein_dp[current_row][current_column - 1],
         )
         if optimal == levenshtein_dp[current_row - 1][current_column - 1]:
-            backtrack_result.append(first_text[current_row - 1] + "-" + second_text[current_column - 1])
+            backtrack_result.append(
+                first_text[current_row - 1] + "-" + second_text[current_column - 1]
+            )
             current_row -= 1
             current_column -= 1
         elif optimal == levenshtein_dp[current_row - 1][current_column]:
@@ -76,7 +80,9 @@ def __backtracking_levenshtein(first_text: List[str] | str,
     return backtrack_result, int(levenshtein_dp[-1][-1])
 
 
-def __joined_levenshtein(first_text: List[str] | str, second_text: List[str] | str) -> Tuple[List[List[str] | str], int]:
+def __joined_levenshtein(
+    first_text: List[str] | str, second_text: List[str] | str
+) -> Tuple[List[List[str] | str], int]:
     """
     Joins the answers given by the initial levenshtein algorithm so they resemble errors more
     Treats a list as a collection of words separated by spaces
@@ -111,7 +117,7 @@ def __joined_levenshtein(first_text: List[str] | str, second_text: List[str] | s
         if isinstance(joined_result[-1], list) and "-" in current_str:
             # We are collecting two separate phrases and the current_str is also separate, continue the last phrase
             joined_result[-1][0] += separator + current_str[: current_str.find("-")]
-            joined_result[-1][1] += separator + current_str[current_str.find("-") + 1:]
+            joined_result[-1][1] += separator + current_str[current_str.find("-") + 1 :]
         elif isinstance(joined_result[-1], list):
             # We are collecting two separate phrases and the current_str is the same, start a new phrase
             joined_result.append(current_str)
@@ -123,12 +129,15 @@ def __joined_levenshtein(first_text: List[str] | str, second_text: List[str] | s
             joined_result[-1] += separator + current_str
 
     # Replace any symbols that symbolise empty space with empty space
-    for current_str in filter(lambda x: isinstance(x, list), joined_result):  # type: ignore
-        while "_ " in current_str[0] or "_ " in current_str[1]:
-            current_str[0] = current_str[0].replace("_ ", "_")
-            current_str[1] = current_str[1].replace("_ ", "_")
-        current_str[0] = current_str[0].replace("_", "")
-        current_str[1] = current_str[1].replace("_", "")
+    for data in joined_result:
+        if not isinstance(data, list):
+            continue
+
+        while "_ " in data[0] or "_ " in data[1]:
+            data[0] = data[0].replace("_ ", "_")
+            data[1] = data[1].replace("_ ", "_")
+        data[0] = data[0].replace("_", "")
+        data[1] = data[1].replace("_", "")
 
     return joined_result, distance
 
@@ -150,8 +159,8 @@ def match(
 
     # Split the text if needed so the algorithm compares whole words
     if separate_words:
-        first_text = first_text_str.split()
-        second_text = second_text_str.split()
+        first_text: List[str] | str = first_text_str.split()
+        second_text: List[str] | str = second_text_str.split()
     else:
         first_text = first_text_str
         second_text = second_text_str
@@ -163,18 +172,20 @@ def match(
     answer: List[Tuple[int, str, str]] = []
     first_index = 0
 
-    for current_str in joined_result:  # type: ignore
-        if type(current_str) == list:
-            answer.append((first_index, current_str[0], current_str[1]))
-            first_index += len(current_str[0])
-            if separate_words and current_str[0] != "":
+    for data in joined_result:
+        if isinstance(data, list):
+            answer.append((first_index, data[0], data[1]))
+            first_index += len(data[0])
+            if separate_words and data[0] != "":
                 first_index += 1
         else:
-            first_index += len(current_str) + 1
+            first_index += len(data) + 1
     return answer, distance
 
 
-def __match_symbols(first_text: str, second_text: str) -> Tuple[List[Tuple[int, str, str]], int]:
+def __match_symbols(
+    first_text: str, second_text: str
+) -> Tuple[List[Tuple[int, str, str]], int]:
     """
     Interface for match() that matches using symbols
     Used for symbol matching for finding short phrases in text more reliably
@@ -190,14 +201,14 @@ def __match_symbols(first_text: str, second_text: str) -> Tuple[List[Tuple[int, 
 
 def match_words(first_text: str, second_text: str) -> List[Tuple[int, str, str]]:
     """
-        Interface for match() that matches using whole words
-        Used for finding errors in most cases
-        :param first_text: the text in which we try to find the errors
-        :param second_text: the "correct" text
-        :return: List[Tuple(the index at which the error occurs (the beginning of the phrase to replace),
-                            the incorrect phrase,
-                            the correct phrase)]
-        """
+    Interface for match() that matches using whole words
+    Used for finding errors in most cases
+    :param first_text: the text in which we try to find the errors
+    :param second_text: the "correct" text
+    :return: List[Tuple(the index at which the error occurs (the beginning of the phrase to replace),
+                        the incorrect phrase,
+                        the correct phrase)]
+    """
     return match(first_text, second_text, True)[0]
 
 
@@ -233,7 +244,7 @@ def match_phrases(phrases: List[str], text: str) -> List[List[Tuple[int, str, st
                 phrase_indices[i[0]] - cur_ind,
                 phrases[y][
                     phrase_indices[i[0]]
-                    - cur_ind: phrase_indices[i[0] + len(i[1]) - 1]
+                    - cur_ind : phrase_indices[i[0] + len(i[1]) - 1]
                     + 1
                     - cur_ind
                 ],
@@ -322,22 +333,27 @@ def find_phrases(phrases: List[str], to_find: str, margin: float = 1.05) -> List
     window = int(len(better_text) * margin)
 
     # Find the window that best fits the string
-    best_window = [[], inf]
+    best_window_max = inf
+    best_window_result = []
+
     best_end = 0
     for j in range(window, len(better_phrases) + 1):
-        new_ans, lev_dist = __match_symbols(better_text, better_phrases[j - window:j])
-        if best_window[1] > lev_dist:
-            best_window = [new_ans, lev_dist]
+        new_ans, lev_dist = __match_symbols(better_text, better_phrases[j - window : j])
+        if best_window_max > lev_dist:
+            best_window_result = new_ans
+            best_window_max = lev_dist
             best_end = j
     best_beg = best_end - window
 
     # Trim the window to exclude unnecessary symbols (trims using full words)
-    optimal_ans = best_window[0]
+    optimal_ans = best_window_result
 
-    first_word = __find(optimal_ans[0][2], len(optimal_ans[0][2]) - len(optimal_ans[0][1]) - 1, ' ', -1)
+    first_word = __find(
+        optimal_ans[0][2], len(optimal_ans[0][2]) - len(optimal_ans[0][1]) - 1, " ", -1
+    )
     best_beg += first_word + 1
 
-    last_word = __find(optimal_ans[-1][2], len(optimal_ans[-1][1]), ' ', 1)
+    last_word = __find(optimal_ans[-1][2], len(optimal_ans[-1][1]), " ", 1)
     best_end -= len(optimal_ans[-1][2]) - last_word
 
     # Transform the indices from prepared text to initial text
@@ -350,10 +366,14 @@ def find_phrases(phrases: List[str], to_find: str, margin: float = 1.05) -> List
     current_index = 0
     for phrase in range(len(phrases)):
         current_index += len(phrases[phrase]) + 1
-        if current_index > actual_beg and current_index - len(phrases[phrase]) - 1 <= actual_end:
+        if (
+            current_index > actual_beg
+            and current_index - len(phrases[phrase]) - 1 <= actual_end
+        ):
             answer.append(phrase)
 
     return answer
+
 
 # tests = {
 #     "test_cases": [
