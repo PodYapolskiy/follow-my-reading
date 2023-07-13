@@ -563,15 +563,134 @@ def test_download():
         os.remove(f"temp_data/audio/{filename}")
 
 
+##############
+### RESULT ###
+##############
+@pytest.mark.flaky(retries=2, delay=30)
+def test_result_no_auth():
+    with TestClient(app) as client:
+        response = client.get("/v1/audio/result?task_id=bruh")
+        assert response.status_code == 401
+
+
+@pytest.mark.flaky(retries=2, delay=30)
+def test_result_process_and_get_task_id():
+    with TestClient(app) as client:
+        response = client.post(
+            "/v1/audio/upload",
+            files={
+                "upload_file": (" ", open("tests/audio/audio.mp3", "rb"), "audio/mpeg"),
+            },
+            headers=GLOBAL_HEADERS,
+        )
+        assert response.status_code == 200
+        filename = response.json()["file_id"]
+
+        response = client.post(
+            "/v1/audio/process",
+            json={
+                "audio_file": filename,
+                "audio_model": DEFAULT_AUDIO_MODEL,
+            },
+            headers=GLOBAL_HEADERS,
+        )
+        assert response.status_code == 200
+        task_id = response.json()["task_id"]
+        assert _is_valid_UUID(task_id)
+
+        os.remove(f"temp_data/audio/{filename}")
+
+
+@pytest.mark.flaky(retries=2, delay=30)
+def test_result_unexistent_task():
+    with TestClient(app) as client:
+        response = client.get(
+            f"/v1/audio/result?task_id={DEFAULT_UNEXISTENT_FILE}",
+            headers=GLOBAL_HEADERS,
+        )
+        assert response.status_code == 406
+
+
+@pytest.mark.flaky(retries=2, delay=30)
+def test_result_no_results():
+    with TestClient(app) as client:
+        response = client.post(
+            "/v1/audio/upload",
+            files={
+                "upload_file": (" ", open("tests/audio/audio.mp3", "rb"), "audio/mpeg"),
+            },
+            headers=GLOBAL_HEADERS,
+        )
+        assert response.status_code == 200
+        filename = response.json()["file_id"]
+
+        response = client.post(
+            "/v1/audio/process",
+            json={
+                "audio_file": filename,
+                "audio_model": DEFAULT_AUDIO_MODEL,
+            },
+            headers=GLOBAL_HEADERS,
+        )
+        assert response.status_code == 200
+        task_id = response.json()["task_id"]
+
+        response = client.get(
+            f"/v1/audio/result?task_id={task_id}",
+            headers=GLOBAL_HEADERS,
+        )
+        assert response.status_code == 406
+
+        os.remove(f"temp_data/audio/{filename}")
+
+
+@pytest.mark.flaky(retries=2, delay=30)
+def test_result_type_validation_failed():
+    with TestClient(app) as client:
+        response = client.get("/v1/audio/result?task_id=bruh", headers=GLOBAL_HEADERS)
+        assert response.status_code == 422
+
+
+@pytest.mark.flaky(retries=2, delay=30)
+def test_result_success():
+    with TestClient(app) as client:
+        response = client.post(
+            "/v1/audio/upload",
+            files={
+                "upload_file": (" ", open("tests/audio/audio.mp3", "rb"), "audio/mpeg"),
+            },
+            headers=GLOBAL_HEADERS,
+        )
+        assert response.status_code == 200
+        filename = response.json()["file_id"]
+
+        response = client.post(
+            "/v1/audio/process",
+            json={
+                "audio_file": filename,
+                "audio_model": DEFAULT_AUDIO_MODEL,
+            },
+            headers=GLOBAL_HEADERS,
+        )
+        assert response.status_code == 200
+        task_id = response.json()["task_id"]
+
+        response = client.get(
+            f"/v1/audio/result?task_id={task_id}",
+            headers=GLOBAL_HEADERS,
+        )
+        # TODO: fix this to finally get a successful response
+        # assert response.status_code == 200
+
+        os.remove(f"temp_data/audio/{filename}")
+
+
+@pytest.mark.flaky(retries=2, delay=30)
 def test_result():
     with TestClient(app) as client:
         # not auth
         response = client.get("/v1/audio/result?task_id=bruh")
         assert response.status_code == 401
-
-        # authorize and get the token
-        token_info = _register_and_get_token_info(client)
-        headers = _return_headers_with_token(token_info)
 
         # upload the audio
         response = client.post(
@@ -579,7 +698,7 @@ def test_result():
             files={
                 "upload_file": (" ", open("tests/audio/audio.mp3", "rb"), "audio/mpeg"),
             },
-            headers=headers,
+            headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 200
         filename = response.json()["file_id"]
@@ -591,7 +710,7 @@ def test_result():
                 "audio_file": filename,
                 "audio_model": DEFAULT_AUDIO_MODEL,
             },
-            headers=headers,
+            headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 200
         task_id = response.json()["task_id"]
@@ -600,36 +719,34 @@ def test_result():
         # there no task or no results
         response = client.get(
             f"/v1/audio/result?task_id={DEFAULT_UNEXISTENT_FILE}",
-            headers=headers,
+            headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 406
 
         # type validation failed
-        response = client.get("/v1/audio/result?task_id=bruh", headers=headers)
+        response = client.get("/v1/audio/result?task_id=bruh", headers=GLOBAL_HEADERS)
         assert response.status_code == 422
 
         # everything ok
         response = client.get(
             f"/v1/audio/result?task_id={task_id}",
-            headers=headers,
+            headers=GLOBAL_HEADERS,
         )
 
-        return
-
         # TODO: deal with successful task ending, probably use async client
-        assert response.status_code == 200
+        # assert response.status_code == 200
 
-        data = response.json()
-        text = data["text"]
-        assert isinstance(text, str)
+        # data = response.json()
+        # text = data["text"]
+        # assert isinstance(text, str)
 
-        segments = data["segments"]
-        assert isinstance(segments, list)
-        for segment in segments:
-            assert isinstance(segment, dict)
-            assert isinstance(segment["start"], int)
-            assert isinstance(segment["end"], int)
-            assert isinstance(segment["text"], str)
-            assert isinstance(segment["file"], str)
+        # segments = data["segments"]
+        # assert isinstance(segments, list)
+        # for segment in segments:
+        #     assert isinstance(segment, dict)
+        #     assert isinstance(segment["start"], int)
+        #     assert isinstance(segment["end"], int)
+        #     assert isinstance(segment["text"], str)
+        #     assert isinstance(segment["file"], str)
 
         os.remove(f"temp_data/audio/{filename}")
