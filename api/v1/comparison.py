@@ -337,7 +337,7 @@ async def get_audio_text_comparison_result(
         },
         "at_char": 0, // chat, at which an error stats
         "found": "string", // found word (based on audio)
-        "expected": "string" // exptected word (suggetion for improvement based on image)
+        "expected": "string" // exptected word (suggetion for improvement based on text)
         }
     ]
     }
@@ -353,7 +353,7 @@ async def get_audio_text_comparison_result(
         except ValidationError as error:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="There is no such task consists of the both image and audio",
+                detail="There is no such task consists of the both audio and text",
             ) from error
     raise HTTPException(
         status_code=status.HTTP_406_NOT_ACCEPTABLE,

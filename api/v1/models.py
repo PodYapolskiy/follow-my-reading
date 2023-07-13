@@ -106,7 +106,7 @@ class AudioImageComparisonResultsResponse(BaseModel):
 
 
 class AudioTextComparisonResultsResponse(BaseModel):
-    audio: AudioProcessingRequest
+    audio: AudioProcessingResponse
     errors: List[TextDiff]
 
 

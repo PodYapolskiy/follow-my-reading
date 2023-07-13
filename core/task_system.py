@@ -213,9 +213,7 @@ def compare_audio_text(
                 )
             )
 
-    return AudioToTextComparisonResponse(
-        audio=audio_model_response, original_text=text, errors=data
-    )
+    return AudioToTextComparisonResponse(audio=audio_model_response, errors=data)
 
 
 @scheduler.task()

@@ -68,7 +68,6 @@ class AudioToImageComparisonResponse(BaseModel):
 
 class AudioToTextComparisonResponse(BaseModel):
     audio: AudioTaskResult
-    original_text: List[str]
     errors: List[TextDiff]
 
 
