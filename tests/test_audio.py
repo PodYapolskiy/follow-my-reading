@@ -30,10 +30,11 @@ def _register_and_get_token_info(client: TestClient) -> dict[str, str]:
     )
     assert response.status_code == 200  # successful auth
 
-    return response.json()
+    data: dict[str, str] = response.json()
+    return data
 
 
-def _return_headers_with_token(token_info: dict[str, str]):
+def _return_headers_with_token(token_info: dict[str, str]) -> dict[str, str]:
     """Return a headers pattern to pass auth"""
     return {
         "Accept": "application/json",
@@ -49,7 +50,7 @@ def _is_valid_UUID(string: str) -> bool:
         return False
 
 
-def test_start():
+def test_start() -> None:
     with TestClient(app) as client:
         token_info = _register_and_get_token_info(client)
         headers = _return_headers_with_token(token_info)
@@ -60,7 +61,7 @@ def test_start():
 
 
 @pytest.mark.flaky(retries=5, delay=30)
-def test_general():
+def test_general() -> None:
     with TestClient(app) as client:
         response = client.post("/v1/audio/upload", data={"upload_file": "some file"})
         assert response.status_code == 401
@@ -84,7 +85,7 @@ def test_general():
         assert response.status_code == 401
 
 
-def test_request_rate_limit():
+def test_request_rate_limit() -> None:
     with TestClient(app) as client:
         # try to knock knock 10 times
         for _ in range(10):
@@ -105,7 +106,7 @@ def test_request_rate_limit():
 ### UPLOAD ###
 ##############
 @pytest.mark.flaky(retries=2, delay=30)
-def test_upload_no_auth():
+def test_upload_no_auth() -> None:
     with TestClient(app) as client:
         filename = "tests/audio/audio.mp3"
 
@@ -120,7 +121,7 @@ def test_upload_no_auth():
 
 
 @pytest.mark.flaky(retries=2, delay=30)
-def test_upload_payload_not_a_file():
+def test_upload_payload_not_a_file() -> None:
     with TestClient(app) as client:
         response = client.post(
             "/v1/audio/upload",
@@ -133,7 +134,7 @@ def test_upload_payload_not_a_file():
 
 
 @pytest.mark.flaky(retries=2, delay=30)
-def test_upload_file_is_not_an_audio():
+def test_upload_file_is_not_an_audio() -> None:
     with TestClient(app) as client:
         response = client.post(
             "/v1/audio/upload",
@@ -146,7 +147,7 @@ def test_upload_file_is_not_an_audio():
 
 
 @pytest.mark.flaky(retries=2, delay=30)
-def test_upload_success():
+def test_upload_success() -> None:
     with TestClient(app) as client:
         filename = "tests/audio/audio.mp3"
 
@@ -163,7 +164,7 @@ def test_upload_success():
 
 
 @pytest.mark.flaky(retries=2, delay=30)
-def test_upload():
+def test_upload() -> None:
     """
     On testing uploading files:
     https://stackoverflow.com/questions/60783222/how-to-test-a-fastapi-api-endpoint-that-consumes-images
@@ -219,14 +220,14 @@ def test_upload():
 ### MODELS ###
 ##############
 @pytest.mark.flaky(retries=2, delay=30)
-def test_models_no_auth():
+def test_models_no_auth() -> None:
     with TestClient(app) as client:
         response = client.get("/v1/audio/models")
         assert response.status_code == 401  # if not authenticated
 
 
 @pytest.mark.flaky(retries=2, delay=30)
-def test_models_success():
+def test_models_success() -> None:
     with TestClient(app) as client:
         response = client.get(
             "/v1/audio/models",
@@ -236,7 +237,7 @@ def test_models_success():
 
 
 @pytest.mark.flaky(retries=2, delay=30)
-def test_models_not_empty():
+def test_models_not_empty() -> None:
     with TestClient(app) as client:
         response = client.get(
             "/v1/audio/models",
@@ -247,7 +248,7 @@ def test_models_not_empty():
 
 
 @pytest.mark.flaky(retries=2, delay=30)
-def test_models_structure():
+def test_models_structure() -> None:
     with TestClient(app) as client:
         response = client.get(
             "/v1/audio/models",
@@ -265,7 +266,7 @@ def test_models_structure():
 
 
 @pytest.mark.flaky(retries=2, delay=30)
-def test_models():
+def test_models() -> None:
     with TestClient(app) as client:
         response = client.get("/v1/audio/models")
         assert response.status_code == 401  # if not authenticated
@@ -291,7 +292,7 @@ def test_models():
 ### PROCESS ###
 ###############
 @pytest.mark.flaky(retries=2, delay=30)
-def test_process_no_auth():
+def test_process_no_auth() -> None:
     with TestClient(app) as client:
         response = client.post(
             "/v1/audio/process",
@@ -304,7 +305,7 @@ def test_process_no_auth():
 
 
 @pytest.mark.flaky(retries=2, delay=30)
-def test_process_model_does_not_exist():
+def test_process_model_does_not_exist() -> None:
     with TestClient(app) as client:
         response = client.post(
             "/v1/audio/upload",
@@ -329,7 +330,7 @@ def test_process_model_does_not_exist():
 
 
 @pytest.mark.flaky(retries=2, delay=30)
-def test_process_file_does_not_exist():
+def test_process_file_does_not_exist() -> None:
     with TestClient(app) as client:
         response = client.post(
             "/v1/audio/upload",
@@ -355,7 +356,7 @@ def test_process_file_does_not_exist():
 
 
 @pytest.mark.flaky(retries=2, delay=30)
-def test_process_wrong_format():
+def test_process_wrong_format() -> None:
     with TestClient(app) as client:
         response = client.post(
             "/v1/audio/upload",
@@ -377,7 +378,7 @@ def test_process_wrong_format():
 
 
 @pytest.mark.flaky(retries=2, delay=30)
-def test_process_success():
+def test_process_success() -> None:
     with TestClient(app) as client:
         response = client.post(
             "/v1/audio/upload",
@@ -403,7 +404,7 @@ def test_process_success():
 
 
 @pytest.mark.flaky(retries=2, delay=30)
-def test_process():
+def test_process() -> None:
     with TestClient(app) as client:
         # no auth
         response = client.post(
@@ -475,14 +476,14 @@ def test_process():
 ### DOWNLOAD ###
 ################
 @pytest.mark.flaky(retries=2, delay=30)
-def test_download_no_auth():
+def test_download_no_auth() -> None:
     with TestClient(app) as client:
         response = client.get("/v1/audio/download?file=bruh")
         assert response.status_code == 401
 
 
 @pytest.mark.flaky(retries=2, delay=30)
-def test_download_file_does_not_exist():
+def test_download_file_does_not_exist() -> None:
     with TestClient(app) as client:
         response = client.get(
             f"/v1/audio/download?file={DEFAULT_UNEXISTENT_FILE}",
@@ -492,14 +493,14 @@ def test_download_file_does_not_exist():
 
 
 @pytest.mark.flaky(retries=2, delay=30)
-def test_download_wrong_format():
+def test_download_wrong_format() -> None:
     with TestClient(app) as client:
         response = client.get("/v1/audio/download?file=bruh", headers=GLOBAL_HEADERS)
         assert response.status_code == 422
 
 
 @pytest.mark.flaky(retries=2, delay=30)
-def test_download_success():
+def test_download_success() -> None:
     with TestClient(app) as client:
         response = client.post(
             "/v1/audio/upload",
@@ -520,7 +521,7 @@ def test_download_success():
 
 
 @pytest.mark.flaky(retries=2, delay=30)
-def test_download():
+def test_download() -> None:
     with TestClient(app) as client:
         # not auth
         response = client.get("/v1/audio/download?file=bruh")
@@ -564,14 +565,14 @@ def test_download():
 ### RESULT ###
 ##############
 @pytest.mark.flaky(retries=2, delay=30)
-def test_result_no_auth():
+def test_result_no_auth() -> None:
     with TestClient(app) as client:
         response = client.get("/v1/audio/result?task_id=bruh")
         assert response.status_code == 401
 
 
 @pytest.mark.flaky(retries=2, delay=30)
-def test_result_process_and_get_task_id():
+def test_result_process_and_get_task_id() -> None:
     with TestClient(app) as client:
         response = client.post(
             "/v1/audio/upload",
@@ -599,7 +600,7 @@ def test_result_process_and_get_task_id():
 
 
 @pytest.mark.flaky(retries=2, delay=30)
-def test_result_unexistent_task():
+def test_result_unexistent_task() -> None:
     with TestClient(app) as client:
         response = client.get(
             f"/v1/audio/result?task_id={DEFAULT_UNEXISTENT_FILE}",
@@ -609,7 +610,7 @@ def test_result_unexistent_task():
 
 
 @pytest.mark.flaky(retries=2, delay=30)
-def test_result_no_results():
+def test_result_no_results() -> None:
     with TestClient(app) as client:
         response = client.post(
             "/v1/audio/upload",
@@ -642,14 +643,14 @@ def test_result_no_results():
 
 
 @pytest.mark.flaky(retries=2, delay=30)
-def test_result_type_validation_failed():
+def test_result_type_validation_failed() -> None:
     with TestClient(app) as client:
         response = client.get("/v1/audio/result?task_id=bruh", headers=GLOBAL_HEADERS)
         assert response.status_code == 422
 
 
 @pytest.mark.flaky(retries=2, delay=30)
-def test_result_success():
+def test_result_success() -> None:
     with TestClient(app) as client:
         response = client.post(
             "/v1/audio/upload",
@@ -683,7 +684,7 @@ def test_result_success():
 
 
 @pytest.mark.flaky(retries=2, delay=30)
-def test_result():
+def test_result() -> None:
     with TestClient(app) as client:
         # not auth
         response = client.get("/v1/audio/result?task_id=bruh")
