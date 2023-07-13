@@ -136,7 +136,7 @@ def image_processing_call(
 
 
 @scheduler.task()
-def compare_image_audio(
+def compare_audio_image(
     audio_class: str,
     audio_function: str,
     audio_path: str,
@@ -190,20 +190,15 @@ def compare_image_audio(
 
 
 @scheduler.task()
-def compare_text_audio(
-        audio_class: str,
-        audio_function: str,
-        audio_path: str,
-        text: List[str]
+def compare_audio_text(
+    audio_class: str, audio_function: str, audio_path: str, text: List[str]
 ) -> AudioToTextComparisonResponse:
     audio_model_response: AudioTaskResult = _audio_process(
         audio_class, audio_function, audio_path
     )
     logger.info("Text matching from query")
     phrases = [x.text for x in audio_model_response.segments]
-    original_text = ''
-    for phrase in text:
-        original_text += phrase + " "
+    original_text = " ".join(text)
     text_diffs = match_phrases(phrases, original_text)
 
     data = []
