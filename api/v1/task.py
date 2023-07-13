@@ -1,5 +1,5 @@
 from uuid import UUID
-
+from loguru import logger
 from fastapi import APIRouter, Depends, HTTPException, status
 from huey.api import Result
 from pydantic.error_wrappers import ValidationError
@@ -21,7 +21,7 @@ from .models import (
 from .task_utils import _get_job_status
 
 config = get_config()
-
+logger.add("./logs/tasklog.log", format="{time:DD-MM-YYYY, HH:mm:ss zzБ} {level} {message}", enqueue=True)
 router = APIRouter(
     prefix="/task", tags=["task"], dependencies=[Depends(get_current_active_user)]
 )
@@ -63,36 +63,41 @@ async def compare_image_and_audio(request: AudioToImageComparisonRequest) -> Tas
     - 404, No such image file available
     - 404, No such image model available
     """
+    logger.info("Starting compare_image_audio algorithm, acquiring data.")
     image_plugin_info = get_image_plugins().get(request.image_model)
     audio_plugin_info = get_audio_plugins().get(request.audio_model)
 
     image_file_path = config.storage.image_dir / str(request.image_file)
     audio_file_path = config.storage.audio_dir / str(request.audio_file)
-
+    logger.info(f"Checking if image model ({request.image_model}) exists.")
     if image_plugin_info is None:
+        logger.error(f"No such image model ({request.image_model} exists. Raising 404 file error.")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No such image model available",
         )
-
+    logger.info(f"Image model ({request.image_model}) exists. Checking if audio model ({request.audio_model}) exists.")
     if audio_plugin_info is None:
+        logger.error(f"No such audio model ({request.image_model}) exists. Raising 404 file error.")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No such audio model available",
         )
-
+    logger.info(f"Audio model ({request.audio_model}) exists. Checking if image file ({request.image_file}) exists.")
     if not image_file_path.exists():
+        logger.error(f"No such image file ({request.image_file}) exists. Raising 404 file error.")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No such image file available",
         )
-
+    logger.info(f"Image file ({request.image_file}) exists. Checking if audio file ({request.audio_file}) exists.")
     if not audio_file_path.exists():
+        logger.error("non-existent audiofile passed at line 93.")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No such audio file available",
         )
-
+    logger.info(f"Audio file ({request.audio_file}) exists. Creating a task for comparison of image and audio.")
     job: Result = task_system.compare_image_audio(  # type: ignore
         audio_plugin_info.class_name,
         AudioProcessingFunction,
@@ -101,6 +106,10 @@ async def compare_image_and_audio(request: AudioToImageComparisonRequest) -> Tas
         ImageProcessingFunction,
         image_file_path.as_posix(),
     )
+    logger.info(f"Task for comparing image (file: {image_file_path}, model: {request.image_model})\n"
+                f"and audio (file: {audio_file_path}, model: {request.audio_model})\n"
+                f"has been submitted successfully.\n"
+                f"Task id: {UUID(job.id)}")
     return TaskCreateResponse(task_id=UUID(job.id))
 
 
@@ -137,27 +146,34 @@ async def compare_text_and_audio(request: AudioToTextComparisonRequest) -> TaskC
     - 404, No such image file available
     - 404, No such image model available
     """
+    logger.info("Starting compare_text_audio algorithm. Acquiring data.")
     audio_plugin_info = get_audio_plugins().get(request.audio_model)
     audio_file_path = config.storage.audio_dir / str(request.audio_file)
-
+    logger.info(f"Checking if audio model ({request.audio_model}) exists.")
     if audio_plugin_info is None:
+        logger.error(f"No such audio model ({request.audio_model}) exists. Raising 404 file error.")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No such audio model available",
         )
-
+    logger.info(f"Audio model ({request.audio_model}) exists. Checking if audio file ({request.audio_file}) exists.")
     if not audio_file_path.exists():
+        logger.error(f"No such audio file ({request.audio_file} exists. Raising 404 file error.")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No such audio file available",
         )
-
+    logger.info(f"Audio file ({request.audio_file} exists. Creating a task of comparison text and audio.")
     job: Result = task_system.compare_text_audio(
         audio_plugin_info.class_name,
         AudioProcessingFunction,
         audio_file_path.as_posix(),
         request.text
     )
+    logger.info(f"Task for comparing text ({request.text})\n"
+                f"and audio (file: ({request.audio_file}), model: ({request.audio_model})\n"
+                f"has been submitted successfully.\n"
+                f"Task id: ({UUID(job.id)})")
     return TaskCreateResponse(task_id=UUID(job.id))
 
 
@@ -175,6 +191,7 @@ async def get_job_status(task_id: UUID) -> TaskStatusResponse:
     Responses:
     - 200, Job status
     """
+    logger.info(f"Getting status of task {task_id}. For more info see logs of task_utils.")
     return _get_job_status(task_id)
 
 
@@ -216,7 +233,7 @@ async def get_job_result(task_id: UUID) -> TaskResultsResponse:
     - 200, job results in the format
     ```js
     {
-    "image": { // image proccessing result
+    "image": { // image processing result
         "text": "string", // total extracted text
         "boxes": [ // list of boxes with text
         {
@@ -263,24 +280,30 @@ async def get_job_result(task_id: UUID) -> TaskResultsResponse:
         },
         "at_char": 0, // chat, at which an error stats
         "found": "string", // found word (based on audio)
-        "expected": "string" // exptected word (suggetion for improvement based on image)
+        "expected": "string" // expected word (suggestion for improvement based on image)
         }
     ]
     }
     ```
     - 406, Results are not ready yet or no task with such id exist
-    - 422, There is no such audio processing task
+    - 422, There is no such task consists of the both image and audio
     """
+    logger.info(f"Starting get_job_result algorithm. Acquiring data of task ({task_id}).")
     data = scheduler.result(str(task_id), preserve=True)
-
+    logger.info("Checking if data acquired exists.")
     if data is not None:
         try:
+            logger.info(f"Parsing data acquired to the appropriate form and returning "
+                        f"the result of the task ({task_id})")
             return TaskResultsResponse.parse_obj(data.dict())
         except ValidationError as error:
+            logger.error(f"Data parsing of the task ({task_id}) failed. Raising 422 file error.")
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="There is no such task consists of the both image and audio",
             ) from error
+    logger.error(f"Results of the task ({task_id}) are not ready yet, or the task is non-existent.\n"
+                 f"Raising 406 file error.")
     raise HTTPException(
         status_code=status.HTTP_406_NOT_ACCEPTABLE,
         detail="Results are not ready yet or no task with such id exist",
