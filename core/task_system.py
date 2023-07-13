@@ -2,7 +2,7 @@ import logging
 from typing import Any, Dict
 
 from huey import RedisHuey
-
+from typing import List
 from core.plugins import (
     AUDIO_PLUGINS,
     IMAGE_PLUGINS,
@@ -14,7 +14,8 @@ from core.plugins.base import (
     AudioSegment,
     AudioTaskResult,
     ImageTaskResult,
-    TaskResult,
+    AudioToImageComparisonResponse,
+    AudioToTextComparisonResponse,
     TextDiff,
 )
 from core.plugins.loader import PluginInfo
@@ -135,14 +136,14 @@ def image_processing_call(
 
 
 @scheduler.task()
-def compare_image_audio(
+def compare_audio_image(
     audio_class: str,
     audio_function: str,
     audio_path: str,
     image_class: str,
     image_function: str,
     image_path: str,
-) -> TaskResult:
+) -> AudioToImageComparisonResponse:
     """
     `compare_image_audio` is a scheduled job, which accepts these parameters:
     - `audio_class: str`
@@ -167,7 +168,7 @@ def compare_image_audio(
         image_class, image_function, image_path
     )
 
-    logger.info("Text matching")
+    logger.info("Text matching from image")
     phrases = [x.text for x in audio_model_response.segments]
     text_diffs = match_phrases(phrases, image_model_response.text)
 
@@ -183,9 +184,36 @@ def compare_image_audio(
                 )
             )
 
-    return TaskResult(
+    return AudioToImageComparisonResponse(
         audio=audio_model_response, image=image_model_response, errors=data
     )
+
+
+@scheduler.task()
+def compare_audio_text(
+    audio_class: str, audio_function: str, audio_path: str, text: List[str]
+) -> AudioToTextComparisonResponse:
+    audio_model_response: AudioTaskResult = _audio_process(
+        audio_class, audio_function, audio_path
+    )
+    logger.info("Text matching from query")
+    phrases = [x.text for x in audio_model_response.segments]
+    original_text = " ".join(text)
+    text_diffs = match_phrases(phrases, original_text)
+
+    data = []
+    for index, diff in enumerate(text_diffs):
+        for at_char, found, expected in diff:
+            data.append(
+                TextDiff(
+                    audio_segment=audio_model_response.segments[index],
+                    at_char=at_char,
+                    found=found,
+                    expected=expected,
+                )
+            )
+
+    return AudioToTextComparisonResponse(audio=audio_model_response, errors=data)
 
 
 @scheduler.task()
