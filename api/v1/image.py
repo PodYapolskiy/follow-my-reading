@@ -91,6 +91,42 @@ async def upload_image(upload_file: UploadFile) -> UploadFileResponse:
 
 
 @router.get(
+    "/download",
+    response_class=FileResponse,
+    status_code=200,
+    summary="""The endpoint `/download` allows to download audio file by given uuid.""",
+    responses={
+        404: {
+            "description": "The specified file was not found.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "File not found",
+                    }
+                }
+            },
+        },
+    },
+)
+async def download_image_file(file: UUID) -> FileResponse:
+    """
+    The endpoint `/download` takes a file UUID as input, checks if the file exists in the
+    image directory, and returns the file as bytes. If file does not exist, returns 404 HTTP response code
+
+    Responses:
+    - 200, file bytes
+    """
+    filepath = config.storage.image_dir / str(file)
+
+    if not filepath.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
+        )
+
+    return FileResponse(path=filepath.as_posix(), media_type="image/png")
+
+
+@router.get(
     "/models",
     response_model=ModelsDataReponse,
     status_code=200,
@@ -141,42 +177,6 @@ async def process_image(request: ImageProcessingRequest) -> TaskCreateResponse:
     """
     created_task: TaskCreateResponse = create_image_task(request)
     return created_task
-
-
-@router.get(
-    "/download",
-    response_class=FileResponse,
-    status_code=200,
-    summary="""The endpoint `/download` allows to download audio file by given uuid.""",
-    responses={
-        404: {
-            "description": "The specified file was not found.",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "detail": "File not found",
-                    }
-                }
-            },
-        },
-    },
-)
-async def download_image_file(file: UUID) -> FileResponse:
-    """
-    The endpoint `/download` takes a file UUID as input, checks if the file exists in the
-    image directory, and returns the file as bytes. If file does not exist, returns 404 HTTP response code
-
-    Responses:
-    - 200, file bytes
-    """
-    filepath = config.storage.image_dir / str(file)
-
-    if not filepath.exists():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
-        )
-
-    return FileResponse(path=filepath.as_posix(), media_type="image/png")
 
 
 @router.get(
