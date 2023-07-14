@@ -71,7 +71,7 @@ def test_general() -> None:
         assert response.status_code == 401
 
         response = client.post(
-            "/v1/audio/process",
+            "/v1/audio/process/task",
             data={
                 "audio_file": "some audio file",
                 "audio_model": "some model name",
@@ -82,7 +82,7 @@ def test_general() -> None:
         response = client.get("/v1/audio/download")
         assert response.status_code == 401
 
-        response = client.get("/v1/audio/result")
+        response = client.get("/v1/audio/process/result")
         assert response.status_code == 401
 
 
@@ -296,7 +296,7 @@ def test_models() -> None:
 def test_process_no_auth() -> None:
     with TestClient(app) as client:
         response = client.post(
-            "/v1/audio/process",
+            "/v1/audio/process/task",
             json={
                 "audio_file": DEFAULT_UNEXISTENT_FILE,
                 "audio_model": DEFAULT_AUDIO_MODEL,
@@ -318,7 +318,7 @@ def test_process_model_does_not_exist() -> None:
         filename = response.json()["file_id"]
 
         response = client.post(
-            "/v1/audio/process",
+            "/v1/audio/process/task",
             json={
                 "audio_file": filename,  # definitely exists
                 "audio_model": "model that does not exist",
@@ -344,7 +344,7 @@ def test_process_file_does_not_exist() -> None:
         filename = response.json()["file_id"]
 
         response = client.post(
-            "/v1/audio/process",
+            "/v1/audio/process/task",
             json={
                 "audio_file": DEFAULT_UNEXISTENT_FILE,
                 "audio_model": DEFAULT_AUDIO_MODEL,
@@ -369,7 +369,7 @@ def test_process_wrong_format() -> None:
         filename = response.json()["file_id"]
 
         response = client.post(
-            "/v1/audio/process",
+            "/v1/audio/process/task",
             json={"bruh": "bruh"},
             headers=GLOBAL_HEADERS,
         )
@@ -391,7 +391,7 @@ def test_process_success() -> None:
         filename = response.json()["file_id"]
 
         response = client.post(
-            "/v1/audio/process",
+            "/v1/audio/process/task",
             json={
                 "audio_file": filename,
                 "audio_model": DEFAULT_AUDIO_MODEL,
@@ -409,7 +409,7 @@ def test_process() -> None:
     with TestClient(app) as client:
         # no auth
         response = client.post(
-            "/v1/audio/process",
+            "/v1/audio/process/task",
             json={
                 "audio_file": DEFAULT_UNEXISTENT_FILE,
                 "audio_model": DEFAULT_AUDIO_MODEL,
@@ -430,7 +430,7 @@ def test_process() -> None:
 
         # model does not exist
         response = client.post(
-            "/v1/audio/process",
+            "/v1/audio/process/task",
             json={
                 "audio_file": filename,  # definitely exists
                 "audio_model": "model that does not exist",
@@ -441,7 +441,7 @@ def test_process() -> None:
 
         # file does not exist
         response = client.post(
-            "/v1/audio/process",
+            "/v1/audio/process/task",
             json={
                 "audio_file": DEFAULT_UNEXISTENT_FILE,
                 "audio_model": DEFAULT_AUDIO_MODEL,
@@ -452,7 +452,7 @@ def test_process() -> None:
 
         # wrong format
         response = client.post(
-            "/v1/audio/process",
+            "/v1/audio/process/task",
             json={"bruh": "bruh"},
             headers=GLOBAL_HEADERS,
         )
@@ -460,7 +460,7 @@ def test_process() -> None:
 
         # everything ok
         response = client.post(
-            "/v1/audio/process",
+            "/v1/audio/process/task",
             json={
                 "audio_file": filename,
                 "audio_model": DEFAULT_AUDIO_MODEL,
@@ -568,7 +568,7 @@ def test_download() -> None:
 @pytest.mark.flaky(retries=2, delay=30)
 def test_result_no_auth() -> None:
     with TestClient(app) as client:
-        response = client.get("/v1/audio/result?task_id=bruh")
+        response = client.get("/v1/audio/process/result?task_id=bruh")
         assert response.status_code == 401
 
 
@@ -586,7 +586,7 @@ def test_result_process_and_get_task_id() -> None:
         filename = response.json()["file_id"]
 
         response = client.post(
-            "/v1/audio/process",
+            "/v1/audio/process/task",
             json={
                 "audio_file": filename,
                 "audio_model": DEFAULT_AUDIO_MODEL,
@@ -604,7 +604,7 @@ def test_result_process_and_get_task_id() -> None:
 def test_result_unexistent_task() -> None:
     with TestClient(app) as client:
         response = client.get(
-            f"/v1/audio/result?task_id={DEFAULT_UNEXISTENT_FILE}",
+            f"/v1/audio/process/result?task_id={DEFAULT_UNEXISTENT_FILE}",
             headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 406
@@ -624,7 +624,7 @@ def test_result_no_results() -> None:
         filename = response.json()["file_id"]
 
         response = client.post(
-            "/v1/audio/process",
+            "/v1/audio/process/task",
             json={
                 "audio_file": filename,
                 "audio_model": DEFAULT_AUDIO_MODEL,
@@ -635,7 +635,7 @@ def test_result_no_results() -> None:
         task_id = response.json()["task_id"]
 
         response = client.get(
-            f"/v1/audio/result?task_id={task_id}",
+            f"/v1/audio/process/result?task_id={task_id}",
             headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 406
@@ -646,7 +646,9 @@ def test_result_no_results() -> None:
 @pytest.mark.flaky(retries=2, delay=30)
 def test_result_type_validation_failed() -> None:
     with TestClient(app) as client:
-        response = client.get("/v1/audio/result?task_id=bruh", headers=GLOBAL_HEADERS)
+        response = client.get(
+            "/v1/audio/process/result?task_id=bruh", headers=GLOBAL_HEADERS
+        )
         assert response.status_code == 422
 
 
@@ -664,7 +666,7 @@ def test_result_success() -> None:
         filename = response.json()["file_id"]
 
         response = client.post(
-            "/v1/audio/process",
+            "/v1/audio/process/task",
             json={
                 "audio_file": filename,
                 "audio_model": DEFAULT_AUDIO_MODEL,
@@ -675,7 +677,7 @@ def test_result_success() -> None:
         task_id = response.json()["task_id"]
 
         response = client.get(
-            f"/v1/audio/result?task_id={task_id}",
+            f"/v1/audio/process/result?task_id={task_id}",
             headers=GLOBAL_HEADERS,
         )
         # TODO: fix this to finally get a successful response
@@ -688,7 +690,7 @@ def test_result_success() -> None:
 def test_result() -> None:
     with TestClient(app) as client:
         # not auth
-        response = client.get("/v1/audio/result?task_id=bruh")
+        response = client.get("/v1/audio/process/result?task_id=bruh")
         assert response.status_code == 401
 
         # upload the audio
@@ -704,7 +706,7 @@ def test_result() -> None:
 
         # process uploaded audio and get task id
         response = client.post(
-            "/v1/audio/process",
+            "/v1/audio/process/task",
             json={
                 "audio_file": filename,
                 "audio_model": DEFAULT_AUDIO_MODEL,
@@ -717,18 +719,20 @@ def test_result() -> None:
 
         # there no task or no results
         response = client.get(
-            f"/v1/audio/result?task_id={DEFAULT_UNEXISTENT_FILE}",
+            f"/v1/audio/process/result?task_id={DEFAULT_UNEXISTENT_FILE}",
             headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 406
 
         # type validation failed
-        response = client.get("/v1/audio/result?task_id=bruh", headers=GLOBAL_HEADERS)
+        response = client.get(
+            "/v1/audio/process/result?task_id=bruh", headers=GLOBAL_HEADERS
+        )
         assert response.status_code == 422
 
         # everything ok
         response = client.get(
-            f"/v1/audio/result?task_id={task_id}",
+            f"/v1/audio/process/result?task_id={task_id}",
             headers=GLOBAL_HEADERS,
         )
 
