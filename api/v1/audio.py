@@ -4,24 +4,23 @@ from uuid import UUID, uuid4
 import pydub
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
+from huey.api import Result
 from pydantic.error_wrappers import ValidationError
 
 from config import get_config
-from core.plugins.no_mem import get_audio_plugins
 from core import task_system
-from huey.api import Result
-
+from core.plugins.no_mem import get_audio_plugins
 
 from .auth import get_current_active_user
 from .models import (
+    AudioExtractPhrasesRequest,
+    AudioExtractPhrasesResponse,
     AudioProcessingRequest,
     AudioProcessingResponse,
     ModelData,
     ModelsDataReponse,
     TaskCreateResponse,
     UploadFileResponse,
-    AudioExtractPhrasesRequest,
-    AudioExtractPhrasesResponse,
 )
 from .task_utils import _get_job_result, _get_job_status, create_audio_task
 
@@ -94,6 +93,42 @@ async def upload_audio_file(upload_file: UploadFile) -> UploadFileResponse:
 
 
 @router.get(
+    "/download",
+    response_class=FileResponse,
+    status_code=200,
+    summary="""The endpoint `/download` allows to download audio file by given uuid.""",
+    responses={
+        404: {
+            "description": "The specified file was not found.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "File not found",
+                    }
+                }
+            },
+        },
+    },
+)
+async def download_audio_file(file: UUID) -> FileResponse:
+    """
+    The endpoint `/download` takes a file UUID as input, checks if the file exists in the
+    audio directory, and returns the file as bytes. If file does not exist, returns 404 HTTP response code
+
+    Responses:
+    - 200, file bytes
+    """
+    filepath = config.storage.audio_dir / str(file)
+
+    if not filepath.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
+        )
+
+    return FileResponse(path=filepath.as_posix(), media_type="audio/mpeg")
+
+
+@router.get(
     "/models",
     response_model=ModelsDataReponse,
     status_code=200,
@@ -144,42 +179,6 @@ async def process_audio(request: AudioProcessingRequest) -> TaskCreateResponse:
     """
     created_task: TaskCreateResponse = create_audio_task(request)
     return created_task
-
-
-@router.get(
-    "/download",
-    response_class=FileResponse,
-    status_code=200,
-    summary="""The endpoint `/download` allows to download audio file by given uuid.""",
-    responses={
-        404: {
-            "description": "The specified file was not found.",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "detail": "File not found",
-                    }
-                }
-            },
-        },
-    },
-)
-async def download_audio_file(file: UUID) -> FileResponse:
-    """
-    The endpoint `/download` takes a file UUID as input, checks if the file exists in the
-    audio directory, and returns the file as bytes. If file does not exist, returns 404 HTTP response code
-
-    Responses:
-    - 200, file bytes
-    """
-    filepath = config.storage.audio_dir / str(file)
-
-    if not filepath.exists():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
-        )
-
-    return FileResponse(path=filepath.as_posix(), media_type="audio/mpeg")
 
 
 @router.get(
