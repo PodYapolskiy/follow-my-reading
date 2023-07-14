@@ -6,7 +6,7 @@ from config import get_config
 
 from .auth import get_current_active_user
 from .models import TaskStatusResponse
-from .task_utils import _get_job_status, _get_job_result
+from .task_utils import _get_job_result, _get_job_status
 
 config = get_config()
 

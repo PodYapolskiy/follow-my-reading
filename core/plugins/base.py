@@ -71,6 +71,16 @@ class AudioToTextComparisonResponse(BaseModel):
     errors: List[TextDiff]
 
 
+class AudioPhrase(BaseModel):
+    audio_segment: AudioSegment | None
+    found: bool
+    phrase: str
+
+
+class AudioExtractPhrasesResponse(BaseModel):
+    data: List[AudioPhrase]
+
+
 @runtime_checkable
 class BasePlugin(Protocol):
     """

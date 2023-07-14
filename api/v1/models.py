@@ -112,3 +112,19 @@ class AudioTextComparisonResultsResponse(BaseModel):
 
 class MultipleTasksStatusResponse(BaseModel):
     data: List[TaskStatusResponse]
+
+
+class AudioExtractPhrasesRequest(BaseModel):
+    audio_file: UUID
+    audio_model: str
+    phrases: List[str]
+
+
+class AudioPhrase(BaseModel):
+    audio_segment: AudioChunk | None
+    found: bool
+    phrase: str
+
+
+class AudioExtractPhrasesResponse(BaseModel):
+    data: List[AudioPhrase]
