@@ -114,7 +114,7 @@ async def get_audio_processing_models() -> ModelsDataReponse:
 
 
 @router.post(
-    "/process",
+    "/process/task",
     response_model=TaskCreateResponse,
     status_code=200,
     summary="""The endpoint `/process` creates an audio processing task based on the given request parameters.""",
@@ -183,7 +183,7 @@ async def download_audio_file(file: UUID) -> FileResponse:
 
 
 @router.get(
-    "/result",
+    "/process/result",
     response_model=AudioProcessingResponse,
     status_code=200,
     summary="""The endpoint `/result` retrieves the result of an audio
@@ -249,7 +249,7 @@ async def get_response(task_id: UUID) -> AudioProcessingResponse:
 
 
 @router.post(
-    "/extract",
+    "/extract/task",
     response_model=TaskCreateResponse,
     status_code=200,
     summary="""The endpoint `/split` extract specified phrases from given audio 

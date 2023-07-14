@@ -29,7 +29,7 @@ router = APIRouter(
 
 
 @router.post(
-    "/audio/image",
+    "/audio/image/task",
     response_model=TaskCreateResponse,
     status_code=200,
     summary="""The endpoint `/audio/image` creates a task to compare an audio against image file using specified
@@ -108,7 +108,7 @@ async def compare_audio_to_image(
 
 
 @router.post(
-    "/audio/text",
+    "/audio/text/task",
     response_model=TaskCreateResponse,
     summary="""The endpoint '/audio/text' creates a task to compare audio against text from user input 
     using specified models and returns the task ID.""",

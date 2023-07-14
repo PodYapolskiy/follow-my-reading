@@ -111,7 +111,7 @@ async def get_models() -> ModelsDataReponse:
 
 
 @router.post(
-    "/process",
+    "/process/task",
     response_model=TaskCreateResponse,
     status_code=200,
     summary="""The endpoint `/process` creates an image processing task based on the given request parameters.""",
@@ -180,7 +180,7 @@ async def download_image_file(file: UUID) -> FileResponse:
 
 
 @router.get(
-    "/result",
+    "/process/result",
     response_model=ImageProcessingResponse,
     status_code=200,
     summary="""The endpoint `/result` retrieves the result of an image
