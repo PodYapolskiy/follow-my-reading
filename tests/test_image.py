@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from main import app
 
 DEFAULT_UNEXISTENT_FILE = "01234567-8910-1112-1314-151617181920"
-DEFAULT_IMAGE_MODEL = "tesseract"
+DEFAULT_IMAGE_MODEL = "eng_tesseract"
 GLOBAL_HEADERS = {}
 
 
@@ -165,10 +165,10 @@ def test_upload_success() -> None:
 
 @pytest.mark.flaky(retries=2, delay=30)
 def test_upload() -> None:
-    """
-    On testing uploading files:
-    https://stackoverflow.com/questions/60783222/how-to-test-a-fastapi-api-endpoint-that-consumes-images
-    """
+#     """
+#     On testing uploading files:
+#     https://stackoverflow.com/questions/60783222/how-to-test-a-fastapi-api-endpoint-that-consumes-images
+#     """
     with TestClient(app) as client:
         filename = "tests/image/image.jpg"
 
@@ -314,6 +314,7 @@ def test_process_model_does_not_exist() -> None:
             },
             headers=GLOBAL_HEADERS,
         )
+        assert response.status_code == 200
         filename = response.json()["file_id"]
 
         response = client.post(
@@ -365,6 +366,7 @@ def test_process_wrong_format() -> None:
             },
             headers=GLOBAL_HEADERS,
         )
+        assert response.status_code == 200
         filename = response.json()["file_id"]
 
         response = client.post(
