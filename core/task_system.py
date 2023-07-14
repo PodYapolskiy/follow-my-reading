@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Tuple, List
 
 from huey import RedisHuey
 from typing import List
@@ -17,10 +17,14 @@ from core.plugins.base import (
     AudioToImageComparisonResponse,
     AudioToTextComparisonResponse,
     TextDiff,
+    AudioPhrase,
+    AudioExtractPhrasesResponse,
+    AudioProcessingFunction,
 )
 from core.plugins.loader import PluginInfo
 from core.processing.audio_split import split_audio
-from core.processing.text import match_phrases
+from core.processing.text import match_phrases, find_phrases
+
 
 scheduler = RedisHuey()
 
@@ -232,3 +236,70 @@ def _get_image_plugins() -> Dict[str, PluginInfo]:
     loaded into the worker image plugins.
     """
     return IMAGE_PLUGINS
+
+
+def _extact_phrases_from_audio(
+    audio_class: str, audio_path: str, phrases: List[str]
+) -> AudioExtractPhrasesResponse:
+    # extract text from audio
+    audio_processing_result = _audio_process(
+        audio_class, AudioProcessingFunction, audio_path
+    )
+    audio_segments = audio_processing_result.segments
+    extracted_phrases = [s.text for s in audio_segments]
+
+    # intermediate results
+    intervals: List[Tuple[float, float] | None] = []
+    audio_chunks: List[AudioSegment | None] = []
+
+    # search each phrase
+    for search_phrase in phrases:
+        segment_indexes = find_phrases(extracted_phrases, search_phrase)
+
+        if len(segment_indexes) == 0:
+            intervals.append(None)
+            audio_chunks.append(None)
+            continue
+
+        # join segments
+        start = audio_segments[segment_indexes[0]].start
+        end = audio_segments[segment_indexes[-1]].end
+
+        joined_segments = audio_segments[segment_indexes[0]]
+        for index in segment_indexes[1:]:
+            joined_segments.text += " " + audio_segments[index].text
+
+        joined_segments.start = start
+        joined_segments.end = end
+
+        intervals.append((start, end))
+        audio_chunks.append(joined_segments)
+
+    # split by non-none intervals
+    non_none_intevals: List[Tuple[float, float]] = list(
+        filter(lambda x: x is not None, intervals)  # type: ignore
+    )
+    files = split_audio(audio_path, non_none_intevals)
+
+    # assign splitted files
+    index = 0
+    for segment in audio_chunks:
+        if segment is not None:
+            segment.file = files[index]
+            index += 1
+
+    data: List[AudioPhrase] = [
+        AudioPhrase(
+            audio_segment=segment, found=segment is not None, phrase=phrases[index]
+        )
+        for index, segment in enumerate(audio_chunks)
+    ]
+
+    return AudioExtractPhrasesResponse(data=data)
+
+
+@scheduler.task()
+def extact_phrases_from_audio(
+    audio_class: str, audio_path: str, phrases: List[str]
+) -> AudioExtractPhrasesResponse:
+    return _extact_phrases_from_audio(audio_class, audio_path, phrases)

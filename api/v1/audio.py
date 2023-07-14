@@ -8,6 +8,9 @@ from pydantic.error_wrappers import ValidationError
 
 from config import get_config
 from core.plugins.no_mem import get_audio_plugins
+from core import task_system
+from huey.api import Result
+
 
 from .auth import get_current_active_user
 from .models import (
@@ -17,6 +20,7 @@ from .models import (
     ModelsDataReponse,
     TaskCreateResponse,
     UploadFileResponse,
+    AudioExtractPhrasesRequest,
 )
 from .task_utils import _get_job_result, _get_job_status, create_audio_task
 
@@ -241,3 +245,53 @@ async def get_response(task_id: UUID) -> AudioProcessingResponse:
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="There is no such audio processing task",
         ) from error
+
+
+@router.post(
+    "/extract",
+    response_model=TaskCreateResponse,
+    status_code=200,
+    summary="""The endpoint `/split` extract specified phrases from given audio 
+file using specified given audio model""",
+    responses={
+        200: {"description": "Task was successfully created and scheduled"},
+        404: {
+            "description": "The specified file or model was not found.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "No such audio file available",
+                    }
+                }
+            },
+        },
+    },
+)
+async def extract_text_from_audio(
+    request: AudioExtractPhrasesRequest,
+) -> TaskCreateResponse:
+    """
+    Parameters:
+    - **audio_file**: an uuid of file to process
+    - **audio_model**: an audio processing model name (check '_/models_' for available models)
+
+    Responses:
+    - 404, No such audio file available
+    - 404, No such audio model available
+    """
+    audio_plugin_info = get_audio_plugins().get(request.audio_model)
+    audio_file_path = config.storage.audio_dir / str(request.audio_file)
+
+    if audio_plugin_info is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No such audio model available",
+        )
+
+    if not audio_file_path.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="No such audio file available"
+        )
+
+    job: Result = task_system.extact_phrases_from_audio(audio_plugin_info.class_name, audio_file_path.as_posix(), request.phrases)  # type: ignore
+    return TaskCreateResponse(task_id=UUID(job.id))
