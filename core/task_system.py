@@ -1,8 +1,8 @@
 import logging
-from typing import Any, Dict, Tuple, List
+from typing import Any, Dict, List, Tuple
 
 from huey import RedisHuey
-from typing import List
+
 from core.plugins import (
     AUDIO_PLUGINS,
     IMAGE_PLUGINS,
@@ -11,20 +11,19 @@ from core.plugins import (
     load_plugins,
 )
 from core.plugins.base import (
+    AudioExtractPhrasesResponse,
+    AudioPhrase,
+    AudioProcessingFunction,
     AudioSegment,
     AudioTaskResult,
-    ImageTaskResult,
     AudioToImageComparisonResponse,
     AudioToTextComparisonResponse,
+    ImageTaskResult,
     TextDiff,
-    AudioPhrase,
-    AudioExtractPhrasesResponse,
-    AudioProcessingFunction,
 )
 from core.plugins.loader import PluginInfo
 from core.processing.audio_split import split_audio
-from core.processing.text import match_phrases, find_phrases
-
+from core.processing.text import find_phrases, match_phrases
 
 scheduler = RedisHuey()
 
