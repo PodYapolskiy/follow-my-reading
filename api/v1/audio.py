@@ -21,6 +21,7 @@ from .models import (
     TaskCreateResponse,
     UploadFileResponse,
     AudioExtractPhrasesRequest,
+    AudioExtractPhrasesResponse,
 )
 from .task_utils import _get_job_result, _get_job_status, create_audio_task
 
@@ -295,3 +296,50 @@ async def extract_text_from_audio(
 
     job: Result = task_system.extact_phrases_from_audio(audio_plugin_info.class_name, audio_file_path.as_posix(), request.phrases)  # type: ignore
     return TaskCreateResponse(task_id=UUID(job.id))
+
+
+@router.get(
+    "/extract/result",
+    response_model=AudioExtractPhrasesResponse,
+    status_code=200,
+    summary="""The endpoint `/result` retrieves the result of an audio
+extracting task from task system and returns it.""",
+    responses={
+        406: {
+            "description": "It is impossible to get task result (task does not exist or it has not finished yet).",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "The job is non-existent or not done",
+                    }
+                }
+            },
+        },
+        422: {
+            "description": "The specified task is not audio extraction task.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "There is no such audio extraction task",
+                    }
+                }
+            },
+        },
+    },
+)
+async def get_extracted_results(task_id: UUID) -> AudioExtractPhrasesResponse:
+    response = _get_job_status(task_id)
+    if not response.ready:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="The job is non-existent or not done",
+        )
+
+    data = _get_job_result(task_id)
+    try:
+        return AudioExtractPhrasesResponse.parse_obj(data.dict())
+    except ValidationError as error:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="There is no such audio processing task",
+        ) from error
