@@ -42,6 +42,10 @@ types-redis = "^4.5.5.2"
 isort = "^5.12.0"
 types-aiofiles = "^23.1.0.4"
 mypy-gitlab-code-quality = "^0.0.15"
+pytest-cov = "^4.1.0"
+pytest-retry = "^1.2.1"
+pytest-xdist = "^3.3.1"
+httpx = "^0.24.1"
 
 
 

@@ -91,59 +91,6 @@ async def upload_image(upload_file: UploadFile) -> UploadFileResponse:
 
 
 @router.get(
-    "/models",
-    response_model=ModelsDataReponse,
-    status_code=200,
-    summary="""The endpoint /models returns available (loaded) image models.""",
-    responses={
-        200: {"description": "List of available models"},
-    },
-)
-async def get_models() -> ModelsDataReponse:
-    """
-    Returns list of models, which are loaded into the worker and available for usage.
-    """
-    # Transform any known image model into ModelData object format and
-    # store them as a list inside ModelsDataResponse
-    return ModelsDataReponse(
-        models=[ModelData.from_orm(model) for model in get_image_plugins().values()]
-    )
-
-
-@router.post(
-    "/process",
-    response_model=TaskCreateResponse,
-    status_code=200,
-    summary="""The endpoint `/process` creates an image processing task based on the given request parameters.""",
-    responses={
-        200: {"description": "Task was successfully created and scheduled"},
-        404: {
-            "description": "The specified file or model was not found.",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "detail": "No such image file available",
-                    }
-                }
-            },
-        },
-    },
-)
-async def process_image(request: ImageProcessingRequest) -> TaskCreateResponse:
-    """
-    Parameters:
-    - **image_file**: an uuid of file to process
-    - **image_model**: an image processing model name (check '_/models_' for available models)
-
-    Responses:
-    - 404, No such image file available
-    - 404, No such image model available
-    """
-    created_task: TaskCreateResponse = create_image_task(request)
-    return created_task
-
-
-@router.get(
     "/download",
     response_class=FileResponse,
     status_code=200,
@@ -180,7 +127,60 @@ async def download_image_file(file: UUID) -> FileResponse:
 
 
 @router.get(
-    "/result",
+    "/models",
+    response_model=ModelsDataReponse,
+    status_code=200,
+    summary="""The endpoint /models returns available (loaded) image models.""",
+    responses={
+        200: {"description": "List of available models"},
+    },
+)
+async def get_models() -> ModelsDataReponse:
+    """
+    Returns list of models, which are loaded into the worker and available for usage.
+    """
+    # Transform any known image model into ModelData object format and
+    # store them as a list inside ModelsDataResponse
+    return ModelsDataReponse(
+        models=[ModelData.from_orm(model) for model in get_image_plugins().values()]
+    )
+
+
+@router.post(
+    "/process/task",
+    response_model=TaskCreateResponse,
+    status_code=200,
+    summary="""The endpoint `/process` creates an image processing task based on the given request parameters.""",
+    responses={
+        200: {"description": "Task was successfully created and scheduled"},
+        404: {
+            "description": "The specified file or model was not found.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "No such image file available",
+                    }
+                }
+            },
+        },
+    },
+)
+async def process_image(request: ImageProcessingRequest) -> TaskCreateResponse:
+    """
+    Parameters:
+    - **image_file**: an uuid of file to process
+    - **image_model**: an image processing model name (check '_/models_' for available models)
+
+    Responses:
+    - 404, No such image file available
+    - 404, No such image model available
+    """
+    created_task: TaskCreateResponse = create_image_task(request)
+    return created_task
+
+
+@router.get(
+    "/process/result",
     response_model=ImageProcessingResponse,
     status_code=200,
     summary="""The endpoint `/result` retrieves the result of an image

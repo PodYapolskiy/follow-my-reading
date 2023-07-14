@@ -69,11 +69,17 @@ class AudioProcessingResponse(BaseModel):
     segments: List[AudioChunk]
 
 
-class TaskCreateRequest(BaseModel):
+class AudioToImageComparisonRequest(BaseModel):
     audio_file: UUID
     image_file: UUID
     audio_model: str
     image_model: str
+
+
+class AudioToTextComparisonRequest(BaseModel):
+    audio_file: UUID
+    text: List[str]
+    audio_model: str
 
 
 class TaskCreateResponse(BaseModel):
@@ -93,11 +99,32 @@ class TextDiff(BaseModel):
     expected: str
 
 
-class TaskResultsResponse(BaseModel):
+class AudioImageComparisonResultsResponse(BaseModel):
     image: ImageProcessingResponse
+    audio: AudioProcessingResponse
+    errors: List[TextDiff]
+
+
+class AudioTextComparisonResultsResponse(BaseModel):
     audio: AudioProcessingResponse
     errors: List[TextDiff]
 
 
 class MultipleTasksStatusResponse(BaseModel):
     data: List[TaskStatusResponse]
+
+
+class AudioExtractPhrasesRequest(BaseModel):
+    audio_file: UUID
+    audio_model: str
+    phrases: List[str]
+
+
+class AudioPhrase(BaseModel):
+    audio_segment: AudioChunk | None
+    found: bool
+    phrase: str
+
+
+class AudioExtractPhrasesResponse(BaseModel):
+    data: List[AudioPhrase]
