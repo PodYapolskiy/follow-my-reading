@@ -53,6 +53,7 @@ mypy:
       codequality: gl-code-quality-report.json
 
 pages:
+  image: ruby:2.7
   script:
     - gem install bundler
     - bundle install
