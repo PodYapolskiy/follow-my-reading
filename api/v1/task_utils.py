@@ -55,7 +55,7 @@ def create_audio_task(request: AudioProcessingRequest) -> TaskCreateResponse:
         )
 
     logger.info(f"Audio file ({request.audio_file}) exists. Creating task for audio processing.\n"
-                f"Check core/processing/logs/task_system.log for more info.\n"
+                f"Check core/logs/task_system.log for more info.\n"
                 f"Process: audio_processing_call.")
 
     job: Result = task_system.audio_processing_call(  # type: ignore
@@ -101,7 +101,7 @@ def create_image_task(request: ImageProcessingRequest) -> TaskCreateResponse:
         )
 
     logger.info(f"Image file ({request.image_file}) exists. Creating task for image processing.\n"
-                f"Check core/processing/logs/task_system.log for more info.\n"
+                f"Check core/logs/task_system.log for more info.\n"
                 f"Process: image_processing_call")
     job: Result = task_system.image_processing_call(  # type: ignore
         image_plugin_info.class_name,

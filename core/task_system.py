@@ -3,6 +3,7 @@ from typing import Any, Dict
 
 from huey import RedisHuey
 from typing import List
+from loguru import logger
 from core.plugins import (
     AUDIO_PLUGINS,
     IMAGE_PLUGINS,
@@ -24,6 +25,7 @@ from core.processing.text import match_phrases
 
 scheduler = RedisHuey()
 
+logger.add("./logs/task_system.log", format="{time:DD-MM-YYYY HH:mm:ss zz} {level} {message}", enqueue=True)
 
 plugins = []
 
@@ -36,9 +38,6 @@ def load_plugins_into_memories() -> None:
     """
     global plugins
     plugins = load_plugins()
-
-
-logger = logging.getLogger("huey")
 
 
 def _plugin_class_method_call(class_name: str, function: str, filepath: str) -> Any:

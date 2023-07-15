@@ -104,7 +104,7 @@ async def compare_image_and_audio(request: AudioToImageComparisonRequest) -> Tas
         )
 
     logger.info(f"Audio file ({request.audio_file}) exists. Creating task for comparison of image and audio.\n"
-                f"Check core/processing/logs/task_system.log for more info.\n"
+                f"Check core/logs/task_system.log for more info.\n"
                 f"Process: compare_image_audio")
     job: Result = task_system.compare_image_audio(  # type: ignore
         audio_plugin_info.class_name,
@@ -177,7 +177,7 @@ async def compare_text_and_audio(request: AudioToTextComparisonRequest) -> TaskC
         )
 
     logger.info(f"Audio file ({request.audio_file} exists. Creating task of comparison text and audio.\n"
-                f"Check core/processing/logs/task_system.log for more info.\n"
+                f"Check core/logs/task_system.log for more info.\n"
                 f"Process: compare_text_audio.")
     job: Result = task_system.compare_text_audio(
         audio_plugin_info.class_name,
@@ -208,7 +208,7 @@ async def get_job_status(task_id: UUID) -> TaskStatusResponse:
     - 200, Job status
     """
     logger.info(f"Starting get_job status algorithm. Getting status of task ({task_id}).\n"
-                f"For more info see in api/v1/logs task_utils logs for more info.\n"
+                f"For more info see in api/v1/logs/task_utils.log.\n"
                 f"Process: _get_job_status")
     return _get_job_status(task_id)
 

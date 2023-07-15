@@ -151,7 +151,7 @@ async def process_image(request: ImageProcessingRequest) -> TaskCreateResponse:
     - 404, No such image model available
     """
     logger.info("Starting process_image algorithm. Creating task for image processing.\n"
-                "For more info check api/v1/logs/task_system.log\n"
+                "For more info check api/v1/logs/task_utils.log\n"
                 "Process: create_image_task")
     created_task: TaskCreateResponse = create_image_task(request)
     logger.info(f"Task ({created_task.task_id}) has been created successfully.")
