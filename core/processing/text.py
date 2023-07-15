@@ -1,5 +1,9 @@
 from typing import List, Tuple
 
+from loguru import logger
+
+logger.add("./logs/text.log", format="{time:DD-MM-YYYY HH:mm:ss zz} {level} {message}", enqueue=True)
+
 
 def match_words(
     first_text_str: str, second_text_str: str
@@ -13,6 +17,8 @@ def match_words(
                           the incorrect phrase,
                           the correct phrase)]
     """
+
+    logger.info("Starting match_words algorithm.")
 
     # Split the text so the algorithm compares whole words
     first_text = first_text_str.split()
@@ -115,6 +121,8 @@ def match_words(
                 first_index += 1
         else:
             first_index += len(current_str) + 1
+
+    logger.info("Process match_words has ended. Returning the result.")
     return answer
 
 
@@ -129,6 +137,8 @@ def match_phrases(phrases: List[str], text: str) -> List[List[Tuple[int, str, st
                           the incorrect phrase,
                           the correct phrase]]]
     """
+
+    logger.info("Starting match_phrases algorithm.")
 
     # Preparing the texts so that capital letters and non-letter symbols are ignored
     better_text, text_indices = prep_text(text)
@@ -158,16 +168,19 @@ def match_phrases(phrases: List[str], text: str) -> List[List[Tuple[int, str, st
             )
         )
 
+    logger.info("Process match_phrases has ended. Returning the result.")
     return answers
 
 
 def prep_text(text: str) -> Tuple[str, List[int]]:
     """
-    Prepares the text so it is fully lowercase and does not contain any non-letter symbols
+    Prepares the text, so it is fully lowercase and does not contain any non-letter symbols
     It is using inbuilt isalpha() and lower() functions so it should support multiple languages
     :param text: the text to be prepared
     :return: the changed text and a list of indices that map the changed text to the initial one
     """
+
+    logger.info("Starting prep_text algorithm.")
 
     changed: str = ""
     indices: List[int] = []
@@ -188,6 +201,7 @@ def prep_text(text: str) -> Tuple[str, List[int]]:
     if changed.rstrip() != changed:
         indices = indices[: len(changed.rstrip()) - len(changed)]
 
+    logger.info("Process prep_text has ended. Returning the result.")
     return changed.lower().strip(), indices
 
 
