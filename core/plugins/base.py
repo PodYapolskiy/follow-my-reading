@@ -68,8 +68,17 @@ class AudioToImageComparisonResponse(BaseModel):
 
 class AudioToTextComparisonResponse(BaseModel):
     audio: AudioTaskResult
-    original_text: List[str]
     errors: List[TextDiff]
+
+
+class AudioPhrase(BaseModel):
+    audio_segment: AudioSegment | None
+    found: bool
+    phrase: str
+
+
+class AudioExtractPhrasesResponse(BaseModel):
+    data: List[AudioPhrase]
 
 
 @runtime_checkable

@@ -19,104 +19,15 @@ from .auth_utils import (
 )
 from .models import RegisterResponse
 
-logger.add("./logs/auth.log", format="{time:DD-MM-YYYY, HH:mm:ss zz} {level} {message}", enqueue=True)
+logger.add(
+    "./logs/auth.log",
+    format="{time:DD-MM-YYYY, HH:mm:ss zz} {level} {message}",
+    enqueue=True,
+)
 
 config = get_config()
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-
-
-@router.post(
-    "/token",
-    response_model=Token,
-    status_code=200,
-    summary="""The endpoint `/token` handles the login process and returns an
-access token for the authenticated user.""",
-    responses={
-        401: {
-            "description": "Incorrect username or password.",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "detail": "Incorrect username or password",
-                    }
-                }
-            },
-        },
-    },
-)
-async def login_for_access_token(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-) -> Token:
-    """
-    Parameters:
-    - **username** - unique username, which the client has provided while registering
-    - **password** - client's password
-
-    Responses:
-    - 401, incorrect username or password
-    - 200, token
-    """
-    logger.info("Starting login_for_access_token algorithm. Acquiring user data.\n"
-                "For more info check api/v1/logs/auth_utils.log.\n"
-                "Process: authenticate_user")
-    user = await authenticate_user(form_data.username, form_data.password)
-
-    logger.info("Checking correctness of login information.")
-    if not user:
-        logger.error("Incorrect username or password. Raising 401 file error.")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    logger.info("Login information is correct. Creating 30 minutes access token.")
-    access_token_expires = timedelta(minutes=config.token.access_expire_minutes)
-    access_token = create_access_token(
-        data={"sub": user.username},
-        expires_delta=access_token_expires,
-    )
-
-    logger.info("Access token is successfully created. Returning the token.")
-    return Token(access_token=access_token, token_type="bearer")
-
-
-@router.get(
-    "/users/me",
-    response_model=User,
-    status_code=200,
-    summary="""The endpoint `/users/me` returns the current user.""",
-    responses={
-        400: {
-            "description": "User is inactive",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "detail": "Inactive user",
-                    }
-                }
-            },
-        },
-        401: {
-            "description": "Could not validate credentials",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "detail": "Could not validate credentials",
-                    }
-                }
-            },
-        },
-    },
-)
-async def read_users_me(
-    current_user: Annotated[User, Depends(get_current_active_user)]
-) -> User:
-    logger.info("Starting read_users_me algorithm.\n"
-                "For more info check api/v1/logs/auth_utils.log\n"
-                "Process: get_current_active_user")
-    return current_user
 
 
 @router.put(
@@ -177,3 +88,100 @@ async def register_user(
 
     logger.info("A user has registered in database successfully.")
     return RegisterResponse(text="Registered successfully.")
+
+
+@router.post(
+    "/token",
+    response_model=Token,
+    status_code=200,
+    summary="""The endpoint `/token` handles the login process and returns an
+access token for the authenticated user.""",
+    responses={
+        401: {
+            "description": "Incorrect username or password.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Incorrect username or password",
+                    }
+                }
+            },
+        },
+    },
+)
+async def login_for_access_token(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+) -> Token:
+    """
+    Parameters:
+    - **username** - unique username, which the client has provided while registering
+    - **password** - client's password
+
+    Responses:
+    - 401, incorrect username or password
+    - 200, token
+    """
+    logger.info(
+        "Starting login_for_access_token algorithm. Acquiring user data.\n"
+        "For more info check api/v1/logs/auth_utils.log.\n"
+        "Process: authenticate_user"
+    )
+    user = await authenticate_user(form_data.username, form_data.password)
+
+    logger.info("Checking correctness of login information.")
+    if not user:
+        logger.error("Incorrect username or password. Raising 401 file error.")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    logger.info("Login information is correct. Creating 30 minutes access token.")
+    access_token_expires = timedelta(minutes=config.token.access_expire_minutes)
+    access_token = create_access_token(
+        data={"sub": user.username},
+        expires_delta=access_token_expires,
+    )
+
+    logger.info("Access token is successfully created. Returning the token.")
+    return Token(access_token=access_token, token_type="bearer")
+
+
+@router.get(
+    "/users/me",
+    response_model=User,
+    status_code=200,
+    summary="""The endpoint `/users/me` returns the current user.""",
+    responses={
+        400: {
+            "description": "User is inactive",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Inactive user",
+                    }
+                }
+            },
+        },
+        401: {
+            "description": "Could not validate credentials",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Could not validate credentials",
+                    }
+                }
+            },
+        },
+    },
+)
+async def read_users_me(
+    current_user: Annotated[User, Depends(get_current_active_user)]
+) -> User:
+    logger.info(
+        "Starting read_users_me algorithm.\n"
+        "For more info check api/v1/logs/auth_utils.log\n"
+        "Process: get_current_active_user"
+    )
+    return current_user

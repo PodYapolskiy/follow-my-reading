@@ -51,3 +51,10 @@ mypy:
     # paths: [gl-code-quality-report.json]
     reports:
       codequality: gl-code-quality-report.json
+
+pages:
+  script:
+    - echo "Pages"
+  artifacts:
+    paths:
+      - public

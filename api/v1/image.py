@@ -20,7 +20,11 @@ from .models import (
 )
 from .task_utils import _get_job_result, _get_job_status, create_image_task
 
-logger.add("./logs/image.log", format="{time:DD-MM-YYYY HH:mm:ss zz} {level} {message}", enqueue=True)
+logger.add(
+    "./logs/image.log",
+    format="{time:DD-MM-YYYY HH:mm:ss zz} {level} {message}",
+    enqueue=True,
+)
 config = get_config()
 
 router = APIRouter(
@@ -79,83 +83,29 @@ async def upload_image(upload_file: UploadFile) -> UploadFileResponse:
         upload_file.content_type is None
         or upload_file.content_type.split("/")[0] != "image"
     ):
-        logger.error(f"The file ({file_id}) is of not allowed format. Raising 422 file error.")
+        logger.error(
+            f"The file ({file_id}) is of not allowed format. Raising 422 file error."
+        )
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Only image files uploads are allowed",
         )
 
-    logger.info(f"File ({file_id}) is of allowed format. Converting to png and saving to "
-                f"{config.storage.image_dir / str(file_id)}.")
+    logger.info(
+        f"File ({file_id}) is of allowed format. Converting to png and saving to "
+        f"{config.storage.image_dir / str(file_id)}."
+    )
     # convert import into png
     byte_content = await upload_file.read()
     Image.open(BytesIO(byte_content)).save(
         config.storage.image_dir / str(file_id), format="png"
     )
 
-    logger.info(f"The file ({file_id}) has been uploaded successfully.\n"
-                f"Filepath: {config.storage.image_dir / str(file_id)}")
-    return UploadFileResponse(file_id=file_id)
-
-
-@router.get(
-    "/models",
-    response_model=ModelsDataResponse,
-    status_code=200,
-    summary="""The endpoint /models returns available (loaded) image models.""",
-    responses={
-        200: {"description": "List of available models"},
-    },
-)
-async def get_models() -> ModelsDataResponse:
-    """
-    Returns list of models, which are loaded into the worker and available for usage.
-    """
-    logger.info(f"Starting get_models algorithm. Acquiring image models.\n"
-                f"For more info check core/plugins/logs/no_mem.log\n"
-                f"Process: get_image_plugins")
-    # Transform any known image model into ModelData object format and
-    # store them as a list inside ModelsDataResponse
-    return ModelsDataResponse(
-        models=[ModelData.from_orm(model) for model in get_image_plugins().values()]
+    logger.info(
+        f"The file ({file_id}) has been uploaded successfully.\n"
+        f"Filepath: {config.storage.image_dir / str(file_id)}"
     )
-
-
-@router.post(
-    "/process",
-    response_model=TaskCreateResponse,
-    status_code=200,
-    summary="""The endpoint `/process` creates an image processing task based on the given request parameters.""",
-    responses={
-        200: {"description": "Task was successfully created and scheduled"},
-        404: {
-            "description": "The specified file or model was not found.",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "detail": "No such image file available",
-                    }
-                }
-            },
-        },
-    },
-)
-async def process_image(request: ImageProcessingRequest) -> TaskCreateResponse:
-    """
-    Parameters:
-    - **image_file**: an uuid of file to process
-    - **image_model**: an image processing model name (check '_/models_' for available models)
-
-    Responses:
-    - 404, No such image file available
-    - 404, No such image model available
-    """
-    logger.info("Starting process_image algorithm. Creating task for image processing.\n"
-                "For more info check api/v1/logs/task_utils.log\n"
-                "Process: create_image_task")
-    created_task: TaskCreateResponse = create_image_task(request)
-    logger.info(f"Task ({created_task.task_id}) has been created successfully.")
-    return created_task
+    return UploadFileResponse(file_id=file_id)
 
 
 @router.get(
@@ -199,10 +149,74 @@ async def download_image_file(file: UUID) -> FileResponse:
 
 
 @router.get(
-    "/result",
+    "/models",
+    response_model=ModelsDataResponse,
+    status_code=200,
+    summary="""The endpoint /models returns available (loaded) image models.""",
+    responses={
+        200: {"description": "List of available models"},
+    },
+)
+async def get_models() -> ModelsDataResponse:
+    """
+    Returns list of models, which are loaded into the worker and available for usage.
+    """
+    logger.info(
+        f"Starting get_models algorithm. Acquiring image models.\n"
+        f"For more info check core/plugins/logs/no_mem.log\n"
+        f"Process: get_image_plugins"
+    )
+    # Transform any known image model into ModelData object format and
+    # store them as a list inside ModelsDataResponse
+    return ModelsDataResponse(
+        models=[ModelData.from_orm(model) for model in get_image_plugins().values()]
+    )
+
+
+@router.post(
+    "/process/task",
+    response_model=TaskCreateResponse,
+    status_code=200,
+    summary="""The endpoint `/process` creates an image processing task based on the given request parameters.""",
+    responses={
+        200: {"description": "Task was successfully created and scheduled"},
+        404: {
+            "description": "The specified file or model was not found.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "No such image file available",
+                    }
+                }
+            },
+        },
+    },
+)
+async def process_image(request: ImageProcessingRequest) -> TaskCreateResponse:
+    """
+    Parameters:
+    - **image_file**: an uuid of file to process
+    - **image_model**: an image processing model name (check '_/models_' for available models)
+
+    Responses:
+    - 404, No such image file available
+    - 404, No such image model available
+    """
+    logger.info(
+        "Starting process_image algorithm. Creating task for image processing.\n"
+        "For more info check api/v1/logs/task_utils.log\n"
+        "Process: create_image_task"
+    )
+    created_task: TaskCreateResponse = create_image_task(request)
+    logger.info(f"Task ({created_task.task_id}) has been created successfully.")
+    return created_task
+
+
+@router.get(
+    "/process/result",
     response_model=ImageProcessingResponse,
     status_code=200,
-    summary="""The endpoint `/result` retrieves the result of an image
+    summary="""The endpoint `/process/result` retrieves the result of an image
 processing task from task system and returns it.""",
     responses={
         406: {
@@ -262,14 +276,18 @@ async def get_response(task_id: UUID) -> ImageProcessingResponse:
     - 406, is impossible to get task result (task does not exist, or it has not finished yet).
     - 422, if the task was not created as audio processing task
     """
-    logger.info("Starting get_response algorithm. Acquiring data.\n"
-                "For more info check api/v1/logs/task_utils.log\n"
-                "Process: _get_job_status")
+    logger.info(
+        "Starting get_response algorithm. Acquiring data.\n"
+        "For more info check api/v1/logs/task_utils.log\n"
+        "Process: _get_job_status"
+    )
     response = _get_job_status(task_id)
 
     logger.info(f"Checking if task ({task_id}) exists and if it is finished.")
     if not response.ready:
-        logger.error(f"The task ({task_id}) is non-existent or not finished. Raising 406 error.")
+        logger.error(
+            f"The task ({task_id}) is non-existent or not finished. Raising 406 error."
+        )
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="The job is non-existent or not done",
