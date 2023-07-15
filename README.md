@@ -1,4 +1,7 @@
 # Follow My Reading
+
+[[_TOC_]]
+
 # Overview
 Follow My Reading is a game-changer for individuals who may struggle with proper pronunciation while reading. Follow My Reading provides a API service for our users to upload an image and audio of their reading session, and our service checks whether there are any mistakes in pronunciation in the audio.
 
