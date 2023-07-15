@@ -57,14 +57,14 @@ code_quality_html:
 
 pages:
   stage: build
-  image: node
+  image: python:3.10-slim-buster
   before_script:
-    - apt-get update
-    - apt-get install python3-pip -y
-    - npm install -g @redocly/cli
+    - apt update
+    - apt install nodejs npm -y
     - pip3 install poetry 
     - poetry config virtualenvs.create false
     - poetry install --only docs
+    - npm install -g @redocly/cli
   script:
     - poetry run python3 docs.py
     - npx @redocly/cli build-docs -o ./public/index.html openapi.json
