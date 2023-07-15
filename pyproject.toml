@@ -60,6 +60,25 @@ librosa = "^0.10.0.post2"
 fastapi = "^0.97.0"
 aioredis = {extras = ["hiredis"], version = "^2.0.1"}
 
+
+[tool.poetry.group.docs.dependencies]
+fastapi = "^0.97.0"
+pydantic = {extras = ["dotenv"], version = "^1.10.9"}
+aiofiles = "^23.1.0"
+python-multipart = "^0.0.6"
+pydub = "^0.25.1"
+librosa = "^0.10.0.post2"
+huey = "^2.4.5"
+nest-asyncio = "^1.5.6"
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+passlib = "^1.7.4"
+bcrypt = "^4.0.1"
+redis = "^4.6.0"
+fastapi-limiter = "^0.1.5"
+aioredis = {extras = ["hiredis"], version = "^2.0.1"}
+pillow = "9.5.0"
+loguru = "^0.7.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

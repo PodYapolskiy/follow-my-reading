@@ -5,22 +5,8 @@ stages:
   - lint
   - quality
   - test
-
-
-code_quality:    
-  stage: quality
-  artifacts:
-    expire_in: 14 days
-    paths: [gl-code-quality-report.json]
-
-code_quality_html:
-  stage: quality
-  extends: code_quality
-  variables:
-    REPORT_FORMAT: html
-  artifacts:
-    expire_in: 14 days
-    paths: [gl-code-quality-report.html]
+  - build
+  - deploy
 
 ruff:
   stage: lint
@@ -34,7 +20,6 @@ ruff:
     # paths: [gl-code-quality-report.json]
     reports:
       codequality: gl-code-quality-report.json
-
 
 mypy:
   stage: quality
@@ -52,7 +37,42 @@ mypy:
     reports:
       codequality: gl-code-quality-report.json
 
+code_quality:    
+  stage: quality
+  dependencies:
+    - ruff
+    - mypy
+  artifacts:
+    expire_in: 14 days
+    paths: [gl-code-quality-report.json]
+
+code_quality_html:
+  stage: quality
+  extends: code_quality
+  variables:
+    REPORT_FORMAT: html
+  artifacts:
+    expire_in: 14 days
+    paths: [gl-code-quality-report.html]
+
+documentation:
+  stage: build
+  image: node:lastest
+  before_script:
+    - npm install -g @redocly/cli
+    - pip install poetry 
+    - poetry config virtualenvs.create false
+    - poetry install --only docs
+  script:
+    - poetry run python3 docs.py
+    - npx @redocly/cli build-docs -o ./public/index.html openapi.json
+  artifacts:
+    paths:
+      - public
+
 pages:
+  dependencies:
+    - documentation
   script:
     - echo "Pages"
   artifacts:
