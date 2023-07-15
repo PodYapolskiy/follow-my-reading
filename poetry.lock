@@ -1515,7 +1515,7 @@ dev = ["black (>=19.3b0)", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "e45ca4b6f72a8c47b87dc53f47eef8429a56ee1854b3d91c73f7ac9522ed30de"
+content-hash = "6b3616afaeabf158ff737886772e4bb8e8c97bc9361ebf847910f0579e872394"
 
 [metadata.files]
 aiofiles = [
