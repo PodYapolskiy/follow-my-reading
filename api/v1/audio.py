@@ -185,7 +185,7 @@ async def download_audio_file(file: UUID) -> FileResponse:
     Responses:
     - 200, file bytes
     """
-    logger.info(f"Starting download_audio_file algorithm. Searching for audio file ({file}).")
+    logger.info(f"Starting download_audio_file algorithm. Searching for audio file ({str(file)}).")
     filepath = config.storage.audio_dir / str(file)
 
     if not filepath.exists():
@@ -262,7 +262,7 @@ async def get_response(task_id: UUID) -> AudioProcessingResponse:
     logger.info(f"The task ({task_id}) exists and is finished. Acquiring results.")
     data = _get_job_result(task_id)
     try:
-        logger.info(f"Returning results of the task ({task_id}).")
+        logger.info(f"Trying to return the results of the task ({task_id}).")
         return AudioProcessingResponse.parse_obj(data.dict())
     except ValidationError as error:
         logger.error(f"Wrong type of task was passed. Raising 422 error.")
