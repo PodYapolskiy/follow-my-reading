@@ -3,6 +3,7 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
+from loguru import logger
 from PIL import Image
 from pydantic.error_wrappers import ValidationError
 
@@ -14,12 +15,17 @@ from .models import (
     ImageProcessingRequest,
     ImageProcessingResponse,
     ModelData,
-    ModelsDataReponse,
+    ModelsDataResponse,
     TaskCreateResponse,
     UploadFileResponse,
 )
 from .task_utils import _get_job_result, _get_job_status, create_image_task
 
+logger.add(
+    "./logs/image.log",
+    format="{time:DD-MM-YYYY HH:mm:ss zz} {level} {message}",
+    enqueue=True,
+)
 config = get_config()
 
 router = APIRouter(
@@ -35,7 +41,7 @@ router = APIRouter(
     responses={
         200: {"description": "The file is uploaded successfully"},
         422: {
-            "description": "The file was not sent or the file has unallowed extension",
+            "description": "The file was not sent or the file has prohibited extension",
             "content": {
                 "application/json": {
                     "example": {
@@ -66,27 +72,40 @@ async def upload_image(upload_file: UploadFile) -> UploadFileResponse:
     - .tif, .tiff
     - .webp
     """
+    logger.info("Starting upload_image algorithm. Acquiring data.")
     file_id = uuid4()
 
-    # Here we using MIME types specification, which have format
-    # "kind/name". In the following code, we checking that the kind of document
+    # Here we are using MIME types specification, which have format
+    # "kind/name". In the following code, we are checking that the kind of document
     # is "image". It is the easiest methods to allow uploading any image format files.
     # https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+    logger.info(f"Checking if file ({file_id}) is of allowed format.")
     if (
         upload_file.content_type is None
         or upload_file.content_type.split("/")[0] != "image"
     ):
+        logger.error(
+            f"The file ({file_id}) is of not allowed format. Raising 422 file error."
+        )
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Only image files uploads are allowed",
         )
 
-    # convert import into jpg
+    logger.info(
+        f"File ({file_id}) is of allowed format. Converting to png and saving to "
+        f"{config.storage.image_dir / str(file_id)}."
+    )
+    # convert import into png
     byte_content = await upload_file.read()
     Image.open(BytesIO(byte_content)).save(
         config.storage.image_dir / str(file_id), format="png"
     )
 
+    logger.info(
+        f"The file ({file_id}) has been uploaded successfully. "
+        f"Filepath: {config.storage.image_dir / str(file_id)}"
+    )
     return UploadFileResponse(file_id=file_id)
 
 
@@ -94,7 +113,7 @@ async def upload_image(upload_file: UploadFile) -> UploadFileResponse:
     "/download",
     response_class=FileResponse,
     status_code=200,
-    summary="""The endpoint `/download` allows to download audio file by given uuid.""",
+    summary="""The endpoint `/download` allows to download image file by given uuid.""",
     responses={
         404: {
             "description": "The specified file was not found.",
@@ -116,32 +135,37 @@ async def download_image_file(file: UUID) -> FileResponse:
     Responses:
     - 200, file bytes
     """
+    logger.info("Starting download_image_file algorithm. Acquiring data.")
     filepath = config.storage.image_dir / str(file)
 
+    logger.info(f"Searching for image ({str(file)})")
     if not filepath.exists():
+        logger.error(f"File ({str(file)}) does not exist. Raising 404 file error.")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
         )
 
+    logger.info(f"File ({str(file)}) was found. Returning file response.")
     return FileResponse(path=filepath.as_posix(), media_type="image/png")
 
 
 @router.get(
     "/models",
-    response_model=ModelsDataReponse,
+    response_model=ModelsDataResponse,
     status_code=200,
     summary="""The endpoint /models returns available (loaded) image models.""",
     responses={
         200: {"description": "List of available models"},
     },
 )
-async def get_models() -> ModelsDataReponse:
+async def get_models() -> ModelsDataResponse:
     """
     Returns list of models, which are loaded into the worker and available for usage.
     """
+    logger.info("Starting get_models algorithm. Acquiring image models.")
     # Transform any known image model into ModelData object format and
     # store them as a list inside ModelsDataResponse
-    return ModelsDataReponse(
+    return ModelsDataResponse(
         models=[ModelData.from_orm(model) for model in get_image_plugins().values()]
     )
 
@@ -150,7 +174,7 @@ async def get_models() -> ModelsDataReponse:
     "/process/task",
     response_model=TaskCreateResponse,
     status_code=200,
-    summary="""The endpoint `/process/task` creates an image processing task based on the given request parameters.""",
+    summary="""The endpoint `/process` creates an image processing task based on the given request parameters.""",
     responses={
         200: {"description": "Task was successfully created and scheduled"},
         404: {
@@ -175,7 +199,9 @@ async def process_image(request: ImageProcessingRequest) -> TaskCreateResponse:
     - 404, No such image file available
     - 404, No such image model available
     """
+    logger.info("Starting process_image algorithm. Creating task for image processing.")
     created_task: TaskCreateResponse = create_image_task(request)
+    logger.info(f"Task ({created_task.task_id}) has been created successfully.")
     return created_task
 
 
@@ -240,21 +266,30 @@ async def get_response(task_id: UUID) -> ImageProcessingResponse:
         ]
     }
     ```
-    - 406, is impossible to get task result (task does not exist or it has not finished yet).
+    - 406, is impossible to get task result (task does not exist, or it has not finished yet).
     - 422, if the task was not created as audio processing task
     """
+    logger.info("Starting get_response algorithm. Acquiring data.")
     response = _get_job_status(task_id)
+
+    logger.info(f"Checking if task ({task_id}) exists and if it is finished.")
     if not response.ready:
+        logger.error(
+            f"The task ({task_id}) is non-existent or not finished. Raising 406 error."
+        )
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="The job is non-existent or not done",
         )
 
+    logger.info(f"The task ({task_id}) is finished. Acquiring results")
     job_results = _get_job_result(task_id)
 
     try:
+        logger.info(f"Trying to return the results of the task ({task_id}).")
         return ImageProcessingResponse.parse_obj(job_results.dict())
     except ValidationError as error:
+        logger.error("Wrong type of task was passed. Raising 422 file error.")
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="There is no such image processing task",

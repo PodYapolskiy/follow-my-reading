@@ -68,7 +68,7 @@ def register_plugin(plugin_cls: Type[BasePlugin]) -> Type | None:
 def load_plugins() -> List[ModuleType]:
     """
     `load_plugins` is a function, that iterates over all files in `./plugins` directory,
-    which satify the mask "*_plugin.py", and dynamically imports them as modules,
+    which satisfy the mask "*_plugin.py", and dynamically imports them as modules,
     thus loading them into the memory and triggering `@register_plugin` decorator.
     Returns loaded models as list of python objects.
     """

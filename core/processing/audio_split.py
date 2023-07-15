@@ -3,15 +3,24 @@ from typing import List, Tuple
 from uuid import UUID, uuid4
 
 from librosa import get_duration
+from loguru import logger
 from pydub import AudioSegment, silence
 
 from config import get_config
 
 config = get_config()
 
+logger.add(
+    "./logs/audio_split.log",
+    format="{time:DD-MM-YYYY HH:mm:ss zz} {level} {message}",
+    enqueue=True,
+)
+
 
 def duration(audio: str) -> float:
+    logger.info("Starting 'duration' algorithm.")
     filepath = config.storage.audio_dir / audio
+    logger.info(f"Returning duration of the audio ({audio})")
     return get_duration(path=filepath)
 
 
@@ -21,6 +30,7 @@ def dbfs_to_fraction(dbfs: float) -> float:
     :param dbfs: dbfs to be converted
     :return: the fraction (float)
     """
+    logger.info(f"Converting dbfs value ({dbfs}) to fraction")
     return 10 ** (dbfs / 20)
 
 
@@ -30,6 +40,7 @@ def fraction_to_dbfs(fraction: float) -> float:
     :param fraction: the fraction of max volume
     :return: the dbfs (float)
     """
+    logger.info(f"Converting fraction value ({fraction}) to dbfs")
     return 20 * lg(fraction)
 
 
@@ -43,6 +54,8 @@ def split_audio(  # type: ignore
     :param intervals: a list of segments, given by the timestamps to the beginning and end (in seconds)
     :return: the uuids of the cut-up files (in order of appearance in intervals)
     """
+
+    logger.info("Starting split_audio algorithm.")
 
     # Creating the pydub.AudioSegment if it is not already created
     if isinstance(file, str):
@@ -61,6 +74,7 @@ def split_audio(  # type: ignore
         )
         files.append(file_id)
 
+    logger.info("Process split_audio has ended. Returning the resulted files.")
     return files
 
 
@@ -76,6 +90,8 @@ def split_silence(
     :param cutoff_ratio: the percentage of max volume at which a segment is considered "silent"
     :return: the list of the UUIDs of all the cut-up segments and the intervals at which they were cut
     """
+
+    logger.info("Starting split_silence algorithm.")
 
     # Creating the pydub.AudioSegment and preparing some variables for audio processing
     audio: AudioSegment = AudioSegment.from_file(file, file[file.rfind(".") + 1 :])  # type: ignore
@@ -109,6 +125,8 @@ def split_silence(
             new_beg = silence_chunks[i - 1][1] - 50
 
     audio_intervals.append((new_beg, silence_chunks[-1][0] + 50))
+
+    logger.info("Process split_silence has ended. Returning the result.")
 
     # Split by counted intervals and return the result
     return (

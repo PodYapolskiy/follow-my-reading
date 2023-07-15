@@ -5,6 +5,7 @@ import pydub
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 from huey.api import Result
+from loguru import logger
 from pydantic.error_wrappers import ValidationError
 
 from config import get_config
@@ -18,12 +19,17 @@ from .models import (
     AudioProcessingRequest,
     AudioProcessingResponse,
     ModelData,
-    ModelsDataReponse,
+    ModelsDataResponse,
     TaskCreateResponse,
     UploadFileResponse,
 )
 from .task_utils import _get_job_result, _get_job_status, create_audio_task
 
+logger.add(
+    "./logs/audio.log",
+    format="{time:DD-MM-YYYY HH:mm:ss zz} {level} {message}",
+    enqueue=True,
+)
 config = get_config()
 router = APIRouter(
     prefix="/audio", tags=["audio"], dependencies=[Depends(get_current_active_user)]
@@ -38,7 +44,7 @@ router = APIRouter(
     responses={
         200: {"description": "The file is uploaded successfully"},
         422: {
-            "description": "The file was not sent or the file has unallowed extension",
+            "description": "The file was not sent or the file has prohibited extension",
             "content": {
                 "application/json": {
                     "example": {
@@ -66,26 +72,36 @@ async def upload_audio_file(upload_file: UploadFile) -> UploadFileResponse:
     - .ogg
     - .opus
     - .wav
-    """
+    - .weba"""
+    logger.info("Starting upload_audio_file algorithm. Acquiring data.")
     file_id = uuid4()
 
-    # Here we using MIME types specification, which have format
-    # "kind/name". In the following code, we checking that the kind of document
+    # Here we are using MIME types specification, which have format
+    # "kind/name". In the following code, we are checking that the kind of document
     # is "audio". It is the easiest methods to allow uploading any audio format files.
     # https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+
+    logger.info(f"Checking if audio file (id: {file_id}) is of allowed format.")
     if (
         upload_file.content_type is None
         or upload_file.content_type.split("/")[0] != "audio"
     ):
+        logger.error(
+            f"File (id: {file_id}) is of not allowed format. " f"Raising 422 file error"
+        )
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Only audio files uploads are allowed",
         )
 
+    logger.info(f"Audio file (id: {file_id}) is valid. Reading and storing it.")
     byte_content = await upload_file.read()
     filepath = config.storage.audio_dir / str(file_id)
 
     # convert file to mp3
+    logger.info(
+        f"Converting audio file (id: {file_id}) to .mp3 extension and saving it to ({filepath})"
+    )
     try:
         pydub.AudioSegment.from_file(BytesIO(byte_content)).export(
             out_f=filepath, format="mp3"
@@ -95,6 +111,7 @@ async def upload_audio_file(upload_file: UploadFile) -> UploadFileResponse:
             status_code=500, detail="Failed to convert audio file to .mp3"
         ) from error
 
+    logger.info(f"Audio file ({file_id}) was saved successfully.")
     return UploadFileResponse(file_id=file_id)
 
 
@@ -119,37 +136,43 @@ async def upload_audio_file(upload_file: UploadFile) -> UploadFileResponse:
 async def download_audio_file(file: UUID) -> FileResponse:
     """
     The endpoint `/download` takes a file UUID as input, checks if the file exists in the
-    audio directory, and returns the file as bytes (`.mp3` format). If file does not exist, returns 404 HTTP response code
+    audio directory, and returns the file as bytes. If file does not exist, returns 404 HTTP response code
 
     Responses:
-    - 200, file bytes (`.mp3` format)
+    - 200, file bytes
     """
+    logger.info(
+        f"Starting download_audio_file algorithm. Searching for audio file ({str(file)})."
+    )
     filepath = config.storage.audio_dir / str(file)
 
     if not filepath.exists():
+        logger.error(f"File ({file}) does not exist. Returning 404 file error.")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
         )
 
+    logger.info(f"Audio file ({file}) was found. Returning file response.")
     return FileResponse(path=filepath.as_posix(), media_type="audio/mpeg")
 
 
 @router.get(
     "/models",
-    response_model=ModelsDataReponse,
+    response_model=ModelsDataResponse,
     status_code=200,
     summary="""The endpoint /models returns available (loaded) audio models.""",
     responses={
         200: {"description": "List of available models"},
     },
 )
-async def get_audio_processing_models() -> ModelsDataReponse:
+async def get_audio_processing_models() -> ModelsDataResponse:
     """
     Returns list of models, which are loaded into the worker and available for usage.
     """
+    logger.info("Starting get_audio_processing_models algorithm. Acquiring models.")
     # Transform any known audio model into ModelData object format and
     # store them as a list inside ModelsDataResponse
-    return ModelsDataReponse(
+    return ModelsDataResponse(
         models=[ModelData.from_orm(model) for model in get_audio_plugins().values()]
     )
 
@@ -183,7 +206,12 @@ async def process_audio(request: AudioProcessingRequest) -> TaskCreateResponse:
     - 404, No such audio file available
     - 404, No such audio model available
     """
+    logger.info("Starting process_audio algorithm. Creating task for processing audio.")
     created_task: TaskCreateResponse = create_audio_task(request)
+
+    logger.info(
+        f"Task created successfully. Returning task instance (id: {created_task.task_id})"
+    )
     return created_task
 
 
@@ -233,20 +261,28 @@ async def get_response(task_id: UUID) -> AudioProcessingResponse:
         ]
     }
     ```
-    - 406, is impossible to get task result (task does not exist or it has not finished yet).
+    - 406, is impossible to get task result (task does not exist, or it has not finished yet).
     - 422, if the task was not created as audio processing task
     """
+
+    logger.info("Starting get_response algorithm. Acquiring data.")
     response = _get_job_status(task_id)
+
+    logger.info(f"Checking if task ({task_id}) exists and if it is finished.")
     if not response.ready:
+        logger.error(f"The task ({task_id}) does not exist or is not finished yet.")
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="The job is non-existent or not done",
         )
 
+    logger.info(f"The task ({task_id}) exists and is finished. Acquiring results.")
     data = _get_job_result(task_id)
     try:
+        logger.info(f"Trying to return the results of the task ({task_id}).")
         return AudioProcessingResponse.parse_obj(data.dict())
     except ValidationError as error:
+        logger.error("Wrong type of task was passed. Raising 422 error.")
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="There is no such audio processing task",
@@ -339,8 +375,13 @@ async def get_extracted_results(task_id: UUID) -> AudioExtractPhrasesResponse:
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="The job is non-existent or not done",
         )
-
-    data = _get_job_result(task_id)
+    try:
+        data = _get_job_result(task_id)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error was raised during job execution: {e}",
+        ) from e
     try:
         return AudioExtractPhrasesResponse.parse_obj(data.dict())
     except ValidationError as error:

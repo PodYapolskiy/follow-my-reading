@@ -1,7 +1,7 @@
-import logging
 from typing import Any, Dict, List, Tuple
 
 from huey import RedisHuey
+from loguru import logger
 
 from core.plugins import (
     AUDIO_PLUGINS,
@@ -27,6 +27,11 @@ from core.processing.text import find_phrases, match_phrases
 
 scheduler = RedisHuey()
 
+logger.add(
+    "./logs/task_system.log",
+    format="{time:DD-MM-YYYY HH:mm:ss zz} {level} {message}",
+    enqueue=True,
+)
 
 plugins = []
 
@@ -37,11 +42,10 @@ def load_plugins_into_memories() -> None:
     Load plugins on startup. This function is introduced
     in order not to load plugins into the module on import.
     """
+    logger.info("Starting load_plugins_into_memories algorithm. Loading plugins.")
     global plugins
     plugins = load_plugins()
-
-
-logger = logging.getLogger("huey")
+    logger.info("Plugins have been loaded successfully.")
 
 
 def _plugin_class_method_call(class_name: str, function: str, filepath: str) -> Any:
@@ -49,15 +53,16 @@ def _plugin_class_method_call(class_name: str, function: str, filepath: str) -> 
     `_plugin_class_method_call` is a function, which search each plugin for `class_name`
     object. If the object is not found, it raises KeyError. If found, the function
     gets the class and loads the `function` from it. According to `AudioProcessingPlugin`
-    and `ImageProccesingPlugin` this function must be `@staticmethod`. Then,
+    and `ImageProcessingPlugin` this function must be `@staticmethod`. Then,
     `_plugin_class_method_call` calls the loaded function with `filepath` argument and
     returns the result.
     """
+    logger.info("Starting _plugin_class_method_call algorithm.")
     logger.info(f"Searching target plugin, which contains {class_name}")
     target = None
     # look through all loaded plugin
     for plugin in plugins:
-        # if any plugin contain specified class, use this plugin as a targer
+        # if any plugin contain specified class, use this plugin as a target
         if hasattr(plugin, class_name):
             logger.info(f"Target plugin found: {plugin.__name__}")
             target = plugin
@@ -69,19 +74,23 @@ def _plugin_class_method_call(class_name: str, function: str, filepath: str) -> 
 
     logger.info(f"Getting class object ({class_name}) from target plugin")
     cls = getattr(target, class_name)  # load class from plugin module
-    logger.info(f"Getting fuction ({function}) from class")
+    logger.info(f"Getting function ({function}) from class")
     func = getattr(cls, function)  # load function from class
-    logger.info(f"Executing function {function} with {filepath=}")
+    logger.info(
+        f"Executing function {function} with {filepath}. "
+        f"End of _plugin_class_method_call algorithm."
+    )
     return func(filepath)  # call the function
 
 
 @scheduler.task()
 def dynamic_plugin_call(class_name: str, function: str, filepath: str) -> Any:
     """
-    `dynamic_plugin_call` is a sheduled job, which accepts `class_name` (str),
+    `dynamic_plugin_call` is a scheduled job, which accepts `class_name` (str),
     `function` (str), `filepath` (str) and returns the result of calling
     `_plugin_class_method_call` with these parameters.
     """
+    logger.info("Starting dynamic_plugin_call algorithm.")
     return _plugin_class_method_call(class_name, function, filepath)
 
 
@@ -108,6 +117,7 @@ def _audio_process(
                 )
             )
 
+        logger.info("Audio processed successfully")
         return AudioTaskResult(text=audio_model_response.text, segments=segments)
 
     # todo: use split silence on models, which can not split audio
@@ -128,6 +138,7 @@ def _image_process(
     image_model_response: ImageProcessingResult = _plugin_class_method_call(
         image_class, image_function, image_path
     )
+    logger.info("Image processed successfully.")
     return ImageTaskResult.parse_obj(image_model_response.dict())
 
 
@@ -171,7 +182,8 @@ def compare_audio_image(
         image_class, image_function, image_path
     )
 
-    logger.info("Text matching from image")
+    logger.info("Starting compare_image_audio algorithm.")
+
     phrases = [x.text for x in audio_model_response.segments]
     text_diffs = match_phrases(phrases, image_model_response.text)
 
@@ -186,7 +198,9 @@ def compare_audio_image(
                     expected=expected,
                 )
             )
-
+    logger.info(
+        "Process compare_image_audio has been completed successfully. Returning the result"
+    )
     return AudioToImageComparisonResponse(
         audio=audio_model_response, image=image_model_response, errors=data
     )
@@ -199,7 +213,7 @@ def compare_audio_text(
     audio_model_response: AudioTaskResult = _audio_process(
         audio_class, audio_function, audio_path
     )
-    logger.info("Text matching from query")
+    logger.info("Starting compare_text_audio algorithm.")
     phrases = [x.text for x in audio_model_response.segments]
     original_text = " ".join(text)
     text_diffs = match_phrases(phrases, original_text)
@@ -216,6 +230,9 @@ def compare_audio_text(
                 )
             )
 
+    logger.info(
+        "Process compare_text_audio has been completed successfully. Returning the result."
+    )
     return AudioToTextComparisonResponse(audio=audio_model_response, errors=data)
 
 

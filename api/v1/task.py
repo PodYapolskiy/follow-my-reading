@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
+from loguru import logger
 
 from config import get_config
 
@@ -9,7 +10,11 @@ from .models import TaskStatusResponse
 from .task_utils import _get_job_result, _get_job_status
 
 config = get_config()
-
+logger.add(
+    "./logs/task.log",
+    format="{time:DD-MM-YYYY HH:mm:ss zz} {level} {message}",
+    enqueue=True,
+)
 router = APIRouter(
     prefix="/task", tags=["task"], dependencies=[Depends(get_current_active_user)]
 )
@@ -29,6 +34,9 @@ async def get_job_status(task_id: UUID) -> TaskStatusResponse:
     Responses:
     - 200, Job status
     """
+    logger.info(
+        f"Starting get_job status algorithm. Getting status of task ({task_id})."
+    )
     return _get_job_status(task_id)
 
 

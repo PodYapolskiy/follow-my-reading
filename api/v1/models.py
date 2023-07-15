@@ -21,7 +21,7 @@ class ModelData(BaseModel):
         orm_mode = True
 
 
-class ModelsDataReponse(BaseModel):
+class ModelsDataResponse(BaseModel):
     models: List[ModelData]
 
 

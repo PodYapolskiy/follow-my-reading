@@ -2,6 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from huey.api import Result
+from loguru import logger
 from pydantic.error_wrappers import ValidationError
 
 from config import get_config
@@ -66,36 +67,61 @@ async def compare_audio_to_image(
     - 404, No such image file available
     - 404, No such image model available
     """
+    logger.info("Starting compare_image_audio algorithm. Acquiring data.")
+
     image_plugin_info = get_image_plugins().get(request.image_model)
     audio_plugin_info = get_audio_plugins().get(request.audio_model)
 
     image_file_path = config.storage.image_dir / str(request.image_file)
     audio_file_path = config.storage.audio_dir / str(request.audio_file)
 
+    logger.info(f"Checking if image model ({request.image_model}) exists.")
     if image_plugin_info is None:
+        logger.error(
+            f"No such image model ({request.image_model} exists. Raising 404 file error."
+        )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No such image model available",
         )
 
+    logger.info(
+        f"Image model ({request.image_model}) exists. Checking if audio model ({request.audio_model}) exists."
+    )
     if audio_plugin_info is None:
+        logger.error(
+            f"No such audio model ({request.image_model}) exists. Raising 404 file error."
+        )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No such audio model available",
         )
 
+    logger.info(
+        f"Audio model ({request.audio_model}) exists. Checking if image file ({request.image_file}) exists."
+    )
     if not image_file_path.exists():
+        logger.error(
+            f"No such image file ({request.image_file}) exists. Raising 404 file error."
+        )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No such image file available",
         )
 
+    logger.info(
+        f"Image file ({request.image_file}) exists. Checking if audio file ({request.audio_file}) exists."
+    )
     if not audio_file_path.exists():
+        logger.error("non-existent audiofile passed at line 93.")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No such audio file available",
         )
 
+    logger.info(
+        f"Audio file ({request.audio_file}) exists. Creating task for comparison of image and audio."
+    )
     job: Result = task_system.compare_audio_image(  # type: ignore
         audio_plugin_info.class_name,
         AudioProcessingFunction,
@@ -103,6 +129,12 @@ async def compare_audio_to_image(
         image_plugin_info.class_name,
         ImageProcessingFunction,
         image_file_path.as_posix(),
+    )
+
+    logger.info(
+        f"Task for comparing image (file: {image_file_path}, model: {request.image_model}))"
+        " and audio (file: {audio_file_path}, model: {request.audio_model}))"
+        " has been created successfully. Task id: {UUID(job.id)}"
     )
     return TaskCreateResponse(task_id=UUID(job.id))
 
@@ -244,34 +276,58 @@ async def compare_audio_to_text(
     Parameters:
     - **audio_file**: an uuid of file to process
     - **audio_model**: an audio processing model name (check '_/audio/models_' for available models)
-    - **text**: a list of strings to compare audio against
 
 
     Responses:
     - 200, Task created
     - 404, No such audio file available
     - 404, No such audio model available
+    - 404, No such image file available
+    - 404, No such image model available
     """
+    logger.info("Starting compare_text_audio algorithm. Acquiring data.")
+
     audio_plugin_info = get_audio_plugins().get(request.audio_model)
     audio_file_path = config.storage.audio_dir / str(request.audio_file)
 
+    logger.info(f"Checking if audio model ({request.audio_model}) exists.")
     if audio_plugin_info is None:
+        logger.error(
+            f"No such audio model ({request.audio_model}) exists. Raising 404 file error."
+        )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No such audio model available",
         )
 
+    logger.info(
+        f"Audio model ({request.audio_model}) exists. Checking if audio file ({request.audio_file}) exists."
+    )
     if not audio_file_path.exists():
+        logger.error(
+            f"No such audio file ({request.audio_file} exists. Raising 404 file error."
+        )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No such audio file available",
         )
+
+    logger.info(
+        f"Audio file ({request.audio_file} exists. Creating task of comparison text and audio."
+    )
 
     job: Result = task_system.compare_audio_text(  # type: ignore
         audio_plugin_info.class_name,
         AudioProcessingFunction,
         audio_file_path.as_posix(),
         request.text,
+    )
+
+    logger.info(
+        f"Task for comparing text ({request.text}) "
+        f"and audio (file: ({request.audio_file}), model: ({request.audio_model})) "
+        f"has been created successfully. "
+        f"Task id: ({UUID(job.id)})"
     )
     return TaskCreateResponse(task_id=UUID(job.id))
 
