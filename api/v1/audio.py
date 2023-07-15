@@ -169,11 +169,7 @@ async def get_audio_processing_models() -> ModelsDataResponse:
     """
     Returns list of models, which are loaded into the worker and available for usage.
     """
-    logger.info(
-        "Starting get_audio_processing_models algorithm. Acquiring models.\n"
-        "For more info check core/plugins/logs/no_mem.log\n"
-        "Process: get_audio_plugins"
-    )
+    logger.info("Starting get_audio_processing_models algorithm. Acquiring models.")
     # Transform any known audio model into ModelData object format and
     # store them as a list inside ModelsDataResponse
     return ModelsDataResponse(
@@ -210,11 +206,7 @@ async def process_audio(request: AudioProcessingRequest) -> TaskCreateResponse:
     - 404, No such audio file available
     - 404, No such audio model available
     """
-    logger.info(
-        "Starting process_audio algorithm. Creating task for processing audio.\n"
-        "For more info check api/v1/logs/task_utils.log\n"
-        "Process: create_audio_task"
-    )
+    logger.info("Starting process_audio algorithm. Creating task for processing audio.")
     created_task: TaskCreateResponse = create_audio_task(request)
 
     logger.info(
@@ -383,8 +375,13 @@ async def get_extracted_results(task_id: UUID) -> AudioExtractPhrasesResponse:
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="The job is non-existent or not done",
         )
-
-    data = _get_job_result(task_id)
+    try:
+        data = _get_job_result(task_id)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error was raised during job execution: {e}",
+        ) from e
     try:
         return AudioExtractPhrasesResponse.parse_obj(data.dict())
     except ValidationError as error:

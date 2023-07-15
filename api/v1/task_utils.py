@@ -17,7 +17,11 @@ from .models import (
     TaskStatusResponse,
 )
 
-logger.add("./logs/task_utils.log", format="{time:DD-MM-YYYY, HH:mm:ss zz} {level} {message}", enqueue=True)
+logger.add(
+    "./logs/task_utils.log",
+    format="{time:DD-MM-YYYY, HH:mm:ss zz} {level} {message}",
+    enqueue=True,
+)
 config = get_config()
 
 
@@ -39,23 +43,29 @@ def create_audio_task(request: AudioProcessingRequest) -> TaskCreateResponse:
     logger.info(f"Checking if audio model ({request.audio_model}) exists.")
 
     if audio_plugin_info is None:
-        logger.error(f"No such audio model ({request.audio_model}) exists. Raising 404 file error.")
+        logger.error(
+            f"No such audio model ({request.audio_model}) exists. Raising 404 file error."
+        )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No such audio model available",
         )
 
-    logger.info(f"Audio model ({request.audio_model}) exists. Checking if audio file ({request.audio_file}) exists.")
+    logger.info(
+        f"Audio model ({request.audio_model}) exists. Checking if audio file ({request.audio_file}) exists."
+    )
 
     if not audio_file_path.exists():
-        logger.error(f"No such audio file ({request.audio_file}) exists. Raising 404 file error.")
+        logger.error(
+            f"No such audio file ({request.audio_file}) exists. Raising 404 file error."
+        )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="No such audio file available"
         )
 
-    logger.info(f"Audio file ({request.audio_file}) exists. Creating task for audio processing.\n"
-                f"Check core/logs/task_system.log for more info.\n"
-                f"Process: audio_processing_call.")
+    logger.info(
+        f"Audio file ({request.audio_file}) exists. Creating task for audio processing."
+    )
 
     job: Result = task_system.audio_processing_call(  # type: ignore
         audio_plugin_info.class_name,
@@ -63,9 +73,10 @@ def create_audio_task(request: AudioProcessingRequest) -> TaskCreateResponse:
         audio_file_path.as_posix(),
     )
 
-    logger.info(f"Task for processing audio (file: ({request.audio_file}), model: ({request.audio_model}))\n"
-                f"has been created successfully."
-                f"Task id: {UUID(job.id)}")
+    logger.info(
+        f"Task for processing audio (file: ({request.audio_file}), model: ({request.audio_model})) has been created successfully."
+        f"Task id: {UUID(job.id)}"
+    )
     return TaskCreateResponse(task_id=UUID(job.id))
 
 
@@ -86,31 +97,36 @@ def create_image_task(request: ImageProcessingRequest) -> TaskCreateResponse:
 
     logger.info(f"Checking if image model ({request.image_model}) exists.")
     if image_plugin_info is None:
-        logger.error(f"No such image model ({request.image_model}) exists. Raising 404 file error.")
+        logger.error(
+            f"No such image model ({request.image_model}) exists. Raising 404 file error."
+        )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No such image model available",
         )
 
-    logger.info(f"Image model ({request.image_model}) exists. Checking if image file ({request.image_file}) exists.")
+    logger.info(
+        f"Image model ({request.image_model}) exists. Checking if image file ({request.image_file}) exists."
+    )
     if not image_file_path.exists():
         logger.error(f"No such image file ({request.image_file}) exists.")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="No such image file available"
         )
 
-    logger.info(f"Image file ({request.image_file}) exists. Creating task for image processing.\n"
-                f"Check core/logs/task_system.log for more info.\n"
-                f"Process: image_processing_call")
+    logger.info(
+        f"Image file ({request.image_file}) exists. Creating task for image processing."
+    )
     job: Result = task_system.image_processing_call(  # type: ignore
         image_plugin_info.class_name,
         ImageProcessingFunction,
         image_file_path.as_posix(),
     )
 
-    logger.info(f"Task for processing image (file: ({request.image_file}), model: ({request.image_model}))\n"
-                f"has been created successfully."
-                f"Task id: {UUID(job.id)}")
+    logger.info(
+        f"Task for processing image (file: ({request.image_file}), model: ({request.image_model})) has been created successfully. "
+        f"Task id: {UUID(job.id)}"
+    )
     return TaskCreateResponse(task_id=UUID(job.id))
 
 
@@ -124,7 +140,9 @@ def _get_job_status(task_id: UUID) -> TaskStatusResponse:
     :type task_id: UUID
     :return: a TaskStatusResponse object.
     """
-    logger.info(f"Starting _get_job_status algorithm. Checking if the results of the task ({task_id}) are available yet.")
+    logger.info(
+        f"Starting _get_job_status algorithm. Checking if the results of the task ({task_id}) are available yet."
+    )
     if scheduler.result(str(task_id), preserve=True) is None:
         logger.info(f"Results of the task ({task_id}) are not available")
         return TaskStatusResponse(
@@ -146,13 +164,19 @@ def _get_job_result(task_id: UUID) -> Any:
     :return: The function `_get_job_result` returns the result of a job/task with the given `task_id`.
     The result are of type `dict`.
     """
-    logger.info(f"Starting _get_job_result algorithm. Acquiring results of task ({task_id}).")
+    logger.info(
+        f"Starting _get_job_result algorithm. Acquiring results of task ({task_id})."
+    )
     data = scheduler.result(str(task_id), preserve=True)
     if data is not None:
-        logger.info(f"The task ({task_id}) exists and is finished. Returning the result.")
+        logger.info(
+            f"The task ({task_id}) exists and is finished. Returning the result."
+        )
         return data
     else:
-        logger.error(f"The task ({task_id}) does not exist or its results are not ready yet. Raising 406 file error.")
+        logger.error(
+            f"The task ({task_id}) does not exist or its results are not ready yet. Raising 406 file error."
+        )
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="Results are not ready yet or no task with such id exist",

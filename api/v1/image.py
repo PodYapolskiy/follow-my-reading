@@ -161,11 +161,7 @@ async def get_models() -> ModelsDataResponse:
     """
     Returns list of models, which are loaded into the worker and available for usage.
     """
-    logger.info(
-        f"Starting get_models algorithm. Acquiring image models.\n"
-        f"For more info check core/plugins/logs/no_mem.log\n"
-        f"Process: get_image_plugins"
-    )
+    logger.info("Starting get_models algorithm. Acquiring image models.")
     # Transform any known image model into ModelData object format and
     # store them as a list inside ModelsDataResponse
     return ModelsDataResponse(
@@ -202,11 +198,7 @@ async def process_image(request: ImageProcessingRequest) -> TaskCreateResponse:
     - 404, No such image file available
     - 404, No such image model available
     """
-    logger.info(
-        "Starting process_image algorithm. Creating task for image processing.\n"
-        "For more info check api/v1/logs/task_utils.log\n"
-        "Process: create_image_task"
-    )
+    logger.info("Starting process_image algorithm. Creating task for image processing.")
     created_task: TaskCreateResponse = create_image_task(request)
     logger.info(f"Task ({created_task.task_id}) has been created successfully.")
     return created_task
@@ -276,11 +268,7 @@ async def get_response(task_id: UUID) -> ImageProcessingResponse:
     - 406, is impossible to get task result (task does not exist, or it has not finished yet).
     - 422, if the task was not created as audio processing task
     """
-    logger.info(
-        "Starting get_response algorithm. Acquiring data.\n"
-        "For more info check api/v1/logs/task_utils.log\n"
-        "Process: _get_job_status"
-    )
+    logger.info("Starting get_response algorithm. Acquiring data.")
     response = _get_job_status(task_id)
 
     logger.info(f"Checking if task ({task_id}) exists and if it is finished.")
