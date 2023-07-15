@@ -71,6 +71,7 @@ documentation:
       - public
 
 pages:
+  stage: build
   dependencies:
     - documentation
   script:
