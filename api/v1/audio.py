@@ -119,10 +119,10 @@ async def upload_audio_file(upload_file: UploadFile) -> UploadFileResponse:
 async def download_audio_file(file: UUID) -> FileResponse:
     """
     The endpoint `/download` takes a file UUID as input, checks if the file exists in the
-    audio directory, and returns the file as bytes. If file does not exist, returns 404 HTTP response code
+    audio directory, and returns the file as bytes (`.mp3` format). If file does not exist, returns 404 HTTP response code
 
     Responses:
-    - 200, file bytes
+    - 200, file bytes (`.mp3` format)
     """
     filepath = config.storage.audio_dir / str(file)
 
@@ -158,7 +158,7 @@ async def get_audio_processing_models() -> ModelsDataReponse:
     "/process/task",
     response_model=TaskCreateResponse,
     status_code=200,
-    summary="""The endpoint `/process` creates an audio processing task based on the given request parameters.""",
+    summary="""The endpoint `/process/task` creates an audio processing task based on the given request parameters.""",
     responses={
         200: {"description": "Task was successfully created and scheduled"},
         404: {
@@ -191,7 +191,7 @@ async def process_audio(request: AudioProcessingRequest) -> TaskCreateResponse:
     "/process/result",
     response_model=AudioProcessingResponse,
     status_code=200,
-    summary="""The endpoint `/result` retrieves the result of an audio
+    summary="""The endpoint `/process/result` retrieves the result of an audio
 processing task from task system and returns it.""",
     responses={
         406: {
@@ -257,7 +257,7 @@ async def get_response(task_id: UUID) -> AudioProcessingResponse:
     "/extract/task",
     response_model=TaskCreateResponse,
     status_code=200,
-    summary="""The endpoint `/split` extract specified phrases from given audio 
+    summary="""The endpoint `/extract/task` extract specified phrases from given audio 
 file using specified given audio model""",
     responses={
         200: {"description": "Task was successfully created and scheduled"},
@@ -307,7 +307,7 @@ async def extract_text_from_audio(
     "/extract/result",
     response_model=AudioExtractPhrasesResponse,
     status_code=200,
-    summary="""The endpoint `/result` retrieves the result of an audio
+    summary="""The endpoint `/extract/result` retrieves the result of an audio
 extracting task from task system and returns it.""",
     responses={
         406: {

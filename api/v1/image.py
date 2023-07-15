@@ -150,7 +150,7 @@ async def get_models() -> ModelsDataReponse:
     "/process/task",
     response_model=TaskCreateResponse,
     status_code=200,
-    summary="""The endpoint `/process` creates an image processing task based on the given request parameters.""",
+    summary="""The endpoint `/process/task` creates an image processing task based on the given request parameters.""",
     responses={
         200: {"description": "Task was successfully created and scheduled"},
         404: {
@@ -183,7 +183,7 @@ async def process_image(request: ImageProcessingRequest) -> TaskCreateResponse:
     "/process/result",
     response_model=ImageProcessingResponse,
     status_code=200,
-    summary="""The endpoint `/result` retrieves the result of an image
+    summary="""The endpoint `/process/result` retrieves the result of an image
 processing task from task system and returns it.""",
     responses={
         406: {
