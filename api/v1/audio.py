@@ -5,8 +5,8 @@ import pydub
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 from huey.api import Result
-from pydantic.error_wrappers import ValidationError
 from loguru import logger
+from pydantic.error_wrappers import ValidationError
 
 from config import get_config
 from core import task_system

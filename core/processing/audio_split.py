@@ -3,14 +3,18 @@ from typing import List, Tuple
 from uuid import UUID, uuid4
 
 from librosa import get_duration
-from pydub import AudioSegment, silence
 from loguru import logger
+from pydub import AudioSegment, silence
 
 from config import get_config
 
 config = get_config()
 
-logger.add("./logs/audio_split.log", format="{time:DD-MM-YYYY HH:mm:ss zz} {level} {message}", enqueue=True)
+logger.add(
+    "./logs/audio_split.log",
+    format="{time:DD-MM-YYYY HH:mm:ss zz} {level} {message}",
+    enqueue=True,
+)
 
 
 def duration(audio: str) -> float:

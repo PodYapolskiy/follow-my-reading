@@ -1,7 +1,7 @@
-from huey import RedisHuey
-from loguru import logger
 from typing import Any, Dict, List, Tuple
 
+from huey import RedisHuey
+from loguru import logger
 
 from core.plugins import (
     AUDIO_PLUGINS,

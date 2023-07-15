@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta
 from typing import Annotated, AsyncGenerator
-from loguru import logger
+
 import aioredis
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
+from loguru import logger
 from passlib.context import CryptContext
 from pydantic import BaseModel
 

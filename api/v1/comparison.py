@@ -2,9 +2,9 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from huey.api import Result
+from loguru import logger
 from pydantic.error_wrappers import ValidationError
 
-from loguru import logger
 from config import get_config
 from core import task_system
 from core.plugins.base import AudioProcessingFunction, ImageProcessingFunction

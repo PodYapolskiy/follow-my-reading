@@ -1,8 +1,9 @@
 from io import BytesIO
 from uuid import UUID, uuid4
-from loguru import logger
+
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
+from loguru import logger
 from PIL import Image
 from pydantic.error_wrappers import ValidationError
 
