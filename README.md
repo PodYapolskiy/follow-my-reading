@@ -40,7 +40,7 @@ Adding or removing models from the platform can be accomplished quickly thanks t
 - ✅ Distributed computing using Task System
 - ✅ Authentication
 
-#Installation
+# Installation
 Before locally using Follow My Reading, there are a few prerequisites that need to be installed first.
 ## Prerequisites
 
@@ -83,7 +83,7 @@ Several models require additional steps to set up.
 
 - [Instructions for installing Tessdata.](https://github.com/tesseract-ocr/tessdata)
 
-#Deployment
+# Deployment
 
 Follow My Reading can be deployed in several ways depending on your requirements. Below are instructions for deploying Follow My Reading in different ways.
 
@@ -118,7 +118,7 @@ Where `NUMBER` is the number of workers you want to run. You can run this comman
 
 > NOTE! Right now executing task on multiple machines is unstable
 
-#Plugins
+# Plugins
 # Quick Start
 ## First Plugin
 Plugins in our system are described as Python files in the /plugins directory. There are several requirements for the format of these plugins. To implement a new plugin, create a file with a name that ends in _plugin.py. In this file, you should include the following imports:
@@ -231,7 +231,7 @@ Additionally, each plugin must implement one of the following static methods:
 - `process_audio(filename: str)`: Must accept an argument of type string and return an object of type AudioProcessingResult.
 - `process_image(filename: str)`: Must accept an argument of type string and return an object of type ImageProcessingResult.
 
-#Algorithms
+# Algorithms
 # Audio Algorithms
 ## `dbfs_to_fraction`
 The `dbfs_to_fraction` function accepts a decibel value relative to full scale (dbfs) and returns the corresponding fraction of the maximum volume as a float.
@@ -262,7 +262,7 @@ The function first prepares the input `to_find` and `phrases` to ignore multiple
 
 The function then trims the window to exclude unnecessary symbols (trims using full words) and transforms the indices from the prepared text to initial text. Lastly, it iterates through the phrases to compute the final answer.
 
-#API
+# API
 
 <h1 id="fastapi">FastAPI v0.1.0</h1>
 
@@ -2769,7 +2769,7 @@ continued
 }
 </script>
 
-#Advanced
+# Advanced
 # Audio
 ## Audio Conversion
 Our system uses the [pydub python package](https://github.com/jiaaro/pydub#pydub) 
