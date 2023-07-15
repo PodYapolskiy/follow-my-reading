@@ -104,7 +104,7 @@ async def compare_image_and_audio(request: AudioToImageComparisonRequest) -> Tas
         )
 
     logger.info(f"Audio file ({request.audio_file}) exists. Creating task for comparison of image and audio.\n"
-                f"Check in core/processing/logs task_system logs for more info.\n"
+                f"Check core/processing/logs/task_system.log for more info.\n"
                 f"Process: compare_image_audio")
     job: Result = task_system.compare_image_audio(  # type: ignore
         audio_plugin_info.class_name,
@@ -177,7 +177,7 @@ async def compare_text_and_audio(request: AudioToTextComparisonRequest) -> TaskC
         )
 
     logger.info(f"Audio file ({request.audio_file} exists. Creating task of comparison text and audio.\n"
-                f"Check in core/processing/logs task_system logs for more info.\n"
+                f"Check core/processing/logs/task_system.log for more info.\n"
                 f"Process: compare_text_audio.")
     job: Result = task_system.compare_text_audio(
         audio_plugin_info.class_name,

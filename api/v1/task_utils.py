@@ -55,7 +55,7 @@ def create_audio_task(request: AudioProcessingRequest) -> TaskCreateResponse:
         )
 
     logger.info(f"Audio file ({request.audio_file}) exists. Creating task for audio processing.\n"
-                f"Check task_system logs for more info.\n"
+                f"Check core/processing/logs/task_system.log for more info.\n"
                 f"Process: audio_processing_call.")
 
     job: Result = task_system.audio_processing_call(  # type: ignore
@@ -101,7 +101,7 @@ def create_image_task(request: ImageProcessingRequest) -> TaskCreateResponse:
         )
 
     logger.info(f"Image file ({request.image_file}) exists. Creating task for image processing.\n"
-                f"Check task_system logs for more info.\n"
+                f"Check core/processing/logs/task_system.log for more info.\n"
                 f"Process: image_processing_call")
     job: Result = task_system.image_processing_call(  # type: ignore
         image_plugin_info.class_name,
@@ -204,10 +204,13 @@ def _get_job_result(task_id: UUID) -> Any:
     :return: The function `_get_job_result` returns the result of a job/task with the given `task_id`.
     The result can be of any type (`Any`).
     """
+    logger.info(f"Starting _get_job_result algorithm. Acquiring results of task ({task_id}).")
     data = scheduler.result(str(task_id), preserve=True)
     if data is not None:
+        logger.info(f"The task ({task_id}) exists and is finished. Returning the result.")
         return data
     else:
+        logger.error(f"The task ({task_id}) does not exist or its results are not ready yet. Raising 406 file error.")
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="Results are not ready yet or no task with such id exist",
