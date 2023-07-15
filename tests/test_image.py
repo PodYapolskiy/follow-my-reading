@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from main import app
 
 DEFAULT_UNEXISTENT_FILE = "01234567-8910-1112-1314-151617181920"
-DEFAULT_AUDIO_MODEL = "whisper"
+DEFAULT_IMAGE_MODEL = "eng_tesseract"
 GLOBAL_HEADERS = {}
 
 
@@ -63,25 +63,25 @@ def test_start() -> None:
 @pytest.mark.flaky(retries=5, delay=30)
 def test_general() -> None:
     with TestClient(app) as client:
-        response = client.post("/v1/audio/upload", data={"upload_file": "some file"})
+        response = client.post("/v1/image/upload", data={"upload_file": "some file"})
         assert response.status_code == 401
 
-        response = client.get("/v1/audio/models")
+        response = client.get("/v1/image/models")
         assert response.status_code == 401
 
         response = client.post(
-            "/v1/audio/process/task",
+            "/v1/image/process/task",
             data={
-                "audio_file": "some audio file",
-                "audio_model": "some model name",
+                "image_file": "some image file",
+                "image_model": "some model name",
             },
         )
         assert response.status_code == 401
 
-        response = client.get("/v1/audio/download")
+        response = client.get("/v1/image/download")
         assert response.status_code == 401
 
-        response = client.get("/v1/audio/process/result")
+        response = client.get("/v1/image/process/result")
         assert response.status_code == 401
 
 
@@ -108,13 +108,13 @@ def test_request_rate_limit() -> None:
 @pytest.mark.flaky(retries=2, delay=30)
 def test_upload_no_auth() -> None:
     with TestClient(app) as client:
-        filename = "tests/audio/audio.mp3"
+        filename = "tests/image/image.jpg"
 
-        # whether can upload audio if no auth
+        # whether can upload image if no auth
         response = client.post(
-            "/v1/audio/upload",
+            "/v1/image/upload",
             files={
-                "upload_file": (" ", open(filename, "rb"), "audio/mpeg"),
+                "upload_file": (" ", open(filename, "rb"), "image/jpeg"),
             },
         )
         assert response.status_code == 401
@@ -124,7 +124,7 @@ def test_upload_no_auth() -> None:
 def test_upload_payload_not_a_file() -> None:
     with TestClient(app) as client:
         response = client.post(
-            "/v1/audio/upload",
+            "/v1/image/upload",
             files={
                 "upload_file": "not a file",
             },
@@ -134,12 +134,12 @@ def test_upload_payload_not_a_file() -> None:
 
 
 @pytest.mark.flaky(retries=2, delay=30)
-def test_upload_file_is_not_an_audio() -> None:
+def test_upload_file_is_not_an_image() -> None:
     with TestClient(app) as client:
         response = client.post(
-            "/v1/audio/upload",
+            "/v1/image/upload",
             files={
-                "upload_file": (" ", open("tests/image/image.jpg", "rb"), "image/jpeg"),
+                "upload_file": (" ", open("tests/audio/audio.mp3", "rb"), "audio/mpeg"),
             },
             headers=GLOBAL_HEADERS,
         )
@@ -149,42 +149,42 @@ def test_upload_file_is_not_an_audio() -> None:
 @pytest.mark.flaky(retries=2, delay=30)
 def test_upload_success() -> None:
     with TestClient(app) as client:
-        filename = "tests/audio/audio.mp3"
+        filename = "tests/image/image.jpg"
 
         response = client.post(
-            "/v1/audio/upload",
+            "/v1/image/upload",
             files={
-                "upload_file": (" ", open(filename, "rb"), "audio/mpeg"),
+                "upload_file": (" ", open(filename, "rb"), "image/jpeg"),
             },
             headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 200
 
-        os.remove(f"temp_data/audio/{response.json()['file_id']}")
+        os.remove(f"temp_data/image/{response.json()['file_id']}")
 
 
 @pytest.mark.flaky(retries=2, delay=30)
 def test_upload() -> None:
-    """
-    On testing uploading files:
-    https://stackoverflow.com/questions/60783222/how-to-test-a-fastapi-api-endpoint-that-consumes-images
-    """
+    #     """
+    #     On testing uploading files:
+    #     https://stackoverflow.com/questions/60783222/how-to-test-a-fastapi-api-endpoint-that-consumes-images
+    #     """
     with TestClient(app) as client:
-        filename = "tests/audio/audio.mp3"
+        filename = "tests/image/image.jpg"
 
-        # whether can upload audio if no auth
+        # whether can upload image if no auth
         response = client.post(
-            "/v1/audio/upload",
+            "/v1/image/upload",
             files={
                 # ! don't know for what the first argument stands for
-                "upload_file": (" ", open(filename, "rb"), "audio/mpeg"),
+                "upload_file": (" ", open(filename, "rb"), "image/jpeg"),
             },
         )
         assert response.status_code == 401
 
         # payload is not file
         response = client.post(
-            "/v1/audio/upload",
+            "/v1/image/upload",
             files={
                 "upload_file": "not a file",
             },
@@ -192,11 +192,11 @@ def test_upload() -> None:
         )
         assert response.status_code == 422
 
-        # file is not audio
+        # file is not image
         response = client.post(
-            "/v1/audio/upload",
+            "/v1/image/upload",
             files={
-                "upload_file": (" ", open("tests/image/image.jpg", "rb"), "image/jpeg"),
+                "upload_file": (" ", open("tests/audio/audio.mp3", "rb"), "audio/mpeg"),
             },
             headers=GLOBAL_HEADERS,
         )
@@ -204,16 +204,16 @@ def test_upload() -> None:
 
         # everything should work
         response = client.post(
-            "/v1/audio/upload",
+            "/v1/image/upload",
             files={
-                "upload_file": (" ", open(filename, "rb"), "audio/mpeg"),
+                "upload_file": (" ", open(filename, "rb"), "image/jpeg"),
             },
             headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 200
 
-        # delete test file from temp_data/audio
-        os.remove(f"temp_data/audio/{response.json()['file_id']}")
+        # delete test file from temp_data/image
+        os.remove(f"temp_data/image/{response.json()['file_id']}")
 
 
 ##############
@@ -222,7 +222,7 @@ def test_upload() -> None:
 @pytest.mark.flaky(retries=2, delay=30)
 def test_models_no_auth() -> None:
     with TestClient(app) as client:
-        response = client.get("/v1/audio/models")
+        response = client.get("/v1/image/models")
         assert response.status_code == 401  # if not authenticated
 
 
@@ -230,7 +230,7 @@ def test_models_no_auth() -> None:
 def test_models_success() -> None:
     with TestClient(app) as client:
         response = client.get(
-            "/v1/audio/models",
+            "/v1/image/models",
             headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 200
@@ -240,7 +240,7 @@ def test_models_success() -> None:
 def test_models_not_empty() -> None:
     with TestClient(app) as client:
         response = client.get(
-            "/v1/audio/models",
+            "/v1/image/models",
             headers=GLOBAL_HEADERS,
         )
         models: list[dict] = response.json()["models"]
@@ -251,7 +251,7 @@ def test_models_not_empty() -> None:
 def test_models_structure() -> None:
     with TestClient(app) as client:
         response = client.get(
-            "/v1/audio/models",
+            "/v1/image/models",
             headers=GLOBAL_HEADERS,
         )
         models: list[dict] = response.json()["models"]
@@ -268,11 +268,11 @@ def test_models_structure() -> None:
 @pytest.mark.flaky(retries=2, delay=30)
 def test_models() -> None:
     with TestClient(app) as client:
-        response = client.get("/v1/audio/models")
+        response = client.get("/v1/image/models")
         assert response.status_code == 401  # if not authenticated
 
         response = client.get(
-            "/v1/audio/models",
+            "/v1/image/models",
             headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 200
@@ -295,10 +295,10 @@ def test_models() -> None:
 def test_process_no_auth() -> None:
     with TestClient(app) as client:
         response = client.post(
-            "/v1/audio/process/task",
+            "/v1/image/process/task",
             json={
-                "audio_file": DEFAULT_UNEXISTENT_FILE,
-                "audio_model": DEFAULT_AUDIO_MODEL,
+                "image_file": DEFAULT_UNEXISTENT_FILE,
+                "image_model": DEFAULT_IMAGE_MODEL,
             },
         )
         assert response.status_code == 401
@@ -308,34 +308,35 @@ def test_process_no_auth() -> None:
 def test_process_model_does_not_exist() -> None:
     with TestClient(app) as client:
         response = client.post(
-            "/v1/audio/upload",
+            "/v1/image/upload",
             files={
-                "upload_file": (" ", open("tests/audio/audio.mp3", "rb"), "audio/mpeg"),
+                "upload_file": (" ", open("tests/image/image.jpg", "rb"), "image/jpeg"),
             },
             headers=GLOBAL_HEADERS,
         )
+        assert response.status_code == 200
         filename = response.json()["file_id"]
 
         response = client.post(
-            "/v1/audio/process/task",
+            "/v1/image/process/task",
             json={
-                "audio_file": filename,  # definitely exists
-                "audio_model": "model that does not exist",
+                "image_file": filename,  # definitely exists
+                "image_model": "model that does not exist",
             },
             headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 404
 
-        os.remove(f"temp_data/audio/{filename}")
+        os.remove(f"temp_data/image/{filename}")
 
 
 @pytest.mark.flaky(retries=2, delay=30)
 def test_process_file_does_not_exist() -> None:
     with TestClient(app) as client:
         response = client.post(
-            "/v1/audio/upload",
+            "/v1/image/upload",
             files={
-                "upload_file": (" ", open("tests/audio/audio.mp3", "rb"), "audio/mpeg"),
+                "upload_file": (" ", open("tests/image/image.jpg", "rb"), "image/jpeg"),
             },
             headers=GLOBAL_HEADERS,
         )
@@ -343,64 +344,65 @@ def test_process_file_does_not_exist() -> None:
         filename = response.json()["file_id"]
 
         response = client.post(
-            "/v1/audio/process/task",
+            "/v1/image/process/task",
             json={
-                "audio_file": DEFAULT_UNEXISTENT_FILE,
-                "audio_model": DEFAULT_AUDIO_MODEL,
+                "image_file": DEFAULT_UNEXISTENT_FILE,
+                "image_model": DEFAULT_IMAGE_MODEL,
             },
             headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 404
 
-        os.remove(f"temp_data/audio/{filename}")
+        os.remove(f"temp_data/image/{filename}")
 
 
 @pytest.mark.flaky(retries=2, delay=30)
 def test_process_wrong_format() -> None:
     with TestClient(app) as client:
         response = client.post(
-            "/v1/audio/upload",
+            "/v1/image/upload",
             files={
-                "upload_file": (" ", open("tests/audio/audio.mp3", "rb"), "audio/mpeg"),
+                "upload_file": (" ", open("tests/image/image.jpg", "rb"), "image/jpeg"),
             },
             headers=GLOBAL_HEADERS,
         )
+        assert response.status_code == 200
         filename = response.json()["file_id"]
 
         response = client.post(
-            "/v1/audio/process/task",
+            "/v1/image/process/task",
             json={"bruh": "bruh"},
             headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 422
 
-        os.remove(f"temp_data/audio/{filename}")
+        os.remove(f"temp_data/image/{filename}")
 
 
 @pytest.mark.flaky(retries=2, delay=30)
 def test_process_success() -> None:
     with TestClient(app) as client:
         response = client.post(
-            "/v1/audio/upload",
+            "/v1/image/upload",
             files={
-                "upload_file": (" ", open("tests/audio/audio.mp3", "rb"), "audio/mpeg"),
+                "upload_file": (" ", open("tests/image/image.jpg", "rb"), "image/jpeg"),
             },
             headers=GLOBAL_HEADERS,
         )
         filename = response.json()["file_id"]
 
         response = client.post(
-            "/v1/audio/process/task",
+            "/v1/image/process/task",
             json={
-                "audio_file": filename,
-                "audio_model": DEFAULT_AUDIO_MODEL,
+                "image_file": filename,
+                "image_model": DEFAULT_IMAGE_MODEL,
             },
             headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 200
         assert _is_valid_UUID(response.json()["task_id"])
 
-        os.remove(f"temp_data/audio/{filename}")
+        os.remove(f"temp_data/image/{filename}")
 
 
 @pytest.mark.flaky(retries=2, delay=30)
@@ -408,19 +410,19 @@ def test_process() -> None:
     with TestClient(app) as client:
         # no auth
         response = client.post(
-            "/v1/audio/process/task",
+            "/v1/image/process/task",
             json={
-                "audio_file": DEFAULT_UNEXISTENT_FILE,
-                "audio_model": DEFAULT_AUDIO_MODEL,
+                "image_file": DEFAULT_UNEXISTENT_FILE,
+                "image_model": DEFAULT_IMAGE_MODEL,
             },
         )
         assert response.status_code == 401
 
-        # upload an audio and get the filename (UUID)
+        # upload an image and get the filename (UUID)
         response = client.post(
-            "/v1/audio/upload",
+            "/v1/image/upload",
             files={
-                "upload_file": (" ", open("tests/audio/audio.mp3", "rb"), "audio/mpeg"),
+                "upload_file": (" ", open("tests/image/image.jpg", "rb"), "image/jpeg"),
             },
             headers=GLOBAL_HEADERS,
         )
@@ -429,10 +431,10 @@ def test_process() -> None:
 
         # model does not exist
         response = client.post(
-            "/v1/audio/process/task",
+            "/v1/image/process/task",
             json={
-                "audio_file": filename,  # definitely exists
-                "audio_model": "model that does not exist",
+                "image_file": filename,  # definitely exists
+                "image_model": "model that does not exist",
             },
             headers=GLOBAL_HEADERS,
         )
@@ -440,10 +442,10 @@ def test_process() -> None:
 
         # file does not exist
         response = client.post(
-            "/v1/audio/process/task",
+            "/v1/image/process/task",
             json={
-                "audio_file": DEFAULT_UNEXISTENT_FILE,
-                "audio_model": DEFAULT_AUDIO_MODEL,
+                "image_file": DEFAULT_UNEXISTENT_FILE,
+                "image_model": DEFAULT_IMAGE_MODEL,
             },
             headers=GLOBAL_HEADERS,
         )
@@ -451,7 +453,7 @@ def test_process() -> None:
 
         # wrong format
         response = client.post(
-            "/v1/audio/process/task",
+            "/v1/image/process/task",
             json={"bruh": "bruh"},
             headers=GLOBAL_HEADERS,
         )
@@ -459,17 +461,17 @@ def test_process() -> None:
 
         # everything ok
         response = client.post(
-            "/v1/audio/process/task",
+            "/v1/image/process/task",
             json={
-                "audio_file": filename,
-                "audio_model": DEFAULT_AUDIO_MODEL,
+                "image_file": filename,
+                "image_model": DEFAULT_IMAGE_MODEL,
             },
             headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 200
         assert _is_valid_UUID(response.json()["task_id"])
 
-        os.remove(f"temp_data/audio/{filename}")
+        os.remove(f"temp_data/image/{filename}")
 
 
 ################
@@ -478,7 +480,7 @@ def test_process() -> None:
 @pytest.mark.flaky(retries=2, delay=30)
 def test_download_no_auth() -> None:
     with TestClient(app) as client:
-        response = client.get("/v1/audio/download?file=bruh")
+        response = client.get("/v1/image/download?file=bruh")
         assert response.status_code == 401
 
 
@@ -486,7 +488,7 @@ def test_download_no_auth() -> None:
 def test_download_file_does_not_exist() -> None:
     with TestClient(app) as client:
         response = client.get(
-            f"/v1/audio/download?file={DEFAULT_UNEXISTENT_FILE}",
+            f"/v1/image/download?file={DEFAULT_UNEXISTENT_FILE}",
             headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 404
@@ -495,7 +497,7 @@ def test_download_file_does_not_exist() -> None:
 @pytest.mark.flaky(retries=2, delay=30)
 def test_download_wrong_format() -> None:
     with TestClient(app) as client:
-        response = client.get("/v1/audio/download?file=bruh", headers=GLOBAL_HEADERS)
+        response = client.get("/v1/image/download?file=bruh", headers=GLOBAL_HEADERS)
         assert response.status_code == 422
 
 
@@ -503,9 +505,9 @@ def test_download_wrong_format() -> None:
 def test_download_success() -> None:
     with TestClient(app) as client:
         response = client.post(
-            "/v1/audio/upload",
+            "/v1/image/upload",
             files={
-                "upload_file": (" ", open("tests/audio/audio.mp3", "rb"), "audio/mpeg"),
+                "upload_file": (" ", open("tests/image/image.jpg", "rb"), "image/jpeg"),
             },
             headers=GLOBAL_HEADERS,
         )
@@ -513,36 +515,36 @@ def test_download_success() -> None:
         filename = response.json()["file_id"]
 
         response = client.get(
-            f"/v1/audio/download?file={filename}", headers=GLOBAL_HEADERS
+            f"/v1/image/download?file={filename}", headers=GLOBAL_HEADERS
         )
         assert response.status_code == 200
 
-        os.remove(f"temp_data/audio/{filename}")
+        os.remove(f"temp_data/image/{filename}")
 
 
 @pytest.mark.flaky(retries=2, delay=30)
 def test_download() -> None:
     with TestClient(app) as client:
         # not auth
-        response = client.get("/v1/audio/download?file=bruh")
+        response = client.get("/v1/image/download?file=bruh")
         assert response.status_code == 401
 
         # file does not exist
         response = client.get(
-            f"/v1/audio/download?file={DEFAULT_UNEXISTENT_FILE}",
+            f"/v1/image/download?file={DEFAULT_UNEXISTENT_FILE}",
             headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 404
 
         # on wrong format
-        response = client.get("/v1/audio/download?file=bruh", headers=GLOBAL_HEADERS)
+        response = client.get("/v1/image/download?file=bruh", headers=GLOBAL_HEADERS)
         assert response.status_code == 422
 
         # upload and then try to download
         response = client.post(
-            "/v1/audio/upload",
+            "/v1/image/upload",
             files={
-                "upload_file": (" ", open("tests/audio/audio.mp3", "rb"), "audio/mpeg"),
+                "upload_file": (" ", open("tests/image/image.jpg", "rb"), "image/jpeg"),
             },
             headers=GLOBAL_HEADERS,
         )
@@ -552,13 +554,13 @@ def test_download() -> None:
 
         # everything ok
         response = client.get(
-            f"/v1/audio/download?file={filename}", headers=GLOBAL_HEADERS
+            f"/v1/image/download?file={filename}", headers=GLOBAL_HEADERS
         )
         assert response.status_code == 200
 
         # TODO: path injections
 
-        os.remove(f"temp_data/audio/{filename}")
+        os.remove(f"temp_data/image/{filename}")
 
 
 ##############
@@ -567,7 +569,7 @@ def test_download() -> None:
 @pytest.mark.flaky(retries=2, delay=30)
 def test_result_no_auth() -> None:
     with TestClient(app) as client:
-        response = client.get("/v1/audio/process/result?task_id=bruh")
+        response = client.get("/v1/image/process/result?task_id=bruh")
         assert response.status_code == 401
 
 
@@ -575,9 +577,9 @@ def test_result_no_auth() -> None:
 def test_result_process_and_get_task_id() -> None:
     with TestClient(app) as client:
         response = client.post(
-            "/v1/audio/upload",
+            "/v1/image/upload",
             files={
-                "upload_file": (" ", open("tests/audio/audio.mp3", "rb"), "audio/mpeg"),
+                "upload_file": (" ", open("tests/image/image.jpg", "rb"), "image/jpeg"),
             },
             headers=GLOBAL_HEADERS,
         )
@@ -585,10 +587,10 @@ def test_result_process_and_get_task_id() -> None:
         filename = response.json()["file_id"]
 
         response = client.post(
-            "/v1/audio/process/task",
+            "/v1/image/process/task",
             json={
-                "audio_file": filename,
-                "audio_model": DEFAULT_AUDIO_MODEL,
+                "image_file": filename,
+                "image_model": DEFAULT_IMAGE_MODEL,
             },
             headers=GLOBAL_HEADERS,
         )
@@ -596,14 +598,14 @@ def test_result_process_and_get_task_id() -> None:
         task_id = response.json()["task_id"]
         assert _is_valid_UUID(task_id)
 
-        os.remove(f"temp_data/audio/{filename}")
+        os.remove(f"temp_data/image/{filename}")
 
 
 @pytest.mark.flaky(retries=2, delay=30)
 def test_result_unexistent_task() -> None:
     with TestClient(app) as client:
         response = client.get(
-            f"/v1/audio/process/result?task_id={DEFAULT_UNEXISTENT_FILE}",
+            f"/v1/image/process/result?task_id={DEFAULT_UNEXISTENT_FILE}",
             headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 406
@@ -613,9 +615,9 @@ def test_result_unexistent_task() -> None:
 def test_result_no_results() -> None:
     with TestClient(app) as client:
         response = client.post(
-            "/v1/audio/upload",
+            "/v1/image/upload",
             files={
-                "upload_file": (" ", open("tests/audio/audio.mp3", "rb"), "audio/mpeg"),
+                "upload_file": (" ", open("tests/image/image.jpg", "rb"), "image/jpeg"),
             },
             headers=GLOBAL_HEADERS,
         )
@@ -623,10 +625,10 @@ def test_result_no_results() -> None:
         filename = response.json()["file_id"]
 
         response = client.post(
-            "/v1/audio/process/task",
+            "/v1/image/process/task",
             json={
-                "audio_file": filename,
-                "audio_model": DEFAULT_AUDIO_MODEL,
+                "image_file": filename,
+                "image_model": DEFAULT_IMAGE_MODEL,
             },
             headers=GLOBAL_HEADERS,
         )
@@ -634,19 +636,19 @@ def test_result_no_results() -> None:
         task_id = response.json()["task_id"]
 
         response = client.get(
-            f"/v1/audio/process/result?task_id={task_id}",
+            f"/v1/image/process/result?task_id={task_id}",
             headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 406
 
-        os.remove(f"temp_data/audio/{filename}")
+        os.remove(f"temp_data/image/{filename}")
 
 
 @pytest.mark.flaky(retries=2, delay=30)
 def test_result_type_validation_failed() -> None:
     with TestClient(app) as client:
         response = client.get(
-            "/v1/audio/process/result?task_id=bruh", headers=GLOBAL_HEADERS
+            "/v1/image/process/result?task_id=bruh", headers=GLOBAL_HEADERS
         )
         assert response.status_code == 422
 
@@ -655,9 +657,9 @@ def test_result_type_validation_failed() -> None:
 def test_result_success() -> None:
     with TestClient(app) as client:
         response = client.post(
-            "/v1/audio/upload",
+            "/v1/image/upload",
             files={
-                "upload_file": (" ", open("tests/audio/audio.mp3", "rb"), "audio/mpeg"),
+                "upload_file": (" ", open("tests/image/image.jpg", "rb"), "image/jpeg"),
             },
             headers=GLOBAL_HEADERS,
         )
@@ -665,10 +667,10 @@ def test_result_success() -> None:
         filename = response.json()["file_id"]
 
         response = client.post(
-            "/v1/audio/process/task",
+            "/v1/image/process/task",
             json={
-                "audio_file": filename,
-                "audio_model": DEFAULT_AUDIO_MODEL,
+                "image_file": filename,
+                "image_model": DEFAULT_IMAGE_MODEL,
             },
             headers=GLOBAL_HEADERS,
         )
@@ -676,39 +678,39 @@ def test_result_success() -> None:
         task_id = response.json()["task_id"]
 
         response = client.get(
-            f"/v1/audio/process/result?task_id={task_id}",
+            f"/v1/image/process/result?task_id={task_id}",
             headers=GLOBAL_HEADERS,
         )
         # TODO: fix this to finally get a successful response
         # assert response.status_code == 200
 
-        os.remove(f"temp_data/audio/{filename}")
+        os.remove(f"temp_data/image/{filename}")
 
 
 @pytest.mark.flaky(retries=2, delay=30)
 def test_result() -> None:
     with TestClient(app) as client:
         # not auth
-        response = client.get("/v1/audio/process/result?task_id=bruh")
+        response = client.get("/v1/image/process/result?task_id=bruh")
         assert response.status_code == 401
 
-        # upload the audio
+        # upload the image
         response = client.post(
-            "/v1/audio/upload",
+            "/v1/image/upload",
             files={
-                "upload_file": (" ", open("tests/audio/audio.mp3", "rb"), "audio/mpeg"),
+                "upload_file": (" ", open("tests/image/image.jpg", "rb"), "image/jpeg"),
             },
             headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 200
         filename = response.json()["file_id"]
 
-        # process uploaded audio and get task id
+        # process uploaded image and get task id
         response = client.post(
-            "/v1/audio/process/task",
+            "/v1/image/process/task",
             json={
-                "audio_file": filename,
-                "audio_model": DEFAULT_AUDIO_MODEL,
+                "image_file": filename,
+                "image_model": DEFAULT_IMAGE_MODEL,
             },
             headers=GLOBAL_HEADERS,
         )
@@ -718,20 +720,20 @@ def test_result() -> None:
 
         # there no task or no results
         response = client.get(
-            f"/v1/audio/process/result?task_id={DEFAULT_UNEXISTENT_FILE}",
+            f"/v1/image/process/result?task_id={DEFAULT_UNEXISTENT_FILE}",
             headers=GLOBAL_HEADERS,
         )
         assert response.status_code == 406
 
         # type validation failed
         response = client.get(
-            "/v1/audio/process/result?task_id=bruh", headers=GLOBAL_HEADERS
+            "/v1/image/processing/result?task_id=bruh", headers=GLOBAL_HEADERS
         )
         assert response.status_code == 422
 
         # everything ok
         response = client.get(
-            f"/v1/audio/process/result?task_id={task_id}",
+            f"/v1/image/result?task_id={task_id}",
             headers=GLOBAL_HEADERS,
         )
 
@@ -751,4 +753,4 @@ def test_result() -> None:
         #     assert isinstance(segment["text"], str)
         #     assert isinstance(segment["file"], str)
 
-        os.remove(f"temp_data/audio/{filename}")
+        os.remove(f"temp_data/image/{filename}")
