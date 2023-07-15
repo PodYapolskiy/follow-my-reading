@@ -30,4 +30,6 @@ class Config(BaseSettings):
 
 @lru_cache
 def get_config() -> Config:
-    return Config.parse_file(".config.json")  # read settings from .config.json file
+    if Path(".config.json").exists():
+        return Config.parse_file(".config.json")  # read settings from .config.json file
+    return Config.parse_file("example.config.json")
