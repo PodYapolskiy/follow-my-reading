@@ -102,7 +102,7 @@ async def upload_image(upload_file: UploadFile) -> UploadFileResponse:
     )
 
     logger.info(
-        f"The file ({file_id}) has been uploaded successfully.\n"
+        f"The file ({file_id}) has been uploaded successfully. "
         f"Filepath: {config.storage.image_dir / str(file_id)}"
     )
     return UploadFileResponse(file_id=file_id)

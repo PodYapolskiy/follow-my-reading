@@ -10,7 +10,11 @@ from pydantic import BaseModel
 
 from config import get_config
 
-logger.add("./logs/auth_utils.log", format="{time:DD-MM-YYYY HH:mm:ss zz} {level} {message}", enqueue=True)
+logger.add(
+    "./logs/auth_utils.log",
+    format="{time:DD-MM-YYYY HH:mm:ss zz} {level} {message}",
+    enqueue=True,
+)
 
 config = get_config()
 
@@ -99,7 +103,9 @@ async def get_user(username: str) -> UserInDB | None:
         logger.info("Searching user in the database")
         db: bytes | None = await connection.hget("users", username)
         if not db:
-            logger.info("Username does not exist in the database. Returning None value.")
+            logger.info(
+                "Username does not exist in the database. Returning None value."
+            )
             return None
 
         logger.info("Username was found. Returning a user instance.")
@@ -122,9 +128,7 @@ async def authenticate_user(username: str, password: str) -> UserInDB | None:
     :return: The function `authenticate_user` returns an instance of `UserInDB` if the user is
     successfully authenticated, or `None` if the user is not found or the password is incorrect.
     """
-    logger.info("Starting authenticate_user algorithm. Getting user instance.\n"
-                "For more info check api/v1/logs/auth_utils.log\n"
-                "Process: get_user")
+    logger.info("Starting authenticate_user algorithm. Getting user instance")
     user = await get_user(username)
 
     logger.info("Checking if user exists in database.")
@@ -161,11 +165,15 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
 
     logger.info("Checking if the custom duration of access token was specified.")
     if expires_delta:
-        logger.info(f"Custom duration of access token was specified. Setting duration to ({expires_delta}) minutes.")
+        logger.info(
+            f"Custom duration of access token was specified. Setting duration to ({expires_delta}) minutes."
+        )
         expire = datetime.utcnow() + expires_delta
     else:
-        logger.info(f"Custom duration of access token was not specified. Setting duration to "
-                    f"({config.token.access_expire_minutes}) minutes")
+        logger.info(
+            f"Custom duration of access token was not specified. Setting duration to "
+            f"({config.token.access_expire_minutes}) minutes"
+        )
         expire = datetime.utcnow() + timedelta(
             minutes=config.token.access_expire_minutes
         )
@@ -225,9 +233,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> Use
     if token_data.username is None:
         raise credentials_exception
 
-    logger.info("Acquiring user data.\n"
-                "for more info check api/v1/logs/auth_utils.log\n"
-                "Process: get_user")
+    logger.info("Acquiring user data.")
     user = await get_user(username=token_data.username)
 
     if user is None:
@@ -252,7 +258,9 @@ async def get_current_active_user(
     :return: the current active user.
     """
 
-    logger.info("Starting get_current_active_user algorithm. Checking if user is disabled.")
+    logger.info(
+        "Starting get_current_active_user algorithm. Checking if user is disabled."
+    )
     if current_user.disabled:
         logger.error("User is disabled. Raising 400 file error.")
         raise HTTPException(status_code=400, detail="Inactive user")

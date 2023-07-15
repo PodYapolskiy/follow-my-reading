@@ -121,11 +121,7 @@ async def login_for_access_token(
     - 401, incorrect username or password
     - 200, token
     """
-    logger.info(
-        "Starting login_for_access_token algorithm. Acquiring user data.\n"
-        "For more info check api/v1/logs/auth_utils.log.\n"
-        "Process: authenticate_user"
-    )
+    logger.info("Starting login_for_access_token algorithm. Acquiring user data.")
     user = await authenticate_user(form_data.username, form_data.password)
 
     logger.info("Checking correctness of login information.")
@@ -179,9 +175,5 @@ async def login_for_access_token(
 async def read_users_me(
     current_user: Annotated[User, Depends(get_current_active_user)]
 ) -> User:
-    logger.info(
-        "Starting read_users_me algorithm.\n"
-        "For more info check api/v1/logs/auth_utils.log\n"
-        "Process: get_current_active_user"
-    )
+    logger.info("Starting read_users_me algorithm.")
     return current_user

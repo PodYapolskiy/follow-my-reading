@@ -35,9 +35,7 @@ async def get_job_status(task_id: UUID) -> TaskStatusResponse:
     - 200, Job status
     """
     logger.info(
-        f"Starting get_job status algorithm. Getting status of task ({task_id}).\n"
-        f"For more info see in api/v1/logs/task_utils.log.\n"
-        f"Process: _get_job_status"
+        f"Starting get_job status algorithm. Getting status of task ({task_id})."
     )
     return _get_job_status(task_id)
 

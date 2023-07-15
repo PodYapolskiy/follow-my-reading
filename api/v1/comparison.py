@@ -120,11 +120,9 @@ async def compare_audio_to_image(
         )
 
     logger.info(
-        f"Audio file ({request.audio_file}) exists. Creating task for comparison of image and audio.\n"
-        f"Check core/logs/task_system.log for more info.\n"
-        f"Process: compare_image_audio"
+        f"Audio file ({request.audio_file}) exists. Creating task for comparison of image and audio."
     )
-    job: Result = task_system.compare_image_audio(  # type: ignore
+    job: Result = task_system.compare_audio_image(  # type: ignore
         audio_plugin_info.class_name,
         AudioProcessingFunction,
         audio_file_path.as_posix(),
@@ -134,10 +132,9 @@ async def compare_audio_to_image(
     )
 
     logger.info(
-        f"Task for comparing image (file: {image_file_path}, model: {request.image_model}))\n"
-        f"and audio (file: {audio_file_path}, model: {request.audio_model}))\n"
-        f"has been created successfully.\n"
-        f"Task id: {UUID(job.id)}"
+        f"Task for comparing image (file: {image_file_path}, model: {request.image_model}))"
+        " and audio (file: {audio_file_path}, model: {request.audio_model}))"
+        " has been created successfully. Task id: {UUID(job.id)}"
     )
     return TaskCreateResponse(task_id=UUID(job.id))
 
@@ -316,11 +313,10 @@ async def compare_audio_to_text(
         )
 
     logger.info(
-        f"Audio file ({request.audio_file} exists. Creating task of comparison text and audio.\n"
-        f"Check core/logs/task_system.log for more info.\n"
-        f"Process: compare_text_audio."
+        f"Audio file ({request.audio_file} exists. Creating task of comparison text and audio."
     )
-    job: Result = task_system.compare_text_audio(
+
+    job: Result = task_system.compare_audio_text(  # type: ignore
         audio_plugin_info.class_name,
         AudioProcessingFunction,
         audio_file_path.as_posix(),
@@ -328,9 +324,9 @@ async def compare_audio_to_text(
     )
 
     logger.info(
-        f"Task for comparing text ({request.text})\n"
-        f"and audio (file: ({request.audio_file}), model: ({request.audio_model}))\n"
-        f"has been created successfully.\n"
+        f"Task for comparing text ({request.text}) "
+        f"and audio (file: ({request.audio_file}), model: ({request.audio_model})) "
+        f"has been created successfully. "
         f"Task id: ({UUID(job.id)})"
     )
     return TaskCreateResponse(task_id=UUID(job.id))

@@ -1,6 +1,5 @@
 from huey import RedisHuey
 from loguru import logger
-import logging
 from typing import Any, Dict, List, Tuple
 
 
@@ -78,7 +77,7 @@ def _plugin_class_method_call(class_name: str, function: str, filepath: str) -> 
     logger.info(f"Getting function ({function}) from class")
     func = getattr(cls, function)  # load function from class
     logger.info(
-        f"Executing function {function} with {filepath}.\n"
+        f"Executing function {function} with {filepath}. "
         f"End of _plugin_class_method_call algorithm."
     )
     return func(filepath)  # call the function
@@ -91,10 +90,7 @@ def dynamic_plugin_call(class_name: str, function: str, filepath: str) -> Any:
     `function` (str), `filepath` (str) and returns the result of calling
     `_plugin_class_method_call` with these parameters.
     """
-    logger.info(
-        "Starting dynamic_plugin_call algorithm.\n"
-        "For more info check Process _plugin_class_method_call"
-    )
+    logger.info("Starting dynamic_plugin_call algorithm.")
     return _plugin_class_method_call(class_name, function, filepath)
 
 
