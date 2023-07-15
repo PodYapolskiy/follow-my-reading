@@ -55,10 +55,12 @@ code_quality_html:
     expire_in: 14 days
     paths: [gl-code-quality-report.html]
 
-documentation:
+pages:
   stage: build
-  image: node:lastest
+  image: node
   before_script:
+    - apt-get update
+    - apt-get install python python3-pip -y
     - npm install -g @redocly/cli
     - pip install poetry 
     - poetry config virtualenvs.create false
@@ -66,16 +68,6 @@ documentation:
   script:
     - poetry run python3 docs.py
     - npx @redocly/cli build-docs -o ./public/index.html openapi.json
-  artifacts:
-    paths:
-      - public
-
-pages:
-  stage: build
-  dependencies:
-    - documentation
-  script:
-    - echo "Pages"
   artifacts:
     paths:
       - public
