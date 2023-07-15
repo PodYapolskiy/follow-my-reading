@@ -21,7 +21,7 @@ RUN curl -o ${TESSDATA_PREFIX}/rus.traineddata \
     -H 'Accept: application/vnd.github.v3.raw' \
     -L https://github.com/tesseract-ocr/tessdata_best/raw/main/rus.traineddata
 # arabian
-RUN curl -o ${TESSDATA_PREFIX}/tat.traineddata \
+RUN curl -o ${TESSDATA_PREFIX}/ara.traineddata \
     -H 'Accept: application/vnd.github.v3.raw' \
     -L https://github.com/tesseract-ocr/tessdata_best/raw/main/ara.traineddata
 # setup python arguments 
