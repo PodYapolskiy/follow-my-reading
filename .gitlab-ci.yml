@@ -51,3 +51,13 @@ mypy:
     # paths: [gl-code-quality-report.json]
     reports:
       codequality: gl-code-quality-report.json
+
+pages:
+  image: ruby:2.7
+  script:
+    - gem install bundler
+    - bundle install
+    - bundle exec jekyll build -d public
+  artifacts:
+    paths:
+      - public
