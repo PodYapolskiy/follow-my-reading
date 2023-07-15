@@ -60,6 +60,8 @@ pages:
   image: python:3.10-slim-buster
   before_script:
     - apt update
+    - apt install curl -y
+    - curl -sL https://deb.nodesource.com/setup_18.x | sudo -E bash -
     - apt install nodejs npm -y
     - pip3 install poetry 
     - poetry config virtualenvs.create false
