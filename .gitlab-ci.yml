@@ -53,6 +53,8 @@ mypy:
       codequality: gl-code-quality-report.json
 
 pages:
+  script:
+    - echo "Pages"
   artifacts:
     paths:
       - public
