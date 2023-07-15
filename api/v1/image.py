@@ -14,7 +14,7 @@ from .models import (
     ImageProcessingRequest,
     ImageProcessingResponse,
     ModelData,
-    ModelsDataReponse,
+    ModelsDataResponse,
     TaskCreateResponse,
     UploadFileResponse,
 )
@@ -92,20 +92,20 @@ async def upload_image(upload_file: UploadFile) -> UploadFileResponse:
 
 @router.get(
     "/models",
-    response_model=ModelsDataReponse,
+    response_model=ModelsDataResponse,
     status_code=200,
     summary="""The endpoint /models returns available (loaded) image models.""",
     responses={
         200: {"description": "List of available models"},
     },
 )
-async def get_models() -> ModelsDataReponse:
+async def get_models() -> ModelsDataResponse:
     """
     Returns list of models, which are loaded into the worker and available for usage.
     """
     # Transform any known image model into ModelData object format and
     # store them as a list inside ModelsDataResponse
-    return ModelsDataReponse(
+    return ModelsDataResponse(
         models=[ModelData.from_orm(model) for model in get_image_plugins().values()]
     )
 
