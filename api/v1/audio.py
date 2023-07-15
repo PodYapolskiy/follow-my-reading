@@ -53,19 +53,20 @@ async def upload_audio_file(upload_file: UploadFile) -> UploadFileResponse:
     """
     The endpoint validates file based on
     [MIME types specification](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types).
-    The endpoint converts audio file into .mp3 format.
+    The endpoint converts audio file into `.mp3` format.
 
     Parameters:
-    - **upload_file**: The file to upload
+    - **upload_file**: The audio file to upload
 
-    Allowed extension:
+    List of the most important allowed extensions:
     - .acc
-    - .mid, .midi
     - .mp3
+    - .m4a
     - .oga, .ogv
+    - .ogg
     - .opus
     - .wav
-    - .weba"""
+    """
     file_id = uuid4()
 
     # Here we using MIME types specification, which have format
@@ -85,9 +86,14 @@ async def upload_audio_file(upload_file: UploadFile) -> UploadFileResponse:
     filepath = config.storage.audio_dir / str(file_id)
 
     # convert file to mp3
-    pydub.AudioSegment.from_file(BytesIO(byte_content)).export(
-        out_f=filepath, format="mp3"
-    )
+    try:
+        pydub.AudioSegment.from_file(BytesIO(byte_content)).export(
+            out_f=filepath, format="mp3"
+        )
+    except pydub.exceptions.CouldntDecodeError as error:
+        raise HTTPException(
+            status_code=500, detail="Failed to convert audio file to .mp3"
+        ) from error
 
     return UploadFileResponse(file_id=file_id)
 
