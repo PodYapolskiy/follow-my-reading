@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Annotated, AsyncGenerator
-
+from loguru import logger
 import aioredis
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -10,6 +10,8 @@ from pydantic import BaseModel
 
 from config import get_config
 
+logger.add("./logs/auth_utils.log", format="{time:DD-MM-YYYY HH:mm:ss zz} {level} {message}", enqueue=True)
+
 config = get_config()
 
 
@@ -18,10 +20,13 @@ async def get_redis_connection() -> AsyncGenerator[aioredis.Redis, None]:
     The function `get_redis_connection` is an asynchronous generator that yields a Redis connection and
     closes it when done.
     """
+    logger.info("Starting get_redis_connection algorithm. Connecting to database.")
     connection = aioredis.from_url(config.redis.url, decode_responses=True)
     try:
+        logger.info("Yielding connection.")
         yield connection
     finally:
+        logger.info("Closing connection.")
         await connection.close()
 
 
@@ -62,6 +67,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     :type hashed_password: str
     :return: a boolean value indicating whether the plain password matches the hashed password.
     """
+    logger.info("Starting verify_password algorithm. Verifying password.")
     return pwd_context.verify(plain_password, hashed_password)  # type: ignore
 
 
@@ -73,6 +79,7 @@ def get_password_hash(password: str) -> str:
     :type password: str
     :return: a hashed version of the password.
     """
+    logger.info("Starting get_password_hash algorithm. Returning hashed password.")
     return pwd_context.hash(password)  # type: ignore
 
 
@@ -87,12 +94,17 @@ async def get_user(username: str) -> UserInDB | None:
     :return: The function `get_user` returns an instance of `UserInDB` if the user with the specified
     `username` exists in the Redis database. If the user does not exist, it returns `None`.
     """
+    logger.info("Starting get_user algorithm.")
     async for connection in get_redis_connection():  # async generator syntax
+        logger.info("Searching user in the database")
         db: bytes | None = await connection.hget("users", username)
         if not db:
+            logger.info("Username does not exist in the database. Returning None value.")
             return None
 
+        logger.info("Username was found. Returning a user instance.")
         return UserInDB.parse_raw(db)
+    logger.error("Failed too connect to the database. Returning None value.")
     return None
 
 
@@ -110,11 +122,22 @@ async def authenticate_user(username: str, password: str) -> UserInDB | None:
     :return: The function `authenticate_user` returns an instance of `UserInDB` if the user is
     successfully authenticated, or `None` if the user is not found or the password is incorrect.
     """
+    logger.info("Starting authenticate_user algorithm. Getting user instance.\n"
+                "For more info check api/v1/logs/auth_utils.log\n"
+                "Process: get_user")
     user = await get_user(username)
+
+    logger.info("Checking if user exists in database.")
     if not user:
+        logger.info("User does not exist in database. Returning None value.")
         return None
+
+    logger.info("User exists in database. Checking if password is correct.")
     if not verify_password(password, user.hashed_password):
+        logger.info("Password of the user is incorrect. Returning None value.")
         return None
+
+    logger.info("User has been successfully authenticated. Returning user instance.")
     return user
 
 
@@ -128,24 +151,36 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     :type data: dict
     :param expires_delta: The `expires_delta` parameter is an optional argument that specifies the
     duration for which the access token will be valid. It can be a `timedelta` object or `None`. If
-    `expires_delta` is `None`, a default expiration time (`config.token.access_exprire_minutes`, or
+    `expires_delta` is `None`, a default expiration time (`config.token.access_expire_minutes`, or
     30 minutes) will be used
     :type expires_delta: timedelta | None
     :return: an encoded JWT (JSON Web Token) as a string.
     """
+    logger.info("Starting create_access_token algorithm. Acquiring data.")
     to_encode = data.copy()
+
+    logger.info("Checking if the custom duration of access token was specified.")
     if expires_delta:
+        logger.info(f"Custom duration of access token was specified. Setting duration to ({expires_delta}) minutes.")
         expire = datetime.utcnow() + expires_delta
     else:
+        logger.info(f"Custom duration of access token was not specified. Setting duration to "
+                    f"({config.token.access_expire_minutes}) minutes")
         expire = datetime.utcnow() + timedelta(
             minutes=config.token.access_expire_minutes
         )
+
+    logger.info("Adding expiration date to the data.")
     to_encode.update({"exp": expire})
+
+    logger.info("Encoding data.")
     encoded_jwt: str = jwt.encode(
         to_encode,
         config.token.secket_key,
         algorithm=config.token.jwt_algorithm,
     )
+
+    logger.info("Returning encoded data.")
     return encoded_jwt
 
 
@@ -159,31 +194,47 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> Use
     :type token: Annotated[str, Depends(oauth2_scheme)]
     :return: an instance of the UserInDB class.
     """
+    logger.info("Starting get_current_user algorithm. Acquiring encoded data.")
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
+        logger.info("Decoding data.")
         payload = jwt.decode(
             token,
             config.token.secket_key,
             algorithms=[config.token.jwt_algorithm],
         )
+
+        logger.info("Acquiring username from the decoded data.")
         username: str = payload.get("sub")
+
         if username is None:
+            logger.error("Username is not found. Raising 401 file error.")
             raise credentials_exception
+
+        logger.info("Creating token data for the user.")
         token_data = TokenData(username=username)
     except JWTError:
+        logger.error("Decoding failed. Raising 401 file error.")
         raise credentials_exception
 
+    logger.info("Checking if the username for the token exists")
     if token_data.username is None:
         raise credentials_exception
 
+    logger.info("Acquiring user data.\n"
+                "for more info check api/v1/logs/auth_utils.log\n"
+                "Process: get_user")
     user = await get_user(username=token_data.username)
+
     if user is None:
+        logger.error("User was not found. Raising 401 file error.")
         raise credentials_exception
 
+    logger.info("Access token has been created successfully. Returning user instance.")
     return user
 
 
@@ -200,6 +251,11 @@ async def get_current_active_user(
     :type current_user: Annotated[User, Depends(get_current_user)]
     :return: the current active user.
     """
+
+    logger.info("Starting get_current_active_user algorithm. Checking if user is disabled.")
     if current_user.disabled:
+        logger.error("User is disabled. Raising 400 file error.")
         raise HTTPException(status_code=400, detail="Inactive user")
+
+    logger.info("User is active. Returning current user instance.")
     return current_user

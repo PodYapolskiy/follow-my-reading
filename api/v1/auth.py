@@ -1,6 +1,6 @@
 from datetime import timedelta
 from typing import Annotated
-
+from loguru import logger
 import aioredis
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -18,6 +18,8 @@ from .auth_utils import (
     get_redis_connection,
 )
 from .models import RegisterResponse
+
+logger.add("./logs/auth.log", format="{time:DD-MM-YYYY, HH:mm:ss zz} {level} {message}", enqueue=True)
 
 config = get_config()
 
@@ -55,18 +57,28 @@ async def login_for_access_token(
     - 401, incorrect username or password
     - 200, token
     """
+    logger.info("Starting login_for_access_token algorithm. Acquiring user data.\n"
+                "For more info check api/v1/logs/auth_utils.log.\n"
+                "Process: authenticate_user")
     user = await authenticate_user(form_data.username, form_data.password)
+
+    logger.info("Checking correctness of login information.")
     if not user:
+        logger.error("Incorrect username or password. Raising 401 file error.")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    logger.info("Login information is correct. Creating 30 minutes access token.")
     access_token_expires = timedelta(minutes=config.token.access_expire_minutes)
     access_token = create_access_token(
         data={"sub": user.username},
         expires_delta=access_token_expires,
     )
+
+    logger.info("Access token is successfully created. Returning the token.")
     return Token(access_token=access_token, token_type="bearer")
 
 
@@ -101,6 +113,9 @@ async def login_for_access_token(
 async def read_users_me(
     current_user: Annotated[User, Depends(get_current_active_user)]
 ) -> User:
+    logger.info("Starting read_users_me algorithm.\n"
+                "For more info check api/v1/logs/auth_utils.log\n"
+                "Process: get_current_active_user")
     return current_user
 
 
@@ -137,12 +152,18 @@ async def register_user(
     - **email**: The "email" parameter is an optional string that represents the email address of the user
     - **full_name**: The "full_name" parameter is an optional parameter that represents the full name of the user
     """
+    logger.info("Starting register_user algorithm. Hashing password.")
     hashed_password = get_password_hash(password)
+
+    logger.info("Password hashed. Checking if username already exists in database.")
     if await conn.hexists("users", username):
+        logger.error("The username is already taken. Raising 422 file error.")
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Username is already taken",
         )
+
+    logger.info("Username is valid. Encoding data and adding to database.")
     encoded_data = UserInDB.json(
         UserInDB(
             username=username,
@@ -153,4 +174,6 @@ async def register_user(
         )
     )
     await conn.hset("users", username, encoded_data)
+
+    logger.info("A user has registered in database successfully.")
     return RegisterResponse(text="Registered successfully.")
