@@ -1,7 +1,10 @@
-![Pipeline](https://gitlab.pg.innopolis.university/a.kudryavtsev/follow-my-reading/badges/main/pipeline.svg)
+![Pipeline](https://gitlab.pg.innopolis.university/a.kudryavtsev/follow-my-reading/badges/main/pipeline.svg) ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+
 ![Packaging: poetry](https://img.shields.io/badge/packaging-poetry-cyan.svg)
 ![Linting: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v1.json)
 ![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)
+
+![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
 
 # Follow My Reading :blue_book:
 
@@ -26,7 +29,17 @@ Follow My Reading provides a **API service** for our users to upload an image an
 
 :arrow_double_down: server can **extract audio** segments with requested phrases
 
-## Full list of features
+## 
+
+## Frameworks and technologies
+- [:zap: FastAPI](https://fastapi.tiangolo.com/)
+> FastAPI is a modern, fast (high-performance) web framework for building APIs with Python 3.6+ based on standard Python type hints, making it easy to write and maintain complex APIs in a fast and scalable way.
+- [:file_cabinet: Redis](https://redis.io/)
+> Redis is an open source, in-memory data structure store, used as a database, cache, and message broker, with support for a wide range of data structures and features that make it highly versatile and efficient.
+- [:gear: Huey](https://huey.readthedocs.io/en/latest/)
+> Huey is a lightweight task queue for Python that allows for easy integration with Redis and asynchronous processing of tasks in distributed systems.
+
+## Full list of features :sparkles:
 
 
 :white_check_mark: Image and audio upload
@@ -53,17 +66,20 @@ Follow My Reading provides a **API service** for our users to upload an image an
 
 :white_check_mark: Authentication
 
-## Documentation
+## Documentation :page_facing_up:
 
 We **host the documentation** for our API here: [:globe_with_meridians: Gitlab Pages](http://antonkudryavtsevdoem.fvds.ru/docs#/), where you will find all the information you need to use our API effectively.
 
 In addition to the API documentation, we also have **a detailed wiki** that explains everything in detail: [:page_facing_up: Project Wiki](https://gitlab.pg.innopolis.university/a.kudryavtsev/follow-my-reading/-/wikis/home). This resource provides more comprehensive information, so feel free to take a deep dive and explore the different sections.
 
-## Team
+## Team :busts_in_silhouette:
 - @a.kudryavtsev
 - @a.soldatov
 - @i.sannikov
 - @f.smirnov
 - @l.novikov
 
-## License
+## License :page_with_curl:
+This project is licensed under the terms of the **MIT License**.
+
+[MIT License](https://opensource.org/licenses/MIT)
