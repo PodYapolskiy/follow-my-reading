@@ -23,8 +23,8 @@ Follow My Reading provides a **API service** for our users to upload an image an
 
 ## Documentation
 
-We host the documentation for our API here: [:globe_with_meridians: Gitlab Pages](http://antonkudryavtsevdoem.fvds.ru/docs#/), where you will find all the information you need to use our API effectively.
+We **host the documentation** for our API here: [:globe_with_meridians: Gitlab Pages](http://antonkudryavtsevdoem.fvds.ru/docs#/), where you will find all the information you need to use our API effectively.
 
-In addition to the API documentation, we also have a detailed wiki that explains everything in detail: [:page_facing_up: Project Wiki](https://gitlab.pg.innopolis.university/a.kudryavtsev/follow-my-reading/-/wikis/home). This resource provides more comprehensive information, so feel free to take a deep dive and explore the different sections.
+In addition to the API documentation, we also have **a detailed wiki :partying_face:** that explains everything in detail: [:page_facing_up: Project Wiki](https://gitlab.pg.innopolis.university/a.kudryavtsev/follow-my-reading/-/wikis/home) . This resource provides more comprehensive information, so feel free to take a deep dive and explore the different sections.
 
 ## License
