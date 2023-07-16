@@ -349,28 +349,26 @@ def find_phrases(phrases: List[str], to_find: str, margin: float = 1.05) -> List
     window = int(len(better_text) * margin)
 
     # Find the window that best fits the string
-    best_window_max = inf
+    best_window_min = inf
     best_window_result = []
 
     best_end = 0
     for j in range(window, len(better_phrases) + 1):
         new_ans, lev_dist = __match_symbols(better_text, better_phrases[j - window : j])
-        if best_window_max > lev_dist:
+        if best_window_min > lev_dist:
             best_window_result = new_ans
-            best_window_max = lev_dist
+            best_window_min = lev_dist
             best_end = j
     best_beg = best_end - window
 
     # Trim the window to exclude unnecessary symbols (trims using full words)
     optimal_ans = best_window_result
 
-    first_word = __find(
-        optimal_ans[0][2], len(optimal_ans[0][2]) - len(optimal_ans[0][1]) - 1, " ", -1
-    )
-    best_beg += first_word + 1
-
-    last_word = __find(optimal_ans[-1][2], len(optimal_ans[-1][1]), " ", 1)
-    best_end -= len(optimal_ans[-1][2]) - last_word
+    if len(optimal_ans) > 0 and optimal_ans[0][0] == 0:
+        first_word = __find(
+            optimal_ans[0][2], len(optimal_ans[0][2]) - len(optimal_ans[0][1]) - 1, " ", -1
+        )
+        best_beg += first_word + 1
 
     # Transform the indices from prepared text to initial text
     actual_beg = phrase_indices[best_beg]
