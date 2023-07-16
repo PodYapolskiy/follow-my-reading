@@ -168,7 +168,15 @@ def _get_job_result(task_id: UUID) -> Any:
     logger.info(
         f"Starting _get_job_result algorithm. Acquiring results of task ({task_id})."
     )
-    data = scheduler.result(str(task_id), preserve=True)
+
+    try:
+        data = scheduler.result(str(task_id), preserve=True)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Task failed with exception: {e}",
+        ) from e
+
     if data is not None:
         logger.info(
             f"The task ({task_id}) exists and is finished. Returning the result."

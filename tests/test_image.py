@@ -728,7 +728,7 @@ def test_result() -> None:
 
         # type validation failed
         response = client.get(
-            "/v1/image/processing/result?task_id=bruh", headers=GLOBAL_HEADERS
+            "/v1/image/process/result?task_id=bruh", headers=GLOBAL_HEADERS
         )
         assert response.status_code == 422
 
