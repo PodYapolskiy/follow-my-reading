@@ -15,7 +15,7 @@ Follow My Reading provides a API service for our users to upload an image and au
 - :arrow_up: upload image and audio files to sever
 - :gear: :park: server can process image
 - :gear: :musical_note: server can process audio
-- :musical_note:: arrows_counterclockwise: :frame_photo: server can compare audio against image
+- :musical_note: :arrows_counterclockwise: :frame_photo: server can compare audio against image
 - :musical_note: :arrows_counterclockwise: :page_facing_up: server can compare audio against text
 - :musical_note: :arrow_right: server can extract audio segments with requested phrases
 
