@@ -7,7 +7,6 @@
 
 Follow My Reading provides a **API service** for our users to upload an image and audio of their reading session, and our service checks whether there are any mistakes in pronunciation in the audio.
 
-
 ## Here's how it works :gear:
 :sunrise: users can take **a photo of the page**
 
@@ -27,8 +26,8 @@ Follow My Reading provides a **API service** for our users to upload an image an
 
 :arrow_double_down: server can **extract audio** segments with requested phrases
 
-## Full list if features
-Full list of Features:
+## Full list of features
+
 
 :white_check_mark: Image and audio upload
 
@@ -58,6 +57,13 @@ Full list of Features:
 
 We **host the documentation** for our API here: [:globe_with_meridians: Gitlab Pages](http://antonkudryavtsevdoem.fvds.ru/docs#/), where you will find all the information you need to use our API effectively.
 
-In addition to the API documentation, we also have **a detailed wiki** that explains everything in detail: [:page_facing_up: Project Wiki](https://gitlab.pg.innopolis.university/a.kudryavtsev/follow-my-reading/-/wikis/home) . This resource provides more comprehensive information, so feel free to take a deep dive and explore the different sections.
+In addition to the API documentation, we also have **a detailed wiki** that explains everything in detail: [:page_facing_up: Project Wiki](https://gitlab.pg.innopolis.university/a.kudryavtsev/follow-my-reading/-/wikis/home). This resource provides more comprehensive information, so feel free to take a deep dive and explore the different sections.
+
+## Team
+- @a.kudryavtsev
+- @a.soldatov
+- @i.sannikov
+- @f.smirnov
+- @l.novikov
 
 ## License
