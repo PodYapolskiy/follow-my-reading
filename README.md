@@ -23,7 +23,7 @@ Follow My Reading provides a **API service** for our users to upload an image an
 
 :musical_note: server can **process audio**
 
-:frame_photo: server can **compare audio against image**
+:sunrise: server can **compare audio against image**
 
 :page_facing_up: server can **compare audio against text**
 
